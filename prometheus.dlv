@@ -1,0 +1,65 @@
+# b main.main
+# web handler
+# b prometheus/main.go:156
+# b prometheus/main.go:458
+# b prometheus/main.go:565
+# b web.New
+# b (*API).Register
+# b web.go:331
+# b web.go:339
+# b web.go:347
+# b web.(*Handler).alerts
+# b web.(*Handler).graph
+# b web.(*Handler).status
+# b web.(*Handler).flags
+# b web.(*Handler).serveConfig
+# b web.(*Handler).rules
+# b web.(*Handler).targets
+# b web.(*Handler).serviceDiscovery
+# b web.go:360
+# b web.(*Handler).version
+# b web.go:378
+# b web.go:419
+# b web.(*Handler).consoles
+# b web.(*Handler).quit
+# b web.(*Handler).reload
+# b web.serveDebug
+# b web.go:458
+# b web.go:462
+# b web.go:384
+# b web.go:175
+# b web.(*metrics).instrumentHandler
+# b remote.NewStorage
+# b remote.NewWriteStorage
+b remote.(*Storage).ApplyConfig
+b remote.(*WriteStorage).ApplyConfig
+b storage.(*fanout).Appender
+b main.(*readyStorage).Appender
+b scrape.(*scrapeLoop).append
+# b remote.NewStorage
+# b remote.(*Storage).ApplyConfig
+#n b remote.NewWriteStorage
+# b remote.(*WriteStorage).ApplyConfig
+# b remote.(*QueueManager).Append
+# b remote.(*Client).Store
+# b wal.NewWatcher
+# b wal.(*Watcher).Start
+# b wal.(*Watcher).loop
+# b wal.(*Watcher).Run
+# b wal.(*Watcher).watch
+# b wal.(*LiveReader).Next
+# b wal.(*LiveReader).buildRecord
+# b wal.(*LiveReader).readRecord
+# b wal.(*LiveReader).fillBuffer
+# b storage.(*fanout).Querier
+# b tsdb.NewBlockQuerier
+# b tsdb.newBlockBaseQuerier
+b tsdb.(*blockQuerier).Select
+b tsdb.(*blockBaseQuerier).LabelValues
+b tsdb.(*blockBaseQuerier).LabelNames
+b tsdb.(*blockQuerier).Close
+b remote.(*querier).Select
+b remote.(*querier).LabelValues
+b remote.(*querier).LabelNames
+b remote.(*querier).Close
+g

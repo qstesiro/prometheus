@@ -1,0 +1,67 @@
+// http.StatusFound
+// web.go:31
+curl 192.168.56.104:9090/ -X GET
+// http.StatusFound
+// web.go:339
+curl 192.168.56.104:9090/graph -X GET
+// http.StatusFound
+// web.go:342
+curl 192.168.56.104:9090/classic/graph -X GET
+// http.StatusFound
+curl 192.168.56.104:9090/classic -X GET
+curl 192.168.56.104:9090/classic/ -X GET
+// web.go:347
+curl 192.168.56.104:9090/new/*path -X GET
+// main.(*Handler).alerts
+curl 192.168.56.104:9090/classic/alerts -X GET
+// main.(*Handler).graph
+curl 192.168.56.104:9090/classic/graph -X GET
+// main.(*Handler).status
+curl 192.168.56.104:9090/classic/status -X GET
+// main.(*Handler).flags
+curl 192.168.56.104:9090/classic/flags -X GET
+// main.(*Handler).serveConfig
+curl 192.168.56.104:9090/classic/config -X GET
+// main.(*Handler).rules
+curl 192.168.56.104:9090/classic/rules -X GET
+// main.(*Handler).targets
+curl 192.168.56.104:9090/classic/targets -X GET
+// main.(*Handler).serviceDiscovery
+curl 192.168.56.104:9090/classic/service-discovery -X GET
+// web.go:360
+curl 192.168.56.104:9090/classic/static/*filepath -X GET
+curl 192.168.56.104:9090/static/{filepath} -X GET
+// main.(*Handler).version
+curl 192.168.56.104:9090/version -X GET
+// 
+curl 192.168.56.104:9090/metrics -X GET
+// web.go:378
+curl 192.168.56.104:9090/federate -X GET
+// web.go:419
+curl 192.168.56.104:9090/consoles/*filepath -X GET
+// main.(*Handler).quit
+curl 192.168.56.104:9090/-/quit -X POST
+// main.(*Handler).quit
+curl 192.168.56.104:9090/-/quit -X PUT
+// main.(*Handler).reload
+curl 192.168.56.104:9090/-/reload -X POST
+// main.(*Handler).reload
+curl 192.168.56.104:9090/-/reload -X PUT
+// web.serveDebug
+curl 192.168.56.104:9090/debug/*subpath -X GET
+// web.serveDebug
+curl 192.168.56.104:9090/debug/*subpath -X POST
+// web.go:458
+curl 192.168.56.104:9090/-/healthy -X GET
+// web.go:462
+curl 192.168.56.104:9090/-/ready -X GET
+// web.go:384
+curl 192.168.56.104:9090/alerts -X GET
+curl 192.168.56.104:9090/config -X GET
+curl 192.168.56.104:9090/flags -X GET
+curl 192.168.56.104:9090/graph -X GET
+curl 192.168.56.104:9090/rules -X GET
+curl 192.168.56.104:9090/service-discovery -X GET
+curl 192.168.56.104:9090/status -X GET
+curl 192.168.56.104:9090/targets -X GET
+curl 192.168.56.104:9090/tsdb-status -X GET
