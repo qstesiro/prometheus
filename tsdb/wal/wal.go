@@ -67,6 +67,9 @@ func (p *page) full() bool {
 }
 
 func (p *page) reset() {
+	// 突然想到是否可以在标准库增加函数封装内存块清空
+	// 函数内部使用针对特定处理器的块处理指令
+	// ???
 	for i := range p.buf {
 		p.buf[i] = 0
 	}
@@ -488,6 +491,7 @@ func (w *WAL) nextSegment() error {
 	}
 
 	// Don't block further writes by fsyncing the last segment.
+	// 直接送函数[从来没有这样用过又进步了:)] ???
 	w.actorc <- func() {
 		if err := w.fsync(prev); err != nil {
 			level.Error(w.logger).Log("msg", "sync previous segment", "err", err)
@@ -528,6 +532,7 @@ func (w *WAL) flushPage(clear bool) error {
 	}
 
 	n, err := w.segment.Write(p.buf[p.flushed:p.alloc])
+	// 可以合并p.flushed += n ???
 	if err != nil {
 		p.flushed += n
 		return err
@@ -634,6 +639,7 @@ func (w *WAL) log(rec []byte, final bool) error {
 	left := w.page.remaining() - recordHeaderSize                                   // Free space in the active page.
 	left += (pageSize - recordHeaderSize) * (w.pagesPerSegment() - w.donePages - 1) // Free pages in the active segment.
 
+	// 同批数据不跨段 ???
 	if len(rec) > left {
 		if err := w.nextSegment(); err != nil {
 			return err
@@ -664,6 +670,9 @@ func (w *WAL) log(rec []byte, final bool) error {
 		default:
 			typ = recMiddle
 		}
+		// 文档中没有描述此标志位
+		// https://github.com/qstesiro/prometheus/blob/main/tsdb/docs/format/wal.md
+		// ???
 		if compressed {
 			typ |= snappyMask
 		}
@@ -689,6 +698,7 @@ func (w *WAL) log(rec []byte, final bool) error {
 	}
 
 	// If it's the final record of the batch and the page is not empty, flush it.
+	// 不同批数据不同页 ???
 	if final && w.page.alloc > 0 {
 		if err := w.flushPage(false); err != nil {
 			return err
