@@ -31,14 +31,14 @@
 # b web.(*metrics).instrumentHandler
 # b remote.NewStorage
 # b remote.NewWriteStorage
-b remote.(*Storage).ApplyConfig
-b remote.(*WriteStorage).ApplyConfig
-b storage.(*fanout).Appender
-b main.(*readyStorage).Appender
-b scrape.(*scrapeLoop).append
+# b remote.(*Storage).ApplyConfig
+# b remote.(*WriteStorage).ApplyConfig
+# b storage.(*fanout).Appender
+# b main.(*readyStorage).Appender
+# b scrape.(*scrapeLoop).append
 # b remote.NewStorage
 # b remote.(*Storage).ApplyConfig
-#n b remote.NewWriteStorage
+# b remote.NewWriteStorage
 # b remote.(*WriteStorage).ApplyConfig
 # b remote.(*QueueManager).Append
 # b remote.(*Client).Store
@@ -54,12 +54,23 @@ b scrape.(*scrapeLoop).append
 # b storage.(*fanout).Querier
 # b tsdb.NewBlockQuerier
 # b tsdb.newBlockBaseQuerier
-b tsdb.(*blockQuerier).Select
-b tsdb.(*blockBaseQuerier).LabelValues
-b tsdb.(*blockBaseQuerier).LabelNames
-b tsdb.(*blockQuerier).Close
-b remote.(*querier).Select
-b remote.(*querier).LabelValues
-b remote.(*querier).LabelNames
-b remote.(*querier).Close
+# b tsdb.(*blockQuerier).Select
+# b tsdb.(*blockBaseQuerier).LabelValues
+# b tsdb.(*blockBaseQuerier).LabelNames
+# b tsdb.(*blockQuerier).Close
+# b remote.(*querier).Select
+# b remote.(*querier).LabelValues
+# b remote.(*querier).LabelNames
+# b remote.(*querier).Close
+# b scrape.(*scrapeLoop).scrapeAndReport
+# b scrape.go:1118
+# b scrape.go:1086
+# b scrape.(*targetScraper).scrape
+# b scrape.go:635
+b tsdb.(*headAppender).log
+# b wal.(*WAL).Log
+# b wal.(*WAL).log
+# b record.(*Encoder).Series
+# b record.(*Encoder).Samples
+# b record.(*Encoder).Tombstones
 g

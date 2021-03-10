@@ -1114,7 +1114,9 @@ func (sl *scrapeLoop) scrapeAndReport(interval, timeout time.Duration, last, app
 	scrapeCtx, cancel := context.WithTimeout(sl.parentCtx, timeout)
 	contentType, scrapeErr = sl.scraper.scrape(scrapeCtx, buf)
 	cancel()
-
+	// 测试使用 ???
+	_v := buf.String()
+	_ = _v
 	if scrapeErr == nil {
 		b = buf.Bytes()
 		// NOTE: There were issues with misbehaving clients in the past
