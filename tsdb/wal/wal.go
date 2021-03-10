@@ -647,7 +647,8 @@ func (w *WAL) log(rec []byte, final bool) error {
 
 		// Find how much of the record we can fit into the page.
 		var (
-			l    = min(len(rec), (pageSize-p.alloc)-recordHeaderSize)
+			l = min(len(rec), (pageSize-p.alloc)-recordHeaderSize)
+			// 低效操作 ???
 			part = rec[:l]
 			buf  = p.buf[p.alloc:]
 			typ  recType
@@ -683,6 +684,7 @@ func (w *WAL) log(rec []byte, final bool) error {
 				return err
 			}
 		}
+		// 低效操作 ???
 		rec = rec[l:]
 	}
 
