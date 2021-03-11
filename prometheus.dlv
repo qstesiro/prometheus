@@ -66,8 +66,16 @@
 # b scrape.go:1118
 # b scrape.go:1086
 # b scrape.(*targetScraper).scrape
+# b scrape.(*scrapeLoop).append
+# b scrape.go:1341
+# b tsdb.(*headAppender).Append
+# b 0d1184 head.go:1184
+# cond 0d1184 s != nil
+b 0d1206 head.go:1206
+cond 0d1206 _count == 353
+# b storage.(*fanoutAppender).Commit
 # b scrape.go:635
-b tsdb.(*headAppender).log
+# b tsdb.(*headAppender).log
 # b wal.(*WAL).Log
 # b wal.(*WAL).log
 # b record.(*Encoder).Series

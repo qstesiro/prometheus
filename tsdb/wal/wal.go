@@ -639,7 +639,7 @@ func (w *WAL) log(rec []byte, final bool) error {
 	left := w.page.remaining() - recordHeaderSize                                   // Free space in the active page.
 	left += (pageSize - recordHeaderSize) * (w.pagesPerSegment() - w.donePages - 1) // Free pages in the active segment.
 
-	// 同批数据不跨段 ???
+	// record压缩结果不跨段 ???
 	if len(rec) > left {
 		if err := w.nextSegment(); err != nil {
 			return err
@@ -698,7 +698,7 @@ func (w *WAL) log(rec []byte, final bool) error {
 	}
 
 	// If it's the final record of the batch and the page is not empty, flush it.
-	// 不同批数据不同页 ???
+	// 尽可能保证一个完整的recrod刷新磁盘 ???
 	if final && w.page.alloc > 0 {
 		if err := w.flushPage(false); err != nil {
 			return err

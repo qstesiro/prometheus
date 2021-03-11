@@ -1395,6 +1395,7 @@ loop:
 	return
 }
 
+// 不直接使用string(b)估计效率更高 ???
 func yoloString(b []byte) string {
 	return *((*string)(unsafe.Pointer(&b)))
 }

@@ -1171,12 +1171,15 @@ type headAppender struct {
 	closed                          bool
 }
 
+var _count = 0 // 测试使用 ???
+
 func (a *headAppender) Append(ref uint64, lset labels.Labels, t int64, v float64) (uint64, error) {
 	if t < a.minValidTime {
 		a.head.metrics.outOfBoundSamples.Inc()
 		return 0, storage.ErrOutOfBounds
 	}
 
+	// 此处理进行series的过滤操作 ???
 	s := a.head.series.getByID(ref)
 	if s == nil {
 		// Ensure no empty labels have gotten through.
@@ -1200,6 +1203,7 @@ func (a *headAppender) Append(ref uint64, lset labels.Labels, t int64, v float64
 				Ref:    s.ref,
 				Labels: lset,
 			})
+			_count += 1
 		}
 	}
 
