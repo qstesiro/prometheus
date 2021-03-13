@@ -52,6 +52,12 @@
 # b wal.(*LiveReader).readRecord
 # b wal.(*LiveReader).fillBuffer
 # b storage.(*fanout).Querier
+b tsdb.Open
+b tsdb.(*Head).Truncate
+b tsdb.(*Head).truncateMemory
+b tsdb.(*Head).truncateWAL
+b chunks.(*ChunkDiskMapper).Truncate
+b tsdb.(*Head).gc
 # b tsdb.NewBlockQuerier
 # b tsdb.newBlockBaseQuerier
 # b tsdb.(*blockQuerier).Select
@@ -71,8 +77,8 @@
 # b tsdb.(*headAppender).Append
 # b 0d1184 head.go:1184
 # cond 0d1184 s != nil
-b 0d1206 head.go:1206
-cond 0d1206 _count == 353
+# b 0d1206 head.go:1206
+# cond 0d1206 _count == 353
 # b storage.(*fanoutAppender).Commit
 # b scrape.go:635
 # b tsdb.(*headAppender).log

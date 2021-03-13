@@ -47,7 +47,9 @@ import (
 
 const (
 	// Default duration of a block in milliseconds.
-	DefaultBlockDuration = int64(2 * time.Hour / time.Millisecond)
+	// DefaultBlockDuration = int64(2 * time.Hour / time.Millisecond)
+	// 测试 ???
+	DefaultBlockDuration = int64(10 * time.Second / time.Millisecond)
 
 	// Block dir suffixes to make deletion and creation operations atomic.
 	// We decided to do suffixes instead of creating meta.json as last (or delete as first) one,

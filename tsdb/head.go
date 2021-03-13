@@ -1844,7 +1844,7 @@ func (m seriesHashmap) del(hash uint64, lset labels.Labels) {
 
 const (
 	// DefaultStripeSize is the default number of entries to allocate in the stripeSeries hash map.
-	DefaultStripeSize = 1 << 14
+	DefaultStripeSize = 1 << 14 // 16K ???
 )
 
 // stripeSeries locks modulo ranges of IDs and hashes to reduce lock contention.
