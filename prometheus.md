@@ -1,5 +1,6 @@
 alias gob='go build -v -gcflags "all=-N -l" -o prometheus cmd/prometheus/main.go'
-alias dlv='rm data/wal/* && gob && dlv exec ./prometheus --init ./prometheus.dlv -- --config.file=documentation/examples/prometheus.yml'
+alias dlv='gob && dlv exec ./prometheus --init ./prometheus.dlv -- --config.file=documentation/examples/prometheus.yml'
+rm data/wal/* && dlv
 
 # HELP go_gc_duration_seconds A summary of the pause duration of garbage collection cycles.
 # TYPE go_gc_duration_seconds summary
