@@ -76,7 +76,10 @@ type Head struct {
 	symbols map[string]struct{}
 
 	deletedMtx sync.Mutex
-	deleted    map[uint64]int // Deleted series, and what WAL segment they must be kept until.
+	// 21/03/15 23:23:55 Quiz:
+	// deleted 记录被从Head中删除的series用于处理WAL创建Checkpoint
+	// 具体用法明天再解释
+	deleted map[uint64]int // Deleted series, and what WAL segment they must be kept until.
 
 	postings *index.MemPostings // Postings lists for terms.
 
@@ -906,6 +909,7 @@ func (h *Head) truncateWAL(mint int64) error {
 		if h.series.getByID(id) != nil {
 			return true
 		}
+		// 21/03/15 23:10:24 Mark: 可以使用RWMutex
 		h.deletedMtx.Lock()
 		_, ok := h.deleted[id]
 		h.deletedMtx.Unlock()
@@ -1179,7 +1183,7 @@ func (a *headAppender) Append(ref uint64, lset labels.Labels, t int64, v float64
 		return 0, storage.ErrOutOfBounds
 	}
 
-	// 此处理进行series的过滤操作 ???
+	// 21/03/15 22:47:02 Quiz: 此处理进行series的过滤操作
 	s := a.head.series.getByID(ref)
 	if s == nil {
 		// Ensure no empty labels have gotten through.

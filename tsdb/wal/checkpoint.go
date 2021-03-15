@@ -47,7 +47,7 @@ type CheckpointStats struct {
 
 // LastCheckpoint returns the directory name and index of the most recent checkpoint.
 // If dir does not contain any checkpoints, ErrNotFound is returned.
-// 只返回最近子目录的全路径 ???
+// 21/03/15 22:38:32 Mark: 只返回最近子目录的全路径
 func LastCheckpoint(dir string) (string, int, error) {
 	checkpoints, err := listCheckpoints(dir)
 	if err != nil {
@@ -63,7 +63,7 @@ func LastCheckpoint(dir string) (string, int, error) {
 }
 
 // DeleteCheckpoints deletes all checkpoints in a directory below a given index.
-// 删除所有小于等于maxIndex的检查点子目录 ???
+// 21/03/15 22:47:13 Mark: 删除所有小于等于maxIndex的检查点子目录
 func DeleteCheckpoints(dir string, maxIndex int) error {
 	checkpoints, err := listCheckpoints(dir)
 	if err != nil {
@@ -119,11 +119,12 @@ func Checkpoint(logger log.Logger, w *WAL, from, to int, keep func(id uint64) bo
 		if err != nil {
 			return nil, errors.Wrap(err, "create segment reader")
 		}
-		defer sgmReader.Close() // ???
+		// 21/03/15 22:47:39 Quiz: 超出块作用域并不会被调用只会在函数返回前调用
+		defer sgmReader.Close()
 	}
 
 	cpdir := checkpointDir(w.Dir(), to)
-	cpdirtmp := cpdir + ".tmp" // checkpoint.%08d.tmp ???
+	cpdirtmp := cpdir + ".tmp" // 21/03/15 22:49:12 Mark: checkpoint.%08d.tmp
 
 	if err := os.RemoveAll(cpdirtmp); err != nil {
 		return nil, errors.Wrap(err, "remove previous temporary checkpoint dir")
@@ -132,7 +133,7 @@ func Checkpoint(logger log.Logger, w *WAL, from, to int, keep func(id uint64) bo
 	if err := os.MkdirAll(cpdirtmp, 0777); err != nil {
 		return nil, errors.Wrap(err, "create checkpoint dir")
 	}
-	// 创建新WAL对象用于写检查点 ???
+	// 21/03/15 22:49:30 Mark: 创建新WAL对象用于写检查点
 	cp, err := New(nil, nil, cpdirtmp, w.CompressionEnabled())
 	if err != nil {
 		return nil, errors.Wrap(err, "open checkpoint")
@@ -273,17 +274,18 @@ func Checkpoint(logger log.Logger, w *WAL, from, to int, keep func(id uint64) bo
 	return stats, nil
 }
 
-// 创建检查点子目录全路径[index8位十进制] ???
+// 21/03/15 22:49:44 Mark: 创建检查点子目录全路径[index8位十进制]
 func checkpointDir(dir string, i int) string {
 	return filepath.Join(dir, fmt.Sprintf(checkpointPrefix+"%08d", i))
 }
 
 type checkpointRef struct {
-	name  string // 检查点目录名称 ???
+	name  string // 21/03/15 22:49:54 Mark: 检查点目录名称
 	index int
 }
 
-// 遍历指定目录下所有文件包括子目录筛选出符合检查点目录名称的子目录 ???
+// 21/03/15 22:50:04 Mark:
+// 遍历指定目录下所有文件包括子目录筛选出符合检查点目录名称的子目录
 func listCheckpoints(dir string) (refs []checkpointRef, err error) {
 	files, err := ioutil.ReadDir(dir)
 	if err != nil {
