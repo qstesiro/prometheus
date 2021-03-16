@@ -439,7 +439,7 @@ func (h *Head) updateMinMaxTime(mint, maxt int64) {
 }
 
 // 21/03/16 16:22:02 Quiz
-// 合适吗一个函数这么多代码可以拆分的
+// 函数这么多代码应该进一步拆分
 func (h *Head) loadWAL(r *wal.Reader, multiRef map[uint64]uint64, mmappedChunks map[uint64][]*mmappedChunk) (err error) {
 	// Track number of samples that referenced a series we don't know about
 	// for error reporting.
@@ -509,6 +509,8 @@ func (h *Head) loadWAL(r *wal.Reader, multiRef map[uint64]uint64, mmappedChunks 
 			rec := r.Record()
 			switch dec.Type(rec) {
 			case record.Series:
+				// 21/03/16 22:47:56 Mark
+				// 代码中多次使用此种处理方式节省空间且高效
 				series := seriesPool.Get().([]record.RefSeries)[:0]
 				series, err = dec.Series(rec, series)
 				if err != nil {
@@ -632,6 +634,8 @@ Outer:
 				}
 			}
 			//nolint:staticcheck // Ignore SA6002 relax staticcheck verification.
+			// 21/03/16 22:44:38 Quiz
+			// 不明白
 			tstonesPool.Put(v)
 		default:
 			panic(fmt.Errorf("unexpected decoded type: %T", d))
@@ -1124,6 +1128,7 @@ func (h *Head) appendableMinValidTime() int64 {
 	return max(h.minValidTime.Load(), h.MaxTime()-h.chunkRange.Load()/2)
 }
 
+// 21/03/16 23:22:18 Mark 哈哈
 func max(a, b int64) int64 {
 	if a > b {
 		return a
