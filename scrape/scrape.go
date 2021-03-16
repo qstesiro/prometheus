@@ -1114,7 +1114,8 @@ func (sl *scrapeLoop) scrapeAndReport(interval, timeout time.Duration, last, app
 	scrapeCtx, cancel := context.WithTimeout(sl.parentCtx, timeout)
 	contentType, scrapeErr = sl.scraper.scrape(scrapeCtx, buf)
 	cancel()
-	// 21/03/15 22:45:31 Mark: 测试使用
+	// 21/03/15 22:45:31 Mark
+	// 测试使用
 	_v := buf.String()
 	_ = _v
 	if scrapeErr == nil {
@@ -1395,7 +1396,8 @@ loop:
 	return
 }
 
-// 21/03/15 22:46:14 Quiz: 不直接使用string(b)估计效率更高
+// 21/03/15 22:46:14 Quiz
+// 不直接使用string(b)估计效率更高
 func yoloString(b []byte) string {
 	return *((*string)(unsafe.Pointer(&b)))
 }

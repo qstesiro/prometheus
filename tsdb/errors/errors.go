@@ -32,7 +32,8 @@ func NewMulti(errs ...error) multiError { // nolint:golint
 
 // Add adds single or many errors to the error list. Each error is added only if not nil.
 // If the error is a nonNilMultiError type, the errors inside nonNilMultiError are added to the main multiError.
-// 21/03/15 22:46:36 Mark: 内置slice,map最好使用值绑定
+// 21/03/15 22:46:36 Mark
+// 内置slice,map最好使用值绑定
 func (es *multiError) Add(errs ...error) {
 	for _, err := range errs {
 		if err == nil {
