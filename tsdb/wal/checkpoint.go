@@ -178,8 +178,13 @@ func Checkpoint(logger log.Logger, w *WAL, from, to int, keep func(id uint64) bo
 				return nil, errors.Wrap(err, "decode series")
 			}
 			// Drop irrelevant series in place.
+			// 21/03/16 14:42:28 Mark
+			// 这个用法妙使用相同内存空间
 			repl := series[:0]
 			for _, s := range series {
+				// 21/03/16 15:45:51 Quiz
+				// 这个keep函数用于判定是否要保留series
+				// 但是其具体内容没有看明白需要后续进一步分析
 				if keep(s.Ref) {
 					repl = append(repl, s)
 				}
@@ -196,6 +201,8 @@ func Checkpoint(logger log.Logger, w *WAL, from, to int, keep func(id uint64) bo
 				return nil, errors.Wrap(err, "decode samples")
 			}
 			// Drop irrelevant samples in place.
+			// 21/03/16 15:03:28 Mark
+			// 这个用法妙使用相同内存空间
 			repl := samples[:0]
 			for _, s := range samples {
 				if s.T >= mint {
@@ -214,6 +221,8 @@ func Checkpoint(logger log.Logger, w *WAL, from, to int, keep func(id uint64) bo
 				return nil, errors.Wrap(err, "decode deletes")
 			}
 			// Drop irrelevant tombstones in place.
+			// 21/03/16 15:03:48 Mark
+			// 这个用法妙使用相同内存空间
 			repl := tstones[:0]
 			for _, s := range tstones {
 				for _, iv := range s.Intervals {

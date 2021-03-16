@@ -123,6 +123,8 @@ func DefaultHeadOptions() *HeadOptions {
 	}
 }
 
+// 21/03/16 16:08:20 Mark
+// 记录Head运行时各种指标
 type headMetrics struct {
 	activeAppenders          prometheus.Gauge
 	series                   prometheus.GaugeFunc
@@ -436,6 +438,8 @@ func (h *Head) updateMinMaxTime(mint, maxt int64) {
 	}
 }
 
+// 21/03/16 16:22:02 Quiz
+// 合适吗一个函数这么多代码可以拆分的
 func (h *Head) loadWAL(r *wal.Reader, multiRef map[uint64]uint64, mmappedChunks map[uint64][]*mmappedChunk) (err error) {
 	// Track number of samples that referenced a series we don't know about
 	// for error reporting.
@@ -487,6 +491,8 @@ func (h *Head) loadWAL(r *wal.Reader, multiRef map[uint64]uint64, mmappedChunks 
 
 	wg.Add(n)
 	for i := 0; i < n; i++ {
+		// 21/03/16 16:33:39 Mark
+		// 使用300为什么不使用2^x
 		outputs[i] = make(chan []record.RefSample, 300)
 		inputs[i] = make(chan []record.RefSample, 300)
 
@@ -904,7 +910,6 @@ func (h *Head) truncateWAL(mint int64) error {
 	if last <= first {
 		return nil
 	}
-
 	keep := func(id uint64) bool {
 		if h.series.getByID(id) != nil {
 			return true
@@ -912,6 +917,8 @@ func (h *Head) truncateWAL(mint int64) error {
 		// 21/03/15 23:10:24 Mark
 		// 可以使用RWMutex
 		h.deletedMtx.Lock()
+		// 21/03/16 15:48:19 Quiz
+		// 不明白为什么要再判定deleted
 		_, ok := h.deleted[id]
 		h.deletedMtx.Unlock()
 		return ok
@@ -1176,7 +1183,9 @@ type headAppender struct {
 	closed                          bool
 }
 
-var _count = 0 // 测试使用 ???
+// 21/03/16 12:25:03 Mark
+// 测试使用
+var _count = 0
 
 func (a *headAppender) Append(ref uint64, lset labels.Labels, t int64, v float64) (uint64, error) {
 	if t < a.minValidTime {
@@ -1850,7 +1859,9 @@ func (m seriesHashmap) del(hash uint64, lset labels.Labels) {
 
 const (
 	// DefaultStripeSize is the default number of entries to allocate in the stripeSeries hash map.
-	DefaultStripeSize = 1 << 14 // 16K ???
+	// 21/03/16 12:25:39 Mark
+	// 16K
+	DefaultStripeSize = 1 << 14
 )
 
 // stripeSeries locks modulo ranges of IDs and hashes to reduce lock contention.
@@ -1868,6 +1879,8 @@ type stripeSeries struct {
 type stripeLock struct {
 	sync.RWMutex
 	// Padding to avoid multiple locks being on the same cache line.
+	// 21/03/16 13:59:26 Quiz
+	// 后续再分析
 	_ [40]byte
 }
 
