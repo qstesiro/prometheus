@@ -47,9 +47,9 @@ import (
 
 const (
 	// Default duration of a block in milliseconds.
+	// ??? 2h 毫秒为单位
 	DefaultBlockDuration = int64(2 * time.Hour / time.Millisecond)
-	// 21/03/15 22:52:32 Mark
-	// 测试
+	// ??? 测试
 	// DefaultBlockDuration = int64(10 * time.Second / time.Millisecond)
 
 	// Block dir suffixes to make deletion and creation operations atomic.
@@ -72,15 +72,15 @@ var (
 // millisecond precision timestamps.
 func DefaultOptions() *Options {
 	return &Options{
-		WALSegmentSize:            wal.DefaultSegmentSize,
-		RetentionDuration:         int64(15 * 24 * time.Hour / time.Millisecond),
-		MinBlockDuration:          DefaultBlockDuration,
-		MaxBlockDuration:          DefaultBlockDuration,
+		WALSegmentSize:            wal.DefaultSegmentSize,                        // ??? 128M
+		RetentionDuration:         int64(15 * 24 * time.Hour / time.Millisecond), // ??? 15d 毫秒为单位
+		MinBlockDuration:          DefaultBlockDuration,                          // ??? 2h 毫秒为单位
+		MaxBlockDuration:          DefaultBlockDuration,                          // ??? 2h 毫秒为单位
 		NoLockfile:                false,
 		AllowOverlappingBlocks:    false,
 		WALCompression:            false,
-		StripeSize:                DefaultStripeSize,
-		HeadChunksWriteBufferSize: chunks.DefaultWriteBufferSize,
+		StripeSize:                DefaultStripeSize,             // ??? 16K
+		HeadChunksWriteBufferSize: chunks.DefaultWriteBufferSize, // ??? 4M
 	}
 }
 

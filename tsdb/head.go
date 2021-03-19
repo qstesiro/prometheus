@@ -78,7 +78,7 @@ type Head struct {
 	deletedMtx sync.Mutex
 	// 21/03/15 23:23:55 Quiz
 	// deleted 记录被从Head中删除的series用于处理WAL创建Checkpoint
-	// 具体用法明天再解释
+	// 具体用法不明白
 	deleted map[uint64]int // Deleted series, and what WAL segment they must be kept until.
 
 	postings *index.MemPostings // Postings lists for terms.
@@ -114,11 +114,11 @@ type HeadOptions struct {
 
 func DefaultHeadOptions() *HeadOptions {
 	return &HeadOptions{
-		ChunkRange:           DefaultBlockDuration,
+		ChunkRange:           DefaultBlockDuration, // 21/03/17 23:39:20 Mark 2h
 		ChunkDirRoot:         "",
 		ChunkPool:            chunkenc.NewPool(),
-		ChunkWriteBufferSize: chunks.DefaultWriteBufferSize,
-		StripeSize:           DefaultStripeSize,
+		ChunkWriteBufferSize: chunks.DefaultWriteBufferSize, // ??? 4M
+		StripeSize:           DefaultStripeSize,             // ??? 16K
 		SeriesCallback:       &noopSeriesLifecycleCallback{},
 	}
 }
@@ -150,6 +150,8 @@ type headMetrics struct {
 	mmapChunkCorruptionTotal prometheus.Counter
 }
 
+// 21/03/17 23:08:27 Mark
+// 从学习prometheus指标相关库的角度来看源码是比较好的学习资料
 func newHeadMetrics(h *Head, r prometheus.Registerer) *headMetrics {
 	m := &headMetrics{
 		activeAppenders: prometheus.NewGauge(prometheus.GaugeOpts{
@@ -1864,8 +1866,7 @@ func (m seriesHashmap) del(hash uint64, lset labels.Labels) {
 
 const (
 	// DefaultStripeSize is the default number of entries to allocate in the stripeSeries hash map.
-	// 21/03/16 12:25:39 Mark
-	// 16K
+	// 21/03/16 12:25:39 Mark 16K
 	DefaultStripeSize = 1 << 14
 )
 

@@ -54,6 +54,9 @@
 # b storage.(*fanout).Querier
 # b tsdb.Open
 # b tsdb.(*DB).CompactHead
+b tsdb.(*noopSeriesLifecycleCallback).PreCreation
+b tsdb.(*noopSeriesLifecycleCallback).PostCreation
+b tsdb.(*noopSeriesLifecycleCallback).PostDeletion
 # b tsdb.(*Head).Truncate
 # b tsdb.(*Head).truncateMemory
 # b tsdb.(*Head).truncateWAL
@@ -82,7 +85,7 @@
 # cond 0d1206 _count == 353
 # b storage.(*fanoutAppender).Commit
 # b scrape.go:635
-b tsdb.(*headAppender).log
+# b tsdb.(*headAppender).log
 # b wal.(*WAL).Log
 # b wal.(*WAL).log
 # b record.(*Encoder).Series
