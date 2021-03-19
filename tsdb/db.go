@@ -660,12 +660,12 @@ func open(dir string, l log.Logger, r prometheus.Registerer, opts *Options, rngs
 	}
 
 	headOpts := DefaultHeadOptions()
-	headOpts.ChunkRange = rngs[0]
+	headOpts.ChunkRange = rngs[0] // ??? 2h
 	headOpts.ChunkDirRoot = dir
 	headOpts.ChunkPool = db.chunkPool
 	headOpts.ChunkWriteBufferSize = opts.HeadChunksWriteBufferSize
 	headOpts.StripeSize = opts.StripeSize
-	headOpts.SeriesCallback = opts.SeriesLifecycleCallback
+	headOpts.SeriesCallback = opts.SeriesLifecycleCallback // ??? 当前版本总是空
 	db.head, err = NewHead(r, l, wlog, headOpts)
 	if err != nil {
 		return nil, err
@@ -1595,6 +1595,10 @@ func isBlockDir(fi os.FileInfo) bool {
 }
 
 // isTmpBlockDir returns dir that consists of block dir ULID and tmp extension.
+// ???
+// 01F0QVNJAXF92BTEBSZVVFSA25.tmp-for-deletion
+// 01F0QVNJAXF92BTEBSZVVFSA25.tmp-for-creation
+// 01F0QVNJAXF92BTEBSZVVFSA25.tmp
 func isTmpBlockDir(fi os.FileInfo) bool {
 	if !fi.IsDir() {
 		return false
