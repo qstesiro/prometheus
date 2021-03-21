@@ -53,10 +53,13 @@
 # b wal.(*LiveReader).fillBuffer
 # b storage.(*fanout).Querier
 # b tsdb.Open
+b tsdb.open
+b tsdb.(*DB).reload
+b tsdb.(*DB).reloadBlocks
 # b tsdb.(*DB).CompactHead
-b tsdb.(*noopSeriesLifecycleCallback).PreCreation
-b tsdb.(*noopSeriesLifecycleCallback).PostCreation
-b tsdb.(*noopSeriesLifecycleCallback).PostDeletion
+# b tsdb.(*noopSeriesLifecycleCallback).PreCreation
+# b tsdb.(*noopSeriesLifecycleCallback).PostCreation
+# b tsdb.(*noopSeriesLifecycleCallback).PostDeletion
 # b tsdb.(*Head).Truncate
 # b tsdb.(*Head).truncateMemory
 # b tsdb.(*Head).truncateWAL

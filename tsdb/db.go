@@ -126,7 +126,7 @@ type Options struct {
 	// The maximum timestamp range of compacted blocks.
 	// Unit agnostic as long as unit is consistent with MinBlockDuration and RetentionDuration.
 	// Typically it is in milliseconds.
-	MaxBlockDuration int64
+	MaxBlockDuration int64 // ??? 实际传入 36h
 
 	// HeadChunksWriteBufferSize configures the write buffer size used by the head chunks mapper.
 	HeadChunksWriteBufferSize int
