@@ -47,6 +47,7 @@ import (
 
 const (
 	// Default duration of a block in milliseconds.
+	// ??? 2h 毫秒为单位
 	DefaultBlockDuration = int64(2 * time.Hour / time.Millisecond)
 	// ??? 测试
 	// DefaultBlockDuration = int64(10 * time.Second / time.Millisecond)
@@ -71,15 +72,15 @@ var (
 // millisecond precision timestamps.
 func DefaultOptions() *Options {
 	return &Options{
-		WALSegmentSize:            wal.DefaultSegmentSize,
-		RetentionDuration:         int64(15 * 24 * time.Hour / time.Millisecond),
-		MinBlockDuration:          DefaultBlockDuration,
-		MaxBlockDuration:          DefaultBlockDuration,
+		WALSegmentSize:            wal.DefaultSegmentSize,                        // ??? 128M
+		RetentionDuration:         int64(15 * 24 * time.Hour / time.Millisecond), // ??? 15d 毫秒为单位
+		MinBlockDuration:          DefaultBlockDuration,                          // ??? 2h 毫秒为单位
+		MaxBlockDuration:          DefaultBlockDuration,                          // ??? 2h 毫秒为单位
 		NoLockfile:                false,
 		AllowOverlappingBlocks:    false,
 		WALCompression:            false,
-		StripeSize:                DefaultStripeSize,
-		HeadChunksWriteBufferSize: chunks.DefaultWriteBufferSize,
+		StripeSize:                DefaultStripeSize,             // ??? 16K
+		HeadChunksWriteBufferSize: chunks.DefaultWriteBufferSize, // ??? 4M
 	}
 }
 
@@ -125,7 +126,7 @@ type Options struct {
 	// The maximum timestamp range of compacted blocks.
 	// Unit agnostic as long as unit is consistent with MinBlockDuration and RetentionDuration.
 	// Typically it is in milliseconds.
-	MaxBlockDuration int64
+	MaxBlockDuration int64 // ??? 实际传入 36h
 
 	// HeadChunksWriteBufferSize configures the write buffer size used by the head chunks mapper.
 	HeadChunksWriteBufferSize int
@@ -661,12 +662,12 @@ func open(dir string, l log.Logger, r prometheus.Registerer, opts *Options, rngs
 	}
 
 	headOpts := DefaultHeadOptions()
-	headOpts.ChunkRange = rngs[0]
+	headOpts.ChunkRange = rngs[0] // ??? 2h
 	headOpts.ChunkDirRoot = dir
 	headOpts.ChunkPool = db.chunkPool
 	headOpts.ChunkWriteBufferSize = opts.HeadChunksWriteBufferSize
 	headOpts.StripeSize = opts.StripeSize
-	headOpts.SeriesCallback = opts.SeriesLifecycleCallback
+	headOpts.SeriesCallback = opts.SeriesLifecycleCallback // ??? 当前版本总是空
 	db.head, err = NewHead(r, l, wlog, headOpts)
 	if err != nil {
 		return nil, err
@@ -989,6 +990,7 @@ func (db *DB) reloadBlocks() (err error) {
 	db.mtx.Lock()
 	defer db.mtx.Unlock()
 
+	// ??? corrupted 代表打开失败
 	loadable, corrupted, err := openBlocks(db.logger, db.dir, db.blocks, db.chunkPool)
 	if err != nil {
 		return err
@@ -1596,6 +1598,10 @@ func isBlockDir(fi os.FileInfo) bool {
 }
 
 // isTmpBlockDir returns dir that consists of block dir ULID and tmp extension.
+// ???
+// 01F0QVNJAXF92BTEBSZVVFSA25.tmp-for-deletion
+// 01F0QVNJAXF92BTEBSZVVFSA25.tmp-for-creation
+// 01F0QVNJAXF92BTEBSZVVFSA25.tmp
 func isTmpBlockDir(fi os.FileInfo) bool {
 	if !fi.IsDir() {
 		return false
