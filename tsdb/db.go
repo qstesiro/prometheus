@@ -996,12 +996,14 @@ func (db *DB) reloadBlocks() (err error) {
 		return err
 	}
 
+	// ??? 获取可删除块ULID(不包含值)
 	deletableULIDs := db.blocksToDelete(loadable)
 	deletable := make(map[ulid.ULID]*Block, len(deletableULIDs))
 
 	// Mark all parents of loaded blocks as deletable (no matter if they exists). This makes it resilient against the process
 	// crashing towards the end of a compaction but before deletions. By doing that, we can pick up the deletion where it left off during a crash.
 	for _, block := range loadable {
+		// ??? 设置可删除值
 		if _, ok := deletableULIDs[block.meta.ULID]; ok {
 			deletable[block.meta.ULID] = block
 		}
@@ -1010,10 +1012,11 @@ func (db *DB) reloadBlocks() (err error) {
 				delete(corrupted, b.ULID)
 				level.Warn(db.logger).Log("msg", "Found corrupted block, but replaced by compacted one so it's safe to delete. This should not happen with atomic deletes.", "block", b.ULID)
 			}
-			deletable[b.ULID] = nil
+			deletable[b.ULID] = nil // ??? 记录下父块后续再设置值 @2021-03-23T23:11:59
 		}
 	}
 
+	// ??? 存在已损坏的块准备退出
 	if len(corrupted) > 0 {
 		// Corrupted but no child loaded for it.
 		// Close all new blocks to release the lock for windows.
@@ -1036,11 +1039,13 @@ func (db *DB) reloadBlocks() (err error) {
 	// All deletable blocks should be unloaded.
 	// NOTE: We need to loop through loadable one more time as there might be loadable ready to be removed (replaced by compacted block).
 	for _, block := range loadable {
+		// ??? 为之前可记录的父设置值 @2021-03-23T23:12:06
 		if _, ok := deletable[block.Meta().ULID]; ok {
 			deletable[block.Meta().ULID] = block
 			continue
 		}
 
+		// ??? 记录真正可装载的块
 		toLoad = append(toLoad, block)
 		blocksSize += block.Size()
 	}
@@ -1068,6 +1073,7 @@ func (db *DB) reloadBlocks() (err error) {
 	}
 
 	// Append blocks to old, deletable blocks, so we can close them.
+	// ??? 感觉没有必要处理旧块了,loadable中记录data目录中所有块包含了的有旧块
 	for _, b := range oldBlocks {
 		if _, ok := deletable[b.Meta().ULID]; ok {
 			deletable[b.Meta().ULID] = b
