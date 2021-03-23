@@ -48,8 +48,7 @@ import (
 const (
 	// Default duration of a block in milliseconds.
 	DefaultBlockDuration = int64(2 * time.Hour / time.Millisecond)
-	// 21/03/15 22:52:32 Mark
-	// 测试
+	// ??? 测试
 	// DefaultBlockDuration = int64(10 * time.Second / time.Millisecond)
 
 	// Block dir suffixes to make deletion and creation operations atomic.
@@ -296,6 +295,7 @@ var ErrClosed = errors.New("db already closed")
 // DBReadOnly provides APIs for read only operations on a database.
 // Current implementation doesn't support concurrency so
 // all API calls should happen in the same go routine.
+// ??? ./cmd/promtool/tsdb.go:339
 type DBReadOnly struct {
 	logger  log.Logger
 	dir     string
@@ -564,6 +564,7 @@ func validateOpts(opts *Options, rngs []int64) (*Options, []int64) {
 	return opts, rngs
 }
 
+// ??? 返回值必须同时命名或不命名,可以使用_占位
 func open(dir string, l log.Logger, r prometheus.Registerer, opts *Options, rngs []int64) (_ *DB, returnedErr error) {
 	if err := os.MkdirAll(dir, 0777); err != nil {
 		return nil, err

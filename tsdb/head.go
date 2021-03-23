@@ -76,9 +76,7 @@ type Head struct {
 	symbols map[string]struct{}
 
 	deletedMtx sync.Mutex
-	// 21/03/15 23:23:55 Quiz
-	// deleted 记录被从Head中删除的series用于处理WAL创建Checkpoint
-	// 具体用法明天再解释
+	// ??? 记录被从Head中删除的series用于处理WAL创建Checkpoint
 	deleted map[uint64]int // Deleted series, and what WAL segment they must be kept until.
 
 	postings *index.MemPostings // Postings lists for terms.
@@ -123,8 +121,7 @@ func DefaultHeadOptions() *HeadOptions {
 	}
 }
 
-// 21/03/16 16:08:20 Mark
-// 记录Head运行时各种指标
+// ??? 记录Head运行时各种指标
 type headMetrics struct {
 	activeAppenders          prometheus.Gauge
 	series                   prometheus.GaugeFunc
