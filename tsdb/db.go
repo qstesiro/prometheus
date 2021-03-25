@@ -665,9 +665,9 @@ func open(dir string, l log.Logger, r prometheus.Registerer, opts *Options, rngs
 	headOpts.ChunkRange = rngs[0] // ??? 2h
 	headOpts.ChunkDirRoot = dir
 	headOpts.ChunkPool = db.chunkPool
-	headOpts.ChunkWriteBufferSize = opts.HeadChunksWriteBufferSize
-	headOpts.StripeSize = opts.StripeSize
-	headOpts.SeriesCallback = opts.SeriesLifecycleCallback // ??? 当前版本总是空
+	headOpts.ChunkWriteBufferSize = opts.HeadChunksWriteBufferSize // ??? 4k
+	headOpts.StripeSize = opts.StripeSize                          // ??? 16k
+	headOpts.SeriesCallback = opts.SeriesLifecycleCallback         // ??? 当前版本总是空
 	db.head, err = NewHead(r, l, wlog, headOpts)
 	if err != nil {
 		return nil, err
@@ -757,7 +757,7 @@ func (db *DB) run() {
 				level.Error(db.logger).Log("msg", "reloadBlocks", "err", err)
 			}
 			db.cmtx.Unlock()
-
+			// ???
 			select {
 			case db.compactc <- struct{}{}:
 			default:
@@ -1073,7 +1073,7 @@ func (db *DB) reloadBlocks() (err error) {
 	}
 
 	// Append blocks to old, deletable blocks, so we can close them.
-	// ??? 感觉没有必要处理旧块了,loadable中记录data目录中所有块包含了的有旧块
+	// ??? 感觉没有必要处理已装载的块了,loadable中记录data目录中所有块包含了已装载的块
 	for _, b := range oldBlocks {
 		if _, ok := deletable[b.Meta().ULID]; ok {
 			deletable[b.Meta().ULID] = b

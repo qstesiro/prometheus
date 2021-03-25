@@ -328,7 +328,7 @@ func NewHead(r prometheus.Registerer, l log.Logger, wal *wal.WAL, opts *HeadOpti
 		return nil, errors.Errorf("invalid chunk range %d", opts.ChunkRange)
 	}
 	if opts.SeriesCallback == nil {
-		opts.SeriesCallback = &noopSeriesLifecycleCallback{}
+		opts.SeriesCallback = &noopSeriesLifecycleCallback{} // 总是设置为空
 	}
 	h := &Head{
 		wal:        wal,
@@ -438,7 +438,6 @@ func (h *Head) updateMinMaxTime(mint, maxt int64) {
 	}
 }
 
-// 21/03/16 16:22:02 Quiz
 // 函数这么多代码应该进一步拆分
 func (h *Head) loadWAL(r *wal.Reader, multiRef map[uint64]uint64, mmappedChunks map[uint64][]*mmappedChunk) (err error) {
 	// Track number of samples that referenced a series we don't know about
@@ -1881,7 +1880,18 @@ type stripeSeries struct {
 }
 
 type stripeLock struct {
-	sync.RWMutex
+	// type Mutex struct {
+	//     key int32;
+	//     sema int32;
+	// }
+	// type RWMutex struct {
+	//     w           Mutex  // held if there are pending writers
+	//     writerSem   uint32 // semaphore for writers to wait for completing readers
+	//     readerSem   uint32 // semaphore for readers to wait for completing writers
+	//     readerCount int32  // number of pending readers
+	//     readerWait  int32  // number of departing readers
+	// }
+	sync.RWMutex // 24byte
 	// Padding to avoid multiple locks being on the same cache line.
 	// 21/03/16 13:59:26 Quiz
 	// 后续再分析
