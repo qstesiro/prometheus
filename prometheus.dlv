@@ -53,10 +53,11 @@
 # b wal.(*LiveReader).fillBuffer
 # b storage.(*fanout).Querier
 # b tsdb.Open
-b tsdb.open
-b tsdb.(*DB).reload
-b tsdb.(*DB).reloadBlocks
-b tsdb.openBlocks
+# b tsdb.open
+# b tsdb.(*DB).reload
+# b tsdb.(*DB).reloadBlocks
+# b tsdb.openBlocks
+b tsdb.newStripeSeries
 # b tsdb.(*DB).CompactHead
 # b tsdb.(*noopSeriesLifecycleCallback).PreCreation
 # b tsdb.(*noopSeriesLifecycleCallback).PostCreation
@@ -82,7 +83,8 @@ b tsdb.openBlocks
 # b scrape.(*targetScraper).scrape
 # b scrape.(*scrapeLoop).append
 # b scrape.go:1341
-# b tsdb.(*headAppender).Append
+b tsdb.(*headAppender).Append
+b chunkenc.(*xorAppender).Append
 # b 0d1184 head.go:1184
 # cond 0d1184 s != nil
 # b 0d1206 head.go:1206
