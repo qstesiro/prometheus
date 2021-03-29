@@ -84,7 +84,7 @@ b tsdb.newStripeSeries
 # b scrape.(*scrapeLoop).append
 # b scrape.go:1341
 b tsdb.(*headAppender).Append
-b chunkenc.(*xorAppender).Append
+# b chunkenc.(*xorAppender).Append
 # b 0d1184 head.go:1184
 # cond 0d1184 s != nil
 # b 0d1206 head.go:1206
