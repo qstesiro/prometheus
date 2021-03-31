@@ -1,4 +1,5 @@
 # b main.main
+
 # web handler
 # b prometheus/main.go:156
 # b prometheus/main.go:458
@@ -29,6 +30,8 @@
 # b web.go:384
 # b web.go:175
 # b web.(*metrics).instrumentHandler
+
+# remote storage
 # b remote.NewStorage
 # b remote.NewWriteStorage
 # b remote.(*Storage).ApplyConfig
@@ -42,6 +45,8 @@
 # b remote.(*WriteStorage).ApplyConfig
 # b remote.(*QueueManager).Append
 # b remote.(*Client).Store
+
+# wal
 # b wal.NewWatcher
 # b wal.(*Watcher).Start
 # b wal.(*Watcher).loop
@@ -51,6 +56,7 @@
 # b wal.(*LiveReader).buildRecord
 # b wal.(*LiveReader).readRecord
 # b wal.(*LiveReader).fillBuffer
+
 # b storage.(*fanout).Querier
 # b tsdb.Open
 # b tsdb.open
@@ -62,10 +68,23 @@ b tsdb.newStripeSeries
 # b tsdb.(*noopSeriesLifecycleCallback).PreCreation
 # b tsdb.(*noopSeriesLifecycleCallback).PostCreation
 # b tsdb.(*noopSeriesLifecycleCallback).PostDeletion
+
+# b tsdb.NewHead
+# b tsdb.(*Head).getOrCreateWithID
 # b tsdb.(*Head).Truncate
 # b tsdb.(*Head).truncateMemory
 # b tsdb.(*Head).truncateWAL
 # b tsdb.(*Head).gc
+
+# headAppender
+b tsdb.(*headAppender).Append
+b tsdb.(*headAppender).Commit
+
+# memSeries
+# b tsdb.newMemSeries
+# b tsdb.(*memSeries).append
+# b tsdb.(*memSeries).cutNewHeadChunk
+
 # b chunks.(*ChunkDiskMapper).Truncate
 # b tsdb.NewBlockQuerier
 # b tsdb.newBlockBaseQuerier
@@ -73,22 +92,26 @@ b tsdb.newStripeSeries
 # b tsdb.(*blockBaseQuerier).LabelValues
 # b tsdb.(*blockBaseQuerier).LabelNames
 # b tsdb.(*blockQuerier).Close
+
 # b remote.(*querier).Select
 # b remote.(*querier).LabelValues
 # b remote.(*querier).LabelNames
 # b remote.(*querier).Close
+
 # b scrape.(*scrapeLoop).scrapeAndReport
 # b scrape.go:1118
 # b scrape.go:1086
 # b scrape.(*targetScraper).scrape
 # b scrape.(*scrapeLoop).append
 # b scrape.go:1341
-b tsdb.(*headAppender).Append
+
 # b chunkenc.(*xorAppender).Append
-# b 0d1184 head.go:1184
-# cond 0d1184 s != nil
-# b 0d1206 head.go:1206
-# cond 0d1206 _count == 353
+# b @1184 head.go:1184
+# cond @1184 s != nil
+
+# b @1206 head.go:1206
+# cond @1206 _count == 353
+
 # b storage.(*fanoutAppender).Commit
 # b scrape.go:635
 # b tsdb.(*headAppender).log
@@ -97,4 +120,5 @@ b tsdb.(*headAppender).Append
 # b record.(*Encoder).Series
 # b record.(*Encoder).Samples
 # b record.(*Encoder).Tombstones
+
 g

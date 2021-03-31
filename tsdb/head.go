@@ -1174,6 +1174,7 @@ func (h *Head) putBytesBuffer(b []byte) {
 	h.bytesPool.Put(b[:0])
 }
 
+// 实现storage.Appender
 type headAppender struct {
 	head         *Head
 	minValidTime int64 // No samples below this timestamp are allowed.
