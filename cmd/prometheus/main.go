@@ -223,7 +223,8 @@ func main() {
 		Default("data/").StringVar(&cfg.localStoragePath)
 
 	a.Flag("storage.tsdb.min-block-duration", "Minimum duration of a data block before being persisted. For use in testing.").
-		Hidden().Default("2h").SetValue(&cfg.tsdb.MinBlockDuration)
+		// Hidden().Default("2h").SetValue(&cfg.tsdb.MinBlockDuration)
+		Hidden().Default("5s").SetValue(&cfg.tsdb.MinBlockDuration) // ??? for debug
 
 	a.Flag("storage.tsdb.max-block-duration",
 		"Maximum duration compacted blocks may span. For use in testing. (Defaults to 10% of the retention period.)").
