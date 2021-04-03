@@ -1,6 +1,6 @@
 alias gob='go build -v -gcflags "all=-N -l" -o prometheus cmd/prometheus/main.go'
-alias dlv='gob && dlv exec ./prometheus --init ./prometheus.dlv -- --config.file=documentation/examples/prometheus.yml'
-rm data/wal/* && dlv
+alias dlv='gob && rm -rf data/ && dlv exec ./prometheus --init ./prometheus.dlv -- --config.file=documentation/examples/prometheus.yml'
+rm -rf data/ && dlv
 
 0  0x0000000002c196fb in github.com/prometheus/prometheus/tsdb.(*headAppender).Append
    at ./tsdb/head.go:1195

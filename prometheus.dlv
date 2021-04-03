@@ -70,6 +70,7 @@
 # b tsdb.(*noopSeriesLifecycleCallback).PostDeletion
 
 # b tsdb.NewHead
+b tsdb.NewHead
 # b tsdb.(*Head).getOrCreateWithID
 # b tsdb.(*Head).Truncate
 # b tsdb.(*Head).truncateMemory

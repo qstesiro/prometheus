@@ -1192,6 +1192,7 @@ type headAppender struct {
 // 测试使用
 var _count = 0
 
+// storage.Appender
 func (a *headAppender) Append(ref uint64, lset labels.Labels, t int64, v float64) (uint64, error) {
 	if t < a.minValidTime {
 		a.head.metrics.outOfBoundSamples.Inc()
@@ -1284,6 +1285,7 @@ func (a *headAppender) log() error {
 	return nil
 }
 
+// storage.Appender
 func (a *headAppender) Commit() (err error) {
 	if a.closed {
 		return ErrAppenderClosed
@@ -1326,6 +1328,7 @@ func (a *headAppender) Commit() (err error) {
 	return nil
 }
 
+// storage.Appender
 func (a *headAppender) Rollback() (err error) {
 	if a.closed {
 		return ErrAppenderClosed
