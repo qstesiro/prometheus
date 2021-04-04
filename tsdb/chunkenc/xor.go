@@ -54,6 +54,7 @@ const (
 )
 
 // XORChunk holds XOR encoded sample data.
+// 实现Chunk接口
 type XORChunk struct {
 	b bstream
 }

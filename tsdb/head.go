@@ -2061,9 +2061,9 @@ type memSeries struct {
 	chunkRange    int64
 	firstChunkID  int
 
-	nextAt        int64 // Timestamp at which to cut the next chunk.
-	sampleBuf     [4]sample
-	pendingCommit bool // Whether there are samples waiting to be committed to this series.
+	nextAt        int64     // Timestamp at which to cut the next chunk.
+	sampleBuf     [4]sample // 记录最新写入headChunk的4个采样[具体作用还没有看明白] ???
+	pendingCommit bool      // Whether there are samples waiting to be committed to this series.
 
 	app chunkenc.Appender // Current appender for the chunk.
 
@@ -2264,7 +2264,7 @@ func (s *memSeries) append(t int64, v float64, appendID uint64, chunkDiskMapper 
 	}
 	s.app.Append(t, v)
 
-	c.maxTime = t
+	c.maxTime = t // 代表当前头采样的最新时间
 
 	s.sampleBuf[0] = s.sampleBuf[1]
 	s.sampleBuf[1] = s.sampleBuf[2]
@@ -2410,6 +2410,7 @@ type memChunk struct {
 
 // OverlapsClosedInterval returns true if the chunk overlaps [mint, maxt].
 func (mc *memChunk) OverlapsClosedInterval(mint, maxt int64) bool {
+	// !(mc.mint > maxt || mint > mc.maxt) 无交集[不重叠]
 	return mc.minTime <= maxt && mint <= mc.maxTime
 }
 
@@ -2461,6 +2462,7 @@ type mmappedChunk struct {
 
 // Returns true if the chunk overlaps [mint, maxt].
 func (mc *mmappedChunk) OverlapsClosedInterval(mint, maxt int64) bool {
+	// !(mc.minTime > maxt || mint > mc.maxTime) 无交集[不重叠]
 	return mc.minTime <= maxt && mint <= mc.maxTime
 }
 

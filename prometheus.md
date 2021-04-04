@@ -740,9 +740,11 @@ promhttp_metric_handler_requests_total{code="503"} 0
 11  0x000000000047cf81 in runtime.goexit
     at /home/qstesiro/ext/go/src/runtime/asm_amd64.s:1371
 
-memChunk/mmappedChunk区别
+memChunk/mmappedChunk区别 !!!
 if numSamples == samplesPerChunk/4 {
-memSeries.head.maxTime
-memSeries.sampleBuf[4]
+memSeries.head.maxTime !!!
+memSeries.sampleBuf[4] !!!
 emacs正则
-color配制
+color配制 !!!
+ChunkDiskMapper ???
+emacs curor ???

@@ -70,7 +70,7 @@
 # b tsdb.(*noopSeriesLifecycleCallback).PostDeletion
 
 # b tsdb.NewHead
-b tsdb.NewHead
+# b tsdb.NewHead
 # b tsdb.(*Head).getOrCreateWithID
 # b tsdb.(*Head).Truncate
 # b tsdb.(*Head).truncateMemory
@@ -81,9 +81,9 @@ b tsdb.NewHead
 b tsdb.(*headAppender).Commit
 
 # b tsdb.newMemSeries
-# b tsdb.(*memSeries).append
+b tsdb.(*memSeries).append
 # b tsdb.(*memSeries).cutNewHeadChunk
-b head.go:2259
+# b head.go:2259
 
 # b chunks.(*ChunkDiskMapper).Truncate
 # b tsdb.NewBlockQuerier
