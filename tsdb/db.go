@@ -938,7 +938,7 @@ func (db *DB) compactBlocks() (err error) {
 			return errors.Wrapf(err, "compact %s", plan)
 		}
 
-		if err := db.reloadBlocks(); err != nil {
+		if err := db.reloadBlocks(); err != nil { // 重新装载
 			if err := os.RemoveAll(filepath.Join(db.dir, uid.String())); err != nil {
 				return errors.Wrapf(err, "delete compacted block after failed db reloadBlocks:%s", uid)
 			}

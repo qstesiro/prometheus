@@ -64,6 +64,9 @@
 # b tsdb.(*DB).reloadBlocks
 # b tsdb.openBlocks
 # b tsdb.newStripeSeries
+b tsdb.(*DB).Compact
+b tsdb.(*DB).compactHead
+b tsdb.(*DB).compactBlocks
 # b tsdb.(*DB).CompactHead
 # b tsdb.(*noopSeriesLifecycleCallback).PreCreation
 # b tsdb.(*noopSeriesLifecycleCallback).PostCreation
@@ -78,12 +81,14 @@
 # b tsdb.(*Head).gc
 
 # b tsdb.(*headAppender).Append
-b tsdb.(*headAppender).Commit
+# b tsdb.(*headAppender).Commit
 
 # b tsdb.newMemSeries
-b tsdb.(*memSeries).append
+# b tsdb.(*memSeries).append
 # b tsdb.(*memSeries).cutNewHeadChunk
-# b head.go:2259
+# b head.go:2262
+
+# b chunks.(*ChunkDiskMapper).cut
 
 # b chunks.(*ChunkDiskMapper).Truncate
 # b tsdb.NewBlockQuerier

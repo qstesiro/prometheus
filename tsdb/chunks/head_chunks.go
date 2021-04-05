@@ -183,7 +183,7 @@ func (cdm *ChunkDiskMapper) openMMapFiles() (returnErr error) {
 
 	chkFileIndices := make([]int, 0, len(files))
 	for seq, fn := range files {
-		f, err := fileutil.OpenMmapFile(fn)
+		f, err := fileutil.OpenMmapFile(fn) // ???
 		if err != nil {
 			return errors.Wrapf(err, "mmap files, file: %s", fn)
 		}
@@ -205,6 +205,7 @@ func (cdm *ChunkDiskMapper) openMMapFiles() (returnErr error) {
 		lastSeq = seq
 	}
 
+	// 验证size,magic,version
 	for i, b := range cdm.mmappedChunkFiles {
 		if b.byteSlice.Len() < HeadChunkFileHeaderSize {
 			return errors.Wrapf(errInvalidSize, "%s: invalid head chunk file header", files[i])
