@@ -744,8 +744,8 @@ memChunk/mmappedChunk区别 !!!
 if numSamples == samplesPerChunk/4 {
 memSeries.head.maxTime !!!
 memSeries.sampleBuf[4] !!!
-emacs正则
+emacs正则 !!!
 color配制 !!!
 ChunkDiskMapper ???
-emacs curor ???
+emacs curor !!!
 fileutil ???
