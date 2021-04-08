@@ -1,3 +1,12 @@
+git config --local http.proxy https://192.168.56.1:4780
+git config --local http.proxy socks5://192.168.56.1:4781
+
+git config --local --unset http.proxy
+git config --local --unset http.proxy
+
+git config --global -l
+git config --local -l
+
 alias gob='go build -v -gcflags "all=-N -l" -o prometheus cmd/prometheus/main.go'
 alias dlv='gob && rm -rf data/ && dlv exec ./prometheus --init ./prometheus.dlv -- --config.file=documentation/examples/prometheus.yml'
 rm -rf data/ && dlv
