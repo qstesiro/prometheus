@@ -439,6 +439,7 @@ func (h *Head) updateMinMaxTime(mint, maxt int64) {
 }
 
 // 函数这么多代码应该进一步拆分
+// 内部调用updateMinMaxTime更新区间
 func (h *Head) loadWAL(r *wal.Reader, multiRef map[uint64]uint64, mmappedChunks map[uint64][]*mmappedChunk) (err error) {
 	// Track number of samples that referenced a series we don't know about
 	// for error reporting.
@@ -675,6 +676,7 @@ Outer:
 func (h *Head) Init(minValidTime int64) error {
 	h.minValidTime.Store(minValidTime)
 	defer h.postings.EnsureOrder()
+	// loadWAL保证区间已更新
 	defer h.gc() // After loading the wal remove the obsolete data from the head.
 
 	level.Info(h.logger).Log("msg", "Replaying on-disk memory mappable chunks if any")
@@ -843,7 +845,7 @@ func (h *Head) truncateMemory(mint int64) (err error) {
 	if h.MinTime() >= mint && !initialize {
 		return nil
 	}
-	h.minTime.Store(mint)
+	h.minTime.Store(mint) // 区间更新
 	h.minValidTime.Store(mint)
 
 	// Ensure that max time is at least as high as min time.
@@ -1405,6 +1407,7 @@ func (h *Head) gc() int64 {
 
 	// Drop old chunks and remember series IDs and hashes if they can be
 	// deleted entirely.
+	// 所有chunks(包括headChunk)都小于minTime的serie应该被删除
 	deleted, chunksRemoved, actualMint := h.series.gc(mint)
 	seriesRemoved := len(deleted)
 
@@ -1939,6 +1942,7 @@ func (s *stripeSeries) gc(mint int64) (map[uint64]struct{}, int, int64) {
 				series.Lock()
 				rmChunks += series.truncateChunksBefore(mint)
 
+				// 还有chunk数据大(等)于的series保留
 				if len(series.mmappedChunks) > 0 || series.headChunk != nil || series.pendingCommit {
 					seriesMint := series.minTime()
 					if seriesMint < actualMint {
@@ -1948,6 +1952,7 @@ func (s *stripeSeries) gc(mint int64) (map[uint64]struct{}, int, int64) {
 					continue
 				}
 
+				// 所有chunks(包括headChunk)都小于minTime的serie应该被删除
 				// The series is gone entirely. We need to keep the series lock
 				// and make sure we have acquired the stripe locks for hash and ID of the
 				// series alike.
