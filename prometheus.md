@@ -1,10 +1,11 @@
-git config --local http.proxy https://192.168.56.1:4780
-git config --local http.proxy socks5://192.168.56.1:4781
+git config --local http.proxy http://192.168.56.1:4780
+git config --local https.proxy https://192.168.56.1:4780
+git config --local https.proxy socks5://192.168.56.1:4781
+git config --local https.proxy socks5://192.168.56.1:4781
 
 git config --local --unset http.proxy
 git config --local --unset http.proxy
 
-git config --global -l
 git config --local -l
 
 alias gob='go build -v -gcflags "all=-N -l" -o prometheus cmd/prometheus/main.go'
