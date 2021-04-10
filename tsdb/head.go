@@ -1003,6 +1003,7 @@ type RangeHead struct {
 }
 
 // NewRangeHead returns a *RangeHead.
+// 实现BlockReader接口
 func NewRangeHead(head *Head, mint, maxt int64) *RangeHead {
 	return &RangeHead{
 		head: head,

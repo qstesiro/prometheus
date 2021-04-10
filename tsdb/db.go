@@ -833,6 +833,7 @@ func (db *DB) Compact() (returnErr error) {
 	start := time.Now()
 	// Check whether we have pending head blocks that are ready to be persisted.
 	// They have the highest priority.
+	// 压缩头
 	for {
 		select {
 		case <-db.stopc:
@@ -873,6 +874,7 @@ func (db *DB) Compact() (returnErr error) {
 			"block_range", db.head.chunkRange.Load(),
 		)
 	}
+	// 压缩与合并块
 	return db.compactBlocks()
 }
 
