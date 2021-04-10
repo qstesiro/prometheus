@@ -58,6 +58,7 @@ type Compactor interface {
 	// Plan returns a set of directories that can be compacted concurrently.
 	// The directories can be overlapping.
 	// Results returned when compactions are in progress are undefined.
+	// 不能并行 ???
 	Plan(dir string) ([]string, error)
 
 	// Write persists a Block into a directory.
