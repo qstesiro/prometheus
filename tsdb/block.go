@@ -119,6 +119,7 @@ type ChunkReader interface {
 }
 
 // BlockReader provides reading access to a data block.
+// 没有BlockWriter ???
 type BlockReader interface {
 	// Index returns an IndexReader over the block's data.
 	Index() (IndexReader, error)

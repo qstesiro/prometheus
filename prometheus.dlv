@@ -64,9 +64,9 @@
 # b tsdb.(*DB).reloadBlocks
 # b tsdb.openBlocks
 # b tsdb.newStripeSeries
-b tsdb.(*DB).Compact
+# b tsdb.(*DB).Compact
 b tsdb.(*DB).compactHead
-b tsdb.(*DB).compactBlocks
+# b tsdb.(*DB).compactBlocks
 # b tsdb.(*DB).CompactHead
 # b tsdb.(*noopSeriesLifecycleCallback).PreCreation
 # b tsdb.(*noopSeriesLifecycleCallback).PostCreation

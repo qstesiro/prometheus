@@ -695,6 +695,7 @@ func (cdm *ChunkDiskMapper) IterateAllChunks(f func(seriesRef, chunkRef uint64, 
 
 // Truncate deletes the head chunk files which are strictly below the mint.
 // mint should be in milliseconds.
+// 删除已经被合并(mmappedChunkFiles.maxt < mint)文件(head_chunks目录中)
 func (cdm *ChunkDiskMapper) Truncate(mint int64) error {
 	if !cdm.fileMaxtSet {
 		return errors.New("maxt of the files are not set")

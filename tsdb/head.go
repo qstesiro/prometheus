@@ -73,13 +73,14 @@ type Head struct {
 	series *stripeSeries
 
 	symMtx  sync.RWMutex
-	symbols map[string]struct{}
+	symbols map[string]struct{} // 记录Symbols为headIndexReader
 
 	deletedMtx sync.Mutex
 
 	// ??? deleted 记录被从Head中删除的series用于处理WAL创建Checkpoint具体用法不明白
 	deleted map[uint64]int // Deleted series, and what WAL segment they must be kept until.
 
+	// 记录Postings为headIndexReader
 	postings *index.MemPostings // Postings lists for terms.
 
 	tombstones *tombstones.MemTombstones
@@ -1670,6 +1671,8 @@ func (h *headIndexReader) SortedLabelValues(name string, matchers ...*labels.Mat
 // If matchers are specified the returned result set is reduced
 // to label values of metrics matching the matchers.
 func (h *headIndexReader) LabelValues(name string, matchers ...*labels.Matcher) ([]string, error) {
+	// !(h.maxt >= h.head.MinTime() && h.mint <= head.MaxTime())
+	// 已经出现至少三次可以封装成函数 ???
 	if h.maxt < h.head.MinTime() || h.mint > h.head.MaxTime() {
 		return []string{}, nil
 	}
@@ -1687,6 +1690,7 @@ func (h *headIndexReader) LabelValues(name string, matchers ...*labels.Matcher) 
 // that are within the time range mint to maxt.
 func (h *headIndexReader) LabelNames() ([]string, error) {
 	h.head.symMtx.RLock()
+	// !(h.maxt >= h.head.MinTime() && h.mint <= head.MaxTime())
 	if h.maxt < h.head.MinTime() || h.mint > h.head.MaxTime() {
 		h.head.symMtx.RUnlock()
 		return []string{}, nil
