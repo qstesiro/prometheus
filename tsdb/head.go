@@ -1792,6 +1792,7 @@ func (h *headIndexReader) LabelValueFor(id uint64, label string) (string, error)
 	return value, nil
 }
 
+// hash = labels.Labels.Hash()
 func (h *Head) getOrCreate(hash uint64, lset labels.Labels) (*memSeries, bool, error) {
 	// Just using `getOrSet` below would be semantically sufficient, but we'd create
 	// a new series on every sample inserted via Add(), which causes allocations
@@ -1802,6 +1803,7 @@ func (h *Head) getOrCreate(hash uint64, lset labels.Labels) (*memSeries, bool, e
 	}
 
 	// Optimistically assume that we are the first one to create the series.
+	// 其实就是单调递增
 	id := h.lastSeriesID.Inc()
 
 	return h.getOrCreateWithID(id, hash, lset)
