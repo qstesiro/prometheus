@@ -126,4 +126,8 @@ b tsdb.(*DB).compactHead
 # b record.(*Encoder).Samples
 # b record.(*Encoder).Tombstones
 
+b index.NewMemPostings
+b index.NewUnorderedMemPostings
+b index.(*MemPostings).Add
+
 g

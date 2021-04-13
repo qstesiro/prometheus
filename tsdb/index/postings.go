@@ -27,6 +27,8 @@ import (
 var allPostingsKey = labels.Label{}
 
 // AllPostingsKey returns the label key that is used to store the postings list of all existing IDs.
+// 这种存储方式有点怪,脑回路清奇
+// 直接存储于一个列表多好 ???
 func AllPostingsKey() (name, value string) {
 	return allPostingsKey.Name, allPostingsKey.Value
 }
@@ -323,6 +325,7 @@ func (p *MemPostings) addFor(id uint64, l labels.Label) {
 	// be generated independently before adding them to postings.
 	// We repair order violations on insert. The invariant is that the first n-1
 	// items in the list are already sorted.
+	// 插入排序 ???
 	for i := len(list) - 1; i >= 1; i-- {
 		if list[i] >= list[i-1] {
 			break
@@ -683,6 +686,7 @@ func NewListPostings(list []uint64) Postings {
 	return newListPostings(list...)
 }
 
+// 会产生复制 ???
 func newListPostings(list ...uint64) *ListPostings {
 	return &ListPostings{list: list}
 }

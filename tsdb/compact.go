@@ -748,6 +748,7 @@ func (c *LeveledCompactor) populateBlock(blocks []BlockReader, meta *BlockMeta, 
 
 	// Iterate over all sorted chunk series.
 	for set.Next() {
+		// 多次出现可以封装成函数 ???
 		select {
 		case <-c.ctx.Done():
 			return c.ctx.Err()
