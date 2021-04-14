@@ -359,6 +359,7 @@ func (w *Writer) ensureStage(s indexWriterStage) error {
 	}
 
 	// Mark start of sections in table of contents.
+	// 偏移设置穿插于其中 ???
 	switch s {
 	case idxStageSymbols:
 		w.toc.Symbols = w.f.pos
@@ -414,6 +415,7 @@ func (w *Writer) writeMeta() error {
 }
 
 // AddSeries adds the series one at a time along with its chunks.
+// 写入Series部分
 func (w *Writer) AddSeries(ref uint64, lset labels.Labels, chunks ...chunks.Meta) error {
 	if err := w.ensureStage(idxStageSeries); err != nil {
 		return err
@@ -508,6 +510,7 @@ func (w *Writer) startSymbols() error {
 	return w.write([]byte("alenblen"))
 }
 
+// 写符号表
 func (w *Writer) AddSymbol(sym string) error {
 	if err := w.ensureStage(idxStageSymbols); err != nil {
 		return err
@@ -534,6 +537,7 @@ func (w *Writer) finishSymbols() error {
 	hashPos := w.f.pos
 	// Leave space for the hash. We can only calculate it
 	// now that the number of symbols is known, so mmap and do it from there.
+	// 占位4字节
 	if err := w.write([]byte("hash")); err != nil {
 		return err
 	}
@@ -796,6 +800,8 @@ func (w *Writer) writeTOC() error {
 	return w.write(w.buf1.Get())
 }
 
+// 此函数认知复杂度太高了 ???
+// 主要是在 Temporary file for posting offsets table 中记录一些临时数据
 func (w *Writer) writePostingsToTmpFiles() error {
 	names := make([]string, 0, len(w.labelNames))
 	for n := range w.labelNames {
@@ -813,23 +819,43 @@ func (w *Writer) writePostingsToTmpFiles() error {
 	defer f.Close()
 
 	// Write out the special all posting.
+	// 获取序列区中的每个序列偏移
 	offsets := []uint32{}
-	d := encoding.NewDecbufRaw(realByteSlice(f.Bytes()), int(w.toc.LabelIndices))
-	d.Skip(int(w.toc.Series))
+	d := encoding.NewDecbufRaw(realByteSlice(f.Bytes()), int(w.toc.LabelIndices)) // 解码符号与序列
+	d.Skip(int(w.toc.Series))                                                     // 跳过符号偏移到序列
 	for d.Len() > 0 {
 		d.ConsumePadding()
 		startPos := w.toc.LabelIndices - uint64(d.Len())
 		if startPos%16 != 0 {
 			return errors.Errorf("series not 16-byte aligned at %d", startPos)
 		}
-		offsets = append(offsets, uint32(startPos/16))
+		offsets = append(offsets, uint32(startPos/16)) // ??? 为什么除16,用时再乘
 		// Skip to next series.
-		x := d.Uvarint()
-		d.Skip(x + crc32.Size)
+		x := d.Uvarint()       // 序列长度
+		d.Skip(x + crc32.Size) // 加CRC32的4字节
 		if err := d.Err(); err != nil {
 			return err
 		}
 	}
+	// 此处只在临时文件中记录以下内容
+	// ┌─────────────────────┬──────────────────────┐
+	// │ len <4b>            │ #entries <4b>        │
+	// ├─────────────────────┴──────────────────────┤
+	// │ ┌────────────────────────────────────────┐ │
+	// │ │  n = 2 <1b>                            │ │
+	// │ ├──────────────────────┬─────────────────┤ │
+	// │ │ len("") <uvarint>    │ "" <bytes>      │ │
+	// │ ├──────────────────────┼─────────────────┤ │
+	// │ │ len("") <uvarint>    │ "" <bytes>      │ │
+	// │ ├──────────────────────┴─────────────────┤ │
+	// │ │  offset_0 <uvarint64>                  │ │
+	// │ │  offset_1 <uvarint64>                  │ │
+	// │ │  offset_n <uvarint64>                  │ │
+	// │ └────────────────────────────────────────┘ │
+	// ├────────────────────────────────────────────┤
+	// │  CRC32 <4b>                                │
+	// └────────────────────────────────────────────┘
+	// 此函数是记录Postings Offset Table这函数名无语
 	if err := w.writePosting("", "", offsets); err != nil {
 		return err
 	}
@@ -895,7 +921,7 @@ func (w *Writer) writePostingsToTmpFiles() error {
 				return err
 			}
 			values := make([]uint32, 0, len(postings[sid]))
-			for v := range postings[sid] {
+			for v := range postings[sid] { // 新语法知识 ???
 				values = append(values, v)
 
 			}
@@ -906,6 +932,38 @@ func (w *Writer) writePostingsToTmpFiles() error {
 				if err != nil {
 					return err
 				}
+				// 临时文件中记录以下内容
+				// ┌─────────────────────┬──────────────────────┐
+				// │ len <4b>            │ #entries <4b>        │
+				// ├─────────────────────┴──────────────────────┤
+				// │ ┌────────────────────────────────────────┐ │
+				// │ │  n = 2 <1b>                            │ │
+				// │ ├──────────────────────┬─────────────────┤ │
+				// │ │ len("") <uvarint>    │ "" <bytes>      │ │
+				// │ ├──────────────────────┼─────────────────┤ │
+				// │ │ len("") <uvarint>    │ "" <bytes>      │ │
+				// │ ├──────────────────────┴─────────────────┤ │
+				// │ │  offset_0 <uvarint64>                  │ │
+				// │ │  offset_1 <uvarint64>                  │ │
+				// │ │  offset_n <uvarint64>                  │ │
+				// │ └────────────────────────────────────────┘ │
+				// ├────────────────────────────────────────────┤
+				// │  padding <optional>                        │
+				// ├────────────────────────────────────────────┤
+				// │ ┌────────────────────────────────────────┐ │
+				// │ │  n = 2 <1b>                            │ │
+				// │ ├──────────────────────┬─────────────────┤ │
+				// │ │ len(name) <uvarint>  │ name <bytes>    │ │
+				// │ ├──────────────────────┼─────────────────┤ │
+				// │ │ len(value) <uvarint> │ value <bytes>   │ │
+				// │ ├──────────────────────┴─────────────────┤ │
+				// │ │  offset_0 <uvarint64>                  │ │
+				// │ │  offset_1 <uvarint64>                  │ │
+				// │ │  offset_n <uvarint64>                  │ │
+				// │ └────────────────────────────────────────┘ │
+				// ├────────────────────────────────────────────┤
+				// │  CRC32 <4b>                                │
+				// └────────────────────────────────────────────┘
 				if err := w.writePosting(name, value, postings[sid][v]); err != nil {
 					return err
 				}
@@ -923,6 +981,7 @@ func (w *Writer) writePostingsToTmpFiles() error {
 
 func (w *Writer) writePosting(name, value string, offs []uint32) error {
 	// Align beginning to 4 bytes for more efficient postings list scans.
+	// w.fP ???
 	if err := w.fP.AddPadding(4); err != nil {
 		return err
 	}
@@ -933,6 +992,7 @@ func (w *Writer) writePosting(name, value string, offs []uint32) error {
 	w.buf1.PutUvarintStr(name)
 	w.buf1.PutUvarintStr(value)
 	w.buf1.PutUvarint64(w.fP.pos) // This is relative to the postings tmp file, not the final index file.
+	// w.fPO ???
 	if err := w.fPO.Write(w.buf1.Get()); err != nil {
 		return err
 	}
@@ -945,12 +1005,13 @@ func (w *Writer) writePosting(name, value string, offs []uint32) error {
 		if off > (1<<32)-1 {
 			return errors.Errorf("series offset %d exceeds 4 bytes", off)
 		}
-		w.buf1.PutBE32(off)
+		w.buf1.PutBE32(off) // ??? 实际写入32位与文档不符
 	}
 
 	w.buf2.Reset()
 	w.buf2.PutBE32int(w.buf1.Len())
 	w.buf1.PutHash(w.crc32)
+	// w.fP ???
 	return w.fP.Write(w.buf2.Get(), w.buf1.Get())
 }
 
@@ -1001,6 +1062,8 @@ type labelIndexHashEntry struct {
 
 func (w *Writer) Close() error {
 	// Even if this fails, we need to close all the files.
+	// 关闭前写入除符号表与序列之外的其它部分
+	// 感觉真是思维方式奇特[与MemPostings中保存ID有异曲同工之妙,呵呵] ???
 	ensureErr := w.ensureStage(idxStageDone)
 
 	if w.symbolFile != nil {
@@ -1276,6 +1339,7 @@ func NewSymbols(bs ByteSlice, version int, off int) (*Symbols, error) {
 		if s.seen%symbolFactor == 0 {
 			s.offsets = append(s.offsets, basePos+origLen-d.Len())
 		}
+		// 跳过符号具体值
 		d.UvarintBytes() // The symbol.
 		s.seen++
 	}
