@@ -617,6 +617,7 @@ func (c *LeveledCompactor) write(dest string, meta *BlockMeta, blocks ...BlockRe
 	}
 
 	// Create an empty tombstones file.
+	// 创建空的墓碑文件在populateBlock函数中写Block时已经进行了过滤,也许吧,后续再分析 ???
 	if _, err := tombstones.WriteFile(c.logger, tmp, tombstones.NewMemTombstones()); err != nil {
 		return errors.Wrap(err, "write new tombstones file")
 	}
@@ -747,6 +748,7 @@ func (c *LeveledCompactor) populateBlock(blocks []BlockReader, meta *BlockMeta, 
 	}
 
 	// Iterate over all sorted chunk series.
+	// Next中使用墓碑进行了判定 ???
 	for set.Next() {
 		// 多次出现可以封装成函数 ???
 		select {

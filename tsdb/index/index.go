@@ -565,6 +565,7 @@ func (w *Writer) finishSymbols() error {
 	return nil
 }
 
+// 文档中说明 This is no longer used. ???
 func (w *Writer) writeLabelIndices() error {
 	if err := w.fPO.Flush(); err != nil {
 		return err
@@ -583,10 +584,11 @@ func (w *Writer) writeLabelIndices() error {
 	values := []uint32{}
 	for d.Err() == nil && cnt > 0 {
 		cnt--
-		d.Uvarint()                           // Keycount.
+		d.Uvarint()                           // Keycount. 当前恒定为2
 		name := d.UvarintBytes()              // Label name.
 		value := yoloString(d.UvarintBytes()) // Label value.
 		d.Uvarint64()                         // Offset.
+		// name = ""
 		if len(name) == 0 {
 			continue // All index is ignored.
 		}
@@ -637,7 +639,7 @@ func (w *Writer) writeLabelIndex(name string, values []uint32) error {
 	w.crc32.Reset()
 
 	w.buf1.Reset()
-	w.buf1.PutBE32int(1) // Number of names.
+	w.buf1.PutBE32int(1) // Number of names. 恒定为1
 	w.buf1.PutBE32int(len(values))
 	w.buf1.WriteToHash(w.crc32)
 	if err := w.write(w.buf1.Get()); err != nil {
@@ -666,6 +668,7 @@ func (w *Writer) writeLabelIndex(name string, values []uint32) error {
 }
 
 // writeLabelIndexesOffsetTable writes the label indices offset table.
+// 文档中说明 This is no longer used. ???
 func (w *Writer) writeLabelIndexesOffsetTable() error {
 	startPos := w.f.pos
 	// Leave 4 bytes of space for the length, which will be calculated later.
@@ -683,7 +686,7 @@ func (w *Writer) writeLabelIndexesOffsetTable() error {
 
 	for _, e := range w.labelIndexes {
 		w.buf1.Reset()
-		w.buf1.PutUvarint(len(e.keys))
+		w.buf1.PutUvarint(len(e.keys)) // 恒定为1
 		for _, k := range e.keys {
 			w.buf1.PutUvarintStr(k)
 		}
@@ -714,6 +717,7 @@ func (w *Writer) writePostingsOffsetTable() error {
 
 	startPos := w.f.pos
 	// Leave 4 bytes of space for the length, which will be calculated later.
+	// 保留4字节长度
 	if err := w.write([]byte("alen")); err != nil {
 		return err
 	}
@@ -724,7 +728,7 @@ func (w *Writer) writePostingsOffsetTable() error {
 
 	w.buf1.Reset()
 	w.crc32.Reset()
-	w.buf1.PutBE32int(int(w.cntPO)) // Count.
+	w.buf1.PutBE32int(int(w.cntPO)) // Count. 项个数
 	w.buf1.WriteToHash(w.crc32)
 	if err := w.write(w.buf1.Get()); err != nil {
 		return err
@@ -741,6 +745,7 @@ func (w *Writer) writePostingsOffsetTable() error {
 	}()
 	d := encoding.NewDecbufRaw(realByteSlice(f.Bytes()), int(w.fPO.pos))
 	cnt := w.cntPO
+	// 第一个项name="",label="" ???
 	for d.Err() == nil && cnt > 0 {
 		w.buf1.Reset()
 		w.buf1.PutUvarint(d.Uvarint())                     // Keycount.
@@ -772,7 +777,7 @@ func (w *Writer) writePostingsOffsetTable() error {
 
 	// Write out the length.
 	w.buf1.Reset()
-	w.buf1.PutBE32int(int(w.f.pos - startPos - 4))
+	w.buf1.PutBE32int(int(w.f.pos - startPos - 4)) // 计算出长度[长度本身不在CRC的计算范围]
 	if err := w.writeAt(w.buf1.Get(), startPos); err != nil {
 		return err
 	}
@@ -825,37 +830,42 @@ func (w *Writer) writePostingsToTmpFiles() error {
 	d.Skip(int(w.toc.Series))                                                     // 跳过符号偏移到序列
 	for d.Len() > 0 {
 		d.ConsumePadding()
-		startPos := w.toc.LabelIndices - uint64(d.Len())
+		startPos := w.toc.LabelIndices - uint64(d.Len()) // 计算每个series的起始
 		if startPos%16 != 0 {
 			return errors.Errorf("series not 16-byte aligned at %d", startPos)
 		}
 		offsets = append(offsets, uint32(startPos/16)) // ??? 为什么除16,用时再乘
 		// Skip to next series.
-		x := d.Uvarint()       // 序列长度
-		d.Skip(x + crc32.Size) // 加CRC32的4字节
+		x := d.Uvarint()       // 单个序列长度
+		d.Skip(x + crc32.Size) // 加单个序列CRC32的4字节
 		if err := d.Err(); err != nil {
 			return err
 		}
 	}
-	// 此处只在临时文件中记录以下内容
-	// ┌─────────────────────┬──────────────────────┐
-	// │ len <4b>            │ #entries <4b>        │
-	// ├─────────────────────┴──────────────────────┤
-	// │ ┌────────────────────────────────────────┐ │
-	// │ │  n = 2 <1b>                            │ │
-	// │ ├──────────────────────┬─────────────────┤ │
-	// │ │ len("") <uvarint>    │ "" <bytes>      │ │
-	// │ ├──────────────────────┼─────────────────┤ │
-	// │ │ len("") <uvarint>    │ "" <bytes>      │ │
-	// │ ├──────────────────────┴─────────────────┤ │
-	// │ │  offset_0 <uvarint64>                  │ │
-	// │ │  offset_1 <uvarint64>                  │ │
-	// │ │  offset_n <uvarint64>                  │ │
-	// │ └────────────────────────────────────────┘ │
-	// ├────────────────────────────────────────────┤
-	// │  CRC32 <4b>                                │
-	// └────────────────────────────────────────────┘
-	// 此函数是记录Postings Offset Table这函数名无语
+	// Temporary file for posting offsets table. [fPO]
+	// ┌─────────────────────────────────────────┐
+	// │  n = 2 <1b>                             │
+	// ├──────────────────────┬──────────────────┤
+	// │ len("") <uvarint>    │ "" <bytes>       │
+	// ├──────────────────────┼──────────────────┤
+	// │ len("") <uvarint>    │ "" <bytes>       │
+	// ├──────────────────────┴──────────────────┤
+	// │ fP <uvarint64>                          │
+	// └─────────────────────────────────────────┘
+	// Temporary file for postings. [fP] 包含当前块中的所有序列引用
+	// ┌────────────────────┬────────────────────┐
+	// │ len <4b>           │ #entries <4b>      │
+	// ├────────────────────┴────────────────────┤
+	// │ ┌─────────────────────────────────────┐ │
+	// │ │ ref(series_1) <4b>                  │ │
+	// │ ├─────────────────────────────────────┤ │
+	// │ │ ...                                 │ │
+	// │ ├─────────────────────────────────────┤ │
+	// │ │ ref(series_n) <4b>                  │ │
+	// │ └─────────────────────────────────────┘ │
+	// ├─────────────────────────────────────────┤
+	// │ CRC32 <4b>                              │
+	// └─────────────────────────────────────────┘
 	if err := w.writePosting("", "", offsets); err != nil {
 		return err
 	}
@@ -932,38 +942,30 @@ func (w *Writer) writePostingsToTmpFiles() error {
 				if err != nil {
 					return err
 				}
-				// 临时文件中记录以下内容
-				// ┌─────────────────────┬──────────────────────┐
-				// │ len <4b>            │ #entries <4b>        │
-				// ├─────────────────────┴──────────────────────┤
-				// │ ┌────────────────────────────────────────┐ │
-				// │ │  n = 2 <1b>                            │ │
-				// │ ├──────────────────────┬─────────────────┤ │
-				// │ │ len("") <uvarint>    │ "" <bytes>      │ │
-				// │ ├──────────────────────┼─────────────────┤ │
-				// │ │ len("") <uvarint>    │ "" <bytes>      │ │
-				// │ ├──────────────────────┴─────────────────┤ │
-				// │ │  offset_0 <uvarint64>                  │ │
-				// │ │  offset_1 <uvarint64>                  │ │
-				// │ │  offset_n <uvarint64>                  │ │
-				// │ └────────────────────────────────────────┘ │
-				// ├────────────────────────────────────────────┤
-				// │  padding <optional>                        │
-				// ├────────────────────────────────────────────┤
-				// │ ┌────────────────────────────────────────┐ │
-				// │ │  n = 2 <1b>                            │ │
-				// │ ├──────────────────────┬─────────────────┤ │
-				// │ │ len(name) <uvarint>  │ name <bytes>    │ │
-				// │ ├──────────────────────┼─────────────────┤ │
-				// │ │ len(value) <uvarint> │ value <bytes>   │ │
-				// │ ├──────────────────────┴─────────────────┤ │
-				// │ │  offset_0 <uvarint64>                  │ │
-				// │ │  offset_1 <uvarint64>                  │ │
-				// │ │  offset_n <uvarint64>                  │ │
-				// │ └────────────────────────────────────────┘ │
-				// ├────────────────────────────────────────────┤
-				// │  CRC32 <4b>                                │
-				// └────────────────────────────────────────────┘
+				// Temporary file for posting offsets table. [fPO]
+				// ┌─────────────────────────────────────────┐
+				// │  n = 2 <1b>                             │
+				// ├──────────────────────┬──────────────────┤
+				// │ len(name) <uvarint>  │ name <bytes>     │
+				// ├──────────────────────┼──────────────────┤
+				// │ len(value) <uvarint> │ value <bytes>    │
+				// ├──────────────────────┴──────────────────┤
+				// │ fP <uvarint64>                          │
+				// └─────────────────────────────────────────┘
+				// Temporary file for postings. [fP]
+				// ┌────────────────────┬────────────────────┐
+				// │ len <4b>           │ #entries <4b>      │
+				// ├────────────────────┴────────────────────┤
+				// │ ┌─────────────────────────────────────┐ │
+				// │ │ ref(series_1) <4b>                  │ │
+				// │ ├─────────────────────────────────────┤ │
+				// │ │ ...                                 │ │
+				// │ ├─────────────────────────────────────┤ │
+				// │ │ ref(series_n) <4b>                  │ │
+				// │ └─────────────────────────────────────┘ │
+				// ├─────────────────────────────────────────┤
+				// │ CRC32 <4b>                              │
+				// └─────────────────────────────────────────┘
 				if err := w.writePosting(name, value, postings[sid][v]); err != nil {
 					return err
 				}
@@ -979,9 +981,32 @@ func (w *Writer) writePostingsToTmpFiles() error {
 	return nil
 }
 
+// Temporary file for posting offsets table. [fPO]
+// ┌─────────────────────────────────────────┐
+// │  n = 2 <1b>                             │
+// ├──────────────────────┬──────────────────┤
+// │ len(name) <uvarint>  │ name <bytes>     │
+// ├──────────────────────┼──────────────────┤
+// │ len(value) <uvarint> │ value <bytes>    │
+// ├──────────────────────┴──────────────────┤
+// │ fP <uvarint64>                          │
+// └─────────────────────────────────────────┘
+// Temporary file for postings. [fP]
+// ┌────────────────────┬────────────────────┐
+// │ len <4b>           │ #entries <4b>      │
+// ├────────────────────┴────────────────────┤
+// │ ┌─────────────────────────────────────┐ │
+// │ │ ref(series_1) <4b>                  │ │
+// │ ├─────────────────────────────────────┤ │
+// │ │ ...                                 │ │
+// │ ├─────────────────────────────────────┤ │
+// │ │ ref(series_n) <4b>                  │ │
+// │ └─────────────────────────────────────┘ │
+// ├─────────────────────────────────────────┤
+// │ CRC32 <4b>                              │
+// └─────────────────────────────────────────┘
 func (w *Writer) writePosting(name, value string, offs []uint32) error {
 	// Align beginning to 4 bytes for more efficient postings list scans.
-	// w.fP ???
 	if err := w.fP.AddPadding(4); err != nil {
 		return err
 	}
@@ -992,7 +1017,6 @@ func (w *Writer) writePosting(name, value string, offs []uint32) error {
 	w.buf1.PutUvarintStr(name)
 	w.buf1.PutUvarintStr(value)
 	w.buf1.PutUvarint64(w.fP.pos) // This is relative to the postings tmp file, not the final index file.
-	// w.fPO ???
 	if err := w.fPO.Write(w.buf1.Get()); err != nil {
 		return err
 	}
@@ -1005,13 +1029,12 @@ func (w *Writer) writePosting(name, value string, offs []uint32) error {
 		if off > (1<<32)-1 {
 			return errors.Errorf("series offset %d exceeds 4 bytes", off)
 		}
-		w.buf1.PutBE32(off) // ??? 实际写入32位与文档不符
+		w.buf1.PutBE32(off)
 	}
 
 	w.buf2.Reset()
 	w.buf2.PutBE32int(w.buf1.Len())
 	w.buf1.PutHash(w.crc32)
-	// w.fP ???
 	return w.fP.Write(w.buf2.Get(), w.buf1.Get())
 }
 
@@ -1026,6 +1049,7 @@ func (w *Writer) writePostings() error {
 	if err := w.fP.Flush(); err != nil {
 		return err
 	}
+	// 第一个Posting包含当前块中所有序列引用 ???
 	if _, err := w.fP.f.Seek(0, 0); err != nil {
 		return err
 	}

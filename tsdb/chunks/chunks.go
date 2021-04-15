@@ -43,7 +43,7 @@ const (
 	ChunksFormatVersionSize  = 1
 	segmentHeaderPaddingSize = 3
 	// SegmentHeaderSize defines the total size of the header part.
-	SegmentHeaderSize = MagicChunksSize + ChunksFormatVersionSize + segmentHeaderPaddingSize
+	SegmentHeaderSize = MagicChunksSize + ChunksFormatVersionSize + segmentHeaderPaddingSize // 8B
 )
 
 // Chunk fields constants.
@@ -140,7 +140,7 @@ func NewWriterWithSegSize(dir string, segmentSize int64) (*Writer, error) {
 // NewWriter returns a new writer against the given directory
 // using the default segment size.
 func NewWriter(dir string) (*Writer, error) {
-	return newWriter(dir, DefaultChunkSegmentSize)
+	return newWriter(dir, DefaultChunkSegmentSize) // 512M
 }
 
 func newWriter(dir string, segmentSize int64) (*Writer, error) {
@@ -297,14 +297,16 @@ func (w *Writer) WriteChunks(chks ...Meta) error {
 
 	for i, chk := range chks {
 		// Each chunk contains: data length + encoding + the data itself + crc32
+		// binary.MaxVarintLen32 = 5
 		chkSize := int64(MaxChunkLengthFieldSize) // The data length is a variable length field so use the maximum possible value.
-		chkSize += ChunkEncodingSize              // The chunk encoding.
+		chkSize += ChunkEncodingSize              // The chunk encoding. 1B
 		chkSize += int64(len(chk.Chunk.Bytes()))  // The data itself.
 		chkSize += crc32.Size                     // The 4 bytes of crc32.
 		batchSize += chkSize
 
 		// Cut a new batch when it is not the first chunk(to avoid empty segments) and
 		// the batch is too large to fit in the current segment.
+		// SegmentHeaderSize = 8B
 		cutNewBatch := (i != 0) && (batchSize+SegmentHeaderSize > w.segmentSize)
 
 		// When the segment already has some data than
@@ -338,6 +340,7 @@ func (w *Writer) WriteChunks(chks ...Meta) error {
 		}
 		// Cut a new segment only when there are more chunks to write.
 		// Avoid creating a new empty segment at the end of the write.
+		// 优秀
 		if i < len(batches)-1 {
 			if err := w.cut(); err != nil {
 				return err
@@ -364,6 +367,8 @@ func (w *Writer) writeChunks(chks []Meta) error {
 		//
 		// The upper 4 bytes are for the segment index and
 		// the lower 4 bytes are for the segment offset where to start reading this chunk.
+		// 低4位是段文件索引,低4位是当前chunk在段文件中的偏移
+		// 此处的修改会对原始数据产生影响,优秀 :)
 		chk.Ref = seq | uint64(w.n)
 
 		n := binary.PutUvarint(w.buf[:], uint64(len(chk.Chunk.Bytes())))

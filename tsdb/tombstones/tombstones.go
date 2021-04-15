@@ -110,6 +110,7 @@ func WriteFile(logger log.Logger, dir string, tr Reader) (int64, error) {
 	}
 
 	// Ignore first byte which is the format type. We do this for compatibility.
+	// 此处跳过了版本 ???
 	if _, err := hash.Write(bytes[1:]); err != nil {
 		return 0, errors.Wrap(err, "calculating hash for tombstones")
 	}
@@ -141,7 +142,7 @@ func WriteFile(logger log.Logger, dir string, tr Reader) (int64, error) {
 // It does not attach any magic number or checksum.
 func Encode(tr Reader) ([]byte, error) {
 	buf := encoding.Encbuf{}
-	buf.PutByte(tombstoneFormatV1)
+	buf.PutByte(tombstoneFormatV1) // 先写入版本
 	err := tr.Iter(func(ref uint64, ivs Intervals) error {
 		for _, iv := range ivs {
 			buf.PutUvarint64(ref)
