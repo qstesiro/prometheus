@@ -1565,6 +1565,7 @@ func (db *DB) CleanTombstones() (err error) {
 			if cleanErr != nil {
 				return errors.Wrapf(cleanErr, "clean tombstones: %s", pb.Dir())
 			}
+			// 没有任何数据需要被删除
 			if !safeToDelete {
 				// There was nothing to clean.
 				continue
@@ -1574,6 +1575,8 @@ func (db *DB) CleanTombstones() (err error) {
 			// then there would be no resultant block to tell the parent.
 			// The lock protects against race conditions when deleting blocks
 			// during an already running reload.
+			// 当前块数据有部分时间重叠产生了新的块
+			// 标记为可删除后续会在reloadBlocks中删除
 			db.mtx.Lock()
 			pb.meta.Compaction.Deletable = safeToDelete
 			db.mtx.Unlock()
@@ -1581,10 +1584,13 @@ func (db *DB) CleanTombstones() (err error) {
 			if err = db.reloadBlocks(); err == nil { // Will try to delete old block.
 				// Successful reload will change the existing blocks.
 				// We need to loop over the new set of blocks.
+				// 成功重新装载block重新开始循环
+				// reloadBlocks中会删除被标记的parent块
 				break
 			}
 
 			// Delete new block if it was created.
+			// 如果reloadBlocks失败则删除新创建的块
 			if uid != nil && *uid != (ulid.ULID{}) {
 				dir := filepath.Join(db.Dir(), uid.String())
 				if err := os.RemoveAll(dir); err != nil {

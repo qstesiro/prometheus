@@ -639,6 +639,7 @@ func (pb *Block) Snapshot(dir string) error {
 func (pb *Block) OverlapsClosedInterval(mint, maxt int64) bool {
 	// The block itself is a half-open interval
 	// [pb.meta.MinTime, pb.meta.MaxTime).
+	// !(pb.meta.MinTime > maxt || pb.meta.MaxTime <= mint)
 	return pb.meta.MinTime <= maxt && mint < pb.meta.MaxTime
 }
 
