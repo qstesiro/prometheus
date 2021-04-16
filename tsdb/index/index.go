@@ -931,7 +931,7 @@ func (w *Writer) writePostingsToTmpFiles() error {
 				return err
 			}
 			values := make([]uint32, 0, len(postings[sid]))
-			for v := range postings[sid] { // 新语法知识 ???
+			for v := range postings[sid] { // v标签值引用ID
 				values = append(values, v)
 
 			}

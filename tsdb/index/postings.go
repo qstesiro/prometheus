@@ -686,7 +686,6 @@ func NewListPostings(list []uint64) Postings {
 	return newListPostings(list...)
 }
 
-// 会产生复制 ???
 func newListPostings(list ...uint64) *ListPostings {
 	return &ListPostings{list: list}
 }
