@@ -766,7 +766,7 @@ func (db *DB) run() {
 			db.metrics.compactionsTriggered.Inc()
 
 			db.autoCompactMtx.Lock()
-			if db.autoCompact {
+			if db.autoCompact { // 当前恒定为true
 				if err := db.Compact(); err != nil {
 					level.Error(db.logger).Log("msg", "compaction failed", "err", err)
 					backoff = exponential(backoff, 1*time.Second, 1*time.Minute)
@@ -1398,6 +1398,7 @@ func (db *DB) Close() error {
 }
 
 // DisableCompactions disables auto compactions.
+// promtool/tsdb.go
 func (db *DB) DisableCompactions() {
 	db.autoCompactMtx.Lock()
 	defer db.autoCompactMtx.Unlock()

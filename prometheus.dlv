@@ -65,7 +65,8 @@
 # b tsdb.openBlocks
 # b tsdb.newStripeSeries
 # b tsdb.(*DB).Compact
-b tsdb.(*DB).compactHead
+# b tsdb/db.go:846
+# b tsdb.(*DB).compactHead
 # b tsdb.(*DB).compactBlocks
 # b tsdb.(*DB).CompactHead
 # b tsdb.(*noopSeriesLifecycleCallback).PreCreation
@@ -130,16 +131,20 @@ b tsdb.(*DB).compactHead
 # b index.NewUnorderedMemPostings
 # b index.(*MemPostings).Add
 
-b index.(*Writer).startSymbols
+# b index.(*Writer).startSymbols
 # b index.(*Writer).AddSymbol
-b index.(*Writer).finishSymbols
+# b index.(*Writer).finishSymbols
 # b index.(*Writer).AddSeries
 # b tsdb/index/index.go:438
-b index.(*Writer).writePostingsToTmpFiles
-b index.(*Writer).writeLabelIndices
-b index.(*Writer).writePostings
-b index.(*Writer).writeLabelIndexesOffsetTable
-b index.(*Writer).writePostingsOffsetTable
-b index.(*Writer).writeTOC
+# b index.(*Writer).writePostingsToTmpFiles
+# b index.(*Writer).writeLabelIndices
+# b index.(*Writer).writePostings
+# b index.(*Writer).writeLabelIndexesOffsetTable
+# b index.(*Writer).writePostingsOffsetTable
+# b index.(*Writer).writeTOC
 
+# b tsdb/compact.go:714
+# b tsdb/compact.go:745
+b tsdb/compact.go:752
+# b tsdb/compact.go:763
 g

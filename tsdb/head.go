@@ -53,8 +53,11 @@ var (
 
 // Head handles reads and writes of time series data within a time window.
 type Head struct {
-	chunkRange            atomic.Int64
-	numSeries             atomic.Uint64
+	chunkRange atomic.Int64
+	numSeries  atomic.Uint64
+	// 初始设置在initAppender.Append中调用initTime设置[min,max]为[sample.T,sample.T]
+	// 初始化loadWAL中调用updateMinMaxTime更新区间
+	// headAppender.Commit中调用updateMinMaxTime更新区间
 	minTime, maxTime      atomic.Int64 // Current min and max of the samples included in the head.
 	minValidTime          atomic.Int64 // Mint allowed to be added to the head. It shouldn't be lower than the maxt of the last persisted block.
 	lastWALTruncationTime atomic.Int64
@@ -1295,6 +1298,7 @@ func (a *headAppender) Commit() (err error) {
 		return ErrAppenderClosed
 	}
 	defer func() { a.closed = true }()
+	// 记录WAL
 	if err := a.log(); err != nil {
 		//nolint: errcheck
 		a.Rollback() // Most likely the same error will happen again.
@@ -1327,7 +1331,7 @@ func (a *headAppender) Commit() (err error) {
 	}
 
 	a.head.metrics.samplesAppended.Add(float64(total))
-	a.head.updateMinMaxTime(a.mint, a.maxt)
+	a.head.updateMinMaxTime(a.mint, a.maxt) // 更新时间区间
 
 	return nil
 }
@@ -1766,6 +1770,7 @@ func (h *headIndexReader) Series(ref uint64, lbls *labels.Labels, chks *[]chunks
 			Ref:     packChunkID(s.ref, uint64(s.chunkID(i))),
 		})
 	}
+	// 还需要获取当前headChunk中的内容吗???
 	if s.headChunk != nil && s.headChunk.OverlapsClosedInterval(h.mint, h.maxt) {
 		*chks = append(*chks, chunks.Meta{
 			MinTime: s.headChunk.minTime,
@@ -2249,6 +2254,7 @@ func (s *memSeries) append(t int64, v float64, appendID uint64, chunkDiskMapper 
 
 	c := s.head()
 
+	// 第一批序列
 	if c == nil {
 		if len(s.mmappedChunks) > 0 && s.mmappedChunks[len(s.mmappedChunks)-1].maxTime >= t {
 			// Out of order sample. Sample timestamp is already in the mmaped chunks, so ignore it.
@@ -2267,6 +2273,7 @@ func (s *memSeries) append(t int64, v float64, appendID uint64, chunkDiskMapper 
 	// If we reach 25% of a chunk's desired sample count, set a definitive time
 	// at which to start the next chunk.
 	// At latest it must happen at the timestamp set when the chunk was cut.
+	// 不明白 ???
 	if numSamples == samplesPerChunk/4 {
 		s.nextAt = computeChunkEndTime(c.minTime, c.maxTime, s.nextAt)
 	}

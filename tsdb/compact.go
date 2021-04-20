@@ -716,7 +716,7 @@ func (c *LeveledCompactor) populateBlock(blocks []BlockReader, meta *BlockMeta, 
 		if err != nil {
 			return err
 		}
-		all = indexr.SortedPostings(all)
+		all = indexr.SortedPostings(all) // 返回index.ListPostings
 		// Blocks meta is half open: [min, max), so subtract 1 to ensure we don't hold samples with exact meta.MaxTime timestamp.
 		sets = append(sets, newBlockChunkSeriesSet(indexr, chunkr, tombsr, all, meta.MinTime, meta.MaxTime-1))
 		syms := indexr.Symbols()
@@ -748,7 +748,7 @@ func (c *LeveledCompactor) populateBlock(blocks []BlockReader, meta *BlockMeta, 
 	}
 
 	// Iterate over all sorted chunk series.
-	// Next中使用墓碑进行了判定 ???
+	// Next中使用墓碑进行了判定
 	for set.Next() {
 		// 多次出现可以封装成函数 ???
 		select {
@@ -759,6 +759,7 @@ func (c *LeveledCompactor) populateBlock(blocks []BlockReader, meta *BlockMeta, 
 		s := set.At()
 		chksIter := s.Iterator()
 		chks = chks[:0]
+		// Next中使用墓碑进行了判定
 		for chksIter.Next() {
 			// We are not iterating in streaming way over chunk as it's more efficient to do bulk write for index and
 			// chunk file purposes.

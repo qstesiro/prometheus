@@ -44,6 +44,7 @@ func init() {
 	}
 }
 
+// 实现storage.Querier中的LabelQuerier的接口
 type blockBaseQuerier struct {
 	index      IndexReader
 	chunks     ChunkReader
@@ -107,6 +108,9 @@ func (q *blockBaseQuerier) Close() error {
 	return errs.Err()
 }
 
+// 继承blockBaseQuerier类型
+// 实现storage.Querier中的Select函数
+// 完整实现storage.Querier接口
 type blockQuerier struct {
 	*blockBaseQuerier
 }
@@ -144,6 +148,9 @@ func (q *blockQuerier) Select(sortSeries bool, hints *storage.SelectHints, ms ..
 }
 
 // blockChunkQuerier provides chunk querying access to a single block database.
+// 继承blockBaseQuerier类型
+// 实现storage.Querier中的Select函数
+// 完整实现storage.Querier接口
 type blockChunkQuerier struct {
 	*blockBaseQuerier
 }
@@ -410,6 +417,7 @@ func labelValuesWithMatchers(r IndexReader, name string, matchers ...*labels.Mat
 // blockBaseSeriesSet allows to iterate over all series in the single block.
 // Iterated series are trimmed with given min and max time as well as tombstones.
 // See newBlockSeriesSet and newBlockChunkSeriesSet to use it for either sample or chunk iterating.
+// 实现storage.SeriesSet与storage.ChunkSeriesSet中Next,Err,Warnings三个函数
 type blockBaseSeriesSet struct {
 	p          index.Postings
 	index      IndexReader
@@ -700,6 +708,9 @@ func (p *populateWithDelChunkSeriesIterator) At() chunks.Meta { return p.curr }
 // blockSeriesSet allows to iterate over sorted, populated series with applied tombstones.
 // Series with all deleted chunks are still present as Series with no samples.
 // Samples from chunks are also trimmed to requested min and max time.
+// 继承blockBaseSeriesSet
+// 实现storage.SeriesSet.At函数
+// 完整实现storage.SeriesSet接口
 type blockSeriesSet struct {
 	blockBaseSeriesSet
 }
@@ -732,6 +743,9 @@ func (b *blockSeriesSet) At() storage.Series {
 // blockChunkSeriesSet allows to iterate over sorted, populated series with applied tombstones.
 // Series with all deleted chunks are still present as Labelled iterator with no chunks.
 // Chunks are also trimmed to requested [min and max] (keeping samples with min and max timestamps).
+// 继承blockBaseSeriesSet
+// 实现storage.ChunkSeriesSet.At函数
+// 完整实现storage.ChunkSeriesSet接口
 type blockChunkSeriesSet struct {
 	blockBaseSeriesSet
 }

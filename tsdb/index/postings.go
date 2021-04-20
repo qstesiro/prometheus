@@ -343,6 +343,7 @@ func ExpandPostings(p Postings) (res []uint64, err error) {
 }
 
 // Postings provides iterative access over a postings list.
+// 实际是Iterator
 type Postings interface {
 	// Next advances the iterator and returns true if another value was found.
 	Next() bool
