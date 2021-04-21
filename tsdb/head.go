@@ -1745,6 +1745,7 @@ func (h *headIndexReader) SortedPostings(p index.Postings) index.Postings {
 }
 
 // Series returns the series for the given reference.
+// lbls,chks使用指针还不如直接使用返回值
 func (h *headIndexReader) Series(ref uint64, lbls *labels.Labels, chks *[]chunks.Meta) error {
 	s := h.head.series.getByID(ref)
 
@@ -1771,6 +1772,7 @@ func (h *headIndexReader) Series(ref uint64, lbls *labels.Labels, chks *[]chunks
 		})
 	}
 	// 还需要获取当前headChunk中的内容吗???
+	// 后续有过滤不会产生问题
 	if s.headChunk != nil && s.headChunk.OverlapsClosedInterval(h.mint, h.maxt) {
 		*chks = append(*chks, chunks.Meta{
 			MinTime: s.headChunk.minTime,

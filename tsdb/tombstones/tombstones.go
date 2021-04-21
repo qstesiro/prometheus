@@ -293,10 +293,12 @@ type Interval struct {
 	Mint, Maxt int64
 }
 
+// tr.Mint <= t <= tr.Maxt
 func (tr Interval) InBounds(t int64) bool {
 	return t >= tr.Mint && t <= tr.Maxt
 }
 
+// 判定tr是否为Intervals中某个间隔的子范围
 func (tr Interval) IsSubrange(dranges Intervals) bool {
 	for _, r := range dranges {
 		if r.InBounds(tr.Mint) && r.InBounds(tr.Maxt) {
@@ -319,11 +321,13 @@ func (in Intervals) Add(n Interval) Intervals {
 	// Find min and max indexes of intervals that overlap with the new interval.
 	// Intervals are closed [t1, t2] and t is discreet, so if neighbour intervals are 1 step difference
 	// to the new one, we can merge those together.
+	// in[i].Maxt == n.Mint-1 紧密相联
+	// in[i].Maxt > n.Mint-1 有交集
 	mini := sort.Search(len(in), func(i int) bool { return in[i].Maxt >= n.Mint-1 })
 	if mini == len(in) {
 		return append(in, n)
 	}
-
+	// n.Max+1 < in[mini+i].Mint 无交集
 	maxi := sort.Search(len(in)-mini, func(i int) bool { return in[mini+i].Mint > n.Maxt+1 })
 	if maxi == 0 {
 		if mini == 0 {

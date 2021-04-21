@@ -466,6 +466,7 @@ func (b *blockBaseSeriesSet) Next() bool {
 
 		// Prefilter chunks and pick those which are not entirely deleted or totally outside of the requested range.
 		for _, chk := range b.bufChks {
+			// chunk时间区间不在获取范围
 			if chk.MaxTime < b.mint {
 				continue
 			}
@@ -473,11 +474,13 @@ func (b *blockBaseSeriesSet) Next() bool {
 				continue
 			}
 
+			// 不在任何墓碑区间内
 			if !(tombstones.Interval{Mint: chk.MinTime, Maxt: chk.MaxTime}.IsSubrange(intervals)) {
 				chks = append(chks, chk)
 			}
 
 			// If still not entirely deleted, check if trim is needed based on requested time range.
+			// 部分存在于获取区间内
 			if chk.MinTime < b.mint {
 				trimFront = true
 			}
@@ -490,9 +493,11 @@ func (b *blockBaseSeriesSet) Next() bool {
 			continue
 		}
 
+		// 增加墓碑时间左部
 		if trimFront {
 			intervals = intervals.Add(tombstones.Interval{Mint: math.MinInt64, Maxt: b.mint - 1})
 		}
+		// 增加墓碑时间右部
 		if trimBack {
 			intervals = intervals.Add(tombstones.Interval{Mint: b.maxt + 1, Maxt: math.MaxInt64})
 		}
@@ -568,6 +573,7 @@ func (p *populateWithDelGenericSeriesIterator) next() bool {
 
 	p.bufIter.Intervals = p.bufIter.Intervals[:0]
 	for _, interval := range p.intervals {
+		// 当前Chunk时间区间与某墓碑区间有重叠
 		if p.currChkMeta.OverlapsClosedInterval(interval.Mint, interval.Maxt) {
 			p.bufIter.Intervals = p.bufIter.Intervals.Add(interval)
 		}
@@ -863,9 +869,12 @@ func (it *DeletedIterator) Seek(t int64) bool {
 func (it *DeletedIterator) Next() bool {
 Outer:
 	for it.Iter.Next() {
+		// 单条采样的时间戳
 		ts, _ := it.Iter.At()
 
 		for _, tr := range it.Intervals {
+			// 是否在墓碑区间内
+			// 看到这儿突然感觉代码效率不高的样子 ???
 			if tr.InBounds(ts) {
 				continue Outer
 			}
