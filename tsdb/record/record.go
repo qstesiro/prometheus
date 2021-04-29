@@ -172,9 +172,21 @@ type Encoder struct {
 }
 
 // Series appends the encoded series to b and returns the resulting slice.
+// ┌────────────────────────────────────────────┐
+// │ ┌─────────┬──────────────────────────────┐ │
+// │ │ id <8b> │ n = len(labels) <uvarint>    │ │
+// │ ├─────────┴────────────┬─────────────────┤ │
+// │ │ len(str_1) <uvarint> │ str_1 <bytes>   │ │
+// │ ├──────────────────────┴─────────────────┤ │
+// │ │  ...                                   │ │
+// │ ├───────────────────────┬────────────────┤ │
+// │ │ len(str_2n) <uvarint> │ str_2n <bytes> │ │
+// │ └───────────────────────┴────────────────┘ │
+// │                  . . .                     │
+// └────────────────────────────────────────────┘
 func (e *Encoder) Series(series []RefSeries, b []byte) []byte {
 	buf := encoding.Encbuf{B: b}
-	buf.PutByte(byte(Series))
+	buf.PutByte(byte(Series)) // 开始实际写入len占位一个字节 ???
 
 	for _, s := range series {
 		buf.PutBE64(s.Ref)
@@ -189,9 +201,18 @@ func (e *Encoder) Series(series []RefSeries, b []byte) []byte {
 }
 
 // Samples appends the encoded samples to b and returns the resulting slice.
+// ┌──────────────────────────────────────────────────────────────────┐
+// │ ┌────────────────────┬───────────────────────────┐               │
+// │ │ id <8b>            │ timestamp <8b>            │               │
+// │ └────────────────────┴───────────────────────────┘               │
+// │ ┌────────────────────┬───────────────────────────┬─────────────┐ │
+// │ │ id_delta <uvarint> │ timestamp_delta <uvarint> │ value <8b>  │ │
+// │ └────────────────────┴───────────────────────────┴─────────────┘ │
+// │                              . . .                               │
+// └──────────────────────────────────────────────────────────────────┘
 func (e *Encoder) Samples(samples []RefSample, b []byte) []byte {
 	buf := encoding.Encbuf{B: b}
-	buf.PutByte(byte(Samples))
+	buf.PutByte(byte(Samples)) // 开始实际写入len占位一个字节 ???
 
 	if len(samples) == 0 {
 		return buf.Get()
@@ -200,7 +221,6 @@ func (e *Encoder) Samples(samples []RefSample, b []byte) []byte {
 	// Store base timestamp and base reference number of first sample.
 	// All samples encode their timestamp and ref as delta to those.
 	first := samples[0]
-
 	buf.PutBE64(first.Ref)
 	buf.PutBE64int64(first.T)
 
@@ -213,10 +233,16 @@ func (e *Encoder) Samples(samples []RefSample, b []byte) []byte {
 }
 
 // Tombstones appends the encoded tombstones to b and returns the resulting slice.
+// ┌─────────────────────────────────────────────────────┐
+// │ ┌─────────┬───────────────────┬───────────────────┐ │
+// │ │ id <8b> │ min_time <varint> │ max_time <varint> │ │
+// │ └─────────┴───────────────────┴───────────────────┘ │
+// │                        . . .                        │
+// └─────────────────────────────────────────────────────┘
 func (e *Encoder) Tombstones(tstones []tombstones.Stone, b []byte) []byte {
 	buf := encoding.Encbuf{B: b}
-	buf.PutByte(byte(Tombstones))
 
+	buf.PutByte(byte(Tombstones))
 	for _, s := range tstones {
 		for _, iv := range s.Intervals {
 			buf.PutBE64(s.Ref)

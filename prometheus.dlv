@@ -58,7 +58,7 @@
 # b wal.(*LiveReader).fillBuffer
 
 # b storage.(*fanout).Querier
-# b tsdb.Open
+b tsdb.Open
 # b tsdb.open
 # b tsdb.(*DB).reload
 # b tsdb.(*DB).reloadBlocks

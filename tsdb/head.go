@@ -1265,11 +1265,12 @@ func (a *headAppender) Append(ref uint64, lset labels.Labels, t int64, v float64
 	return s.ref, nil
 }
 
+// 提交函数中在实际写入前先写入WAL
 func (a *headAppender) log() error {
 	if a.head.wal == nil {
 		return nil
 	}
-
+	// 从池中获取一个缓冲区
 	buf := a.head.getBytesBuffer()
 	defer func() { a.head.putBytesBuffer(buf) }()
 

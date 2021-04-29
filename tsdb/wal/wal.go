@@ -194,6 +194,7 @@ type WAL struct {
 	metrics *walMetrics
 }
 
+// 不错的学习指标使用的样例
 type walMetrics struct {
 	fsyncDuration   prometheus.Summary
 	pageFlushes     prometheus.Counter
@@ -492,7 +493,7 @@ func (w *WAL) nextSegment() error {
 
 	// Don't block further writes by fsyncing the last segment.
 	// 21/03/15 22:50:51 Mark
-	// 直接送函数[从来没有这样用过又进步了:)]
+	// 直接送函数[从来没有这样用过我又进步了:)]
 	w.actorc <- func() {
 		if err := w.fsync(prev); err != nil {
 			level.Error(w.logger).Log("msg", "sync previous segment", "err", err)
@@ -638,11 +639,10 @@ func (w *WAL) log(rec []byte, final bool) error {
 	// If the record is too big to fit within the active page in the current
 	// segment, terminate the active segment and advance to the next one.
 	// This ensures that records do not cross segment boundaries.
-	left := w.page.remaining() - recordHeaderSize                                   // Free space in the active page.
+	left := w.page.remaining() - recordHeaderSize                                   // Free space in the active page. [7字节]
 	left += (pageSize - recordHeaderSize) * (w.pagesPerSegment() - w.donePages - 1) // Free pages in the active segment.
 
-	// 21/03/15 22:51:18 Mark
-	// record压缩结果不跨段
+	// record不跨段
 	if len(rec) > left {
 		if err := w.nextSegment(); err != nil {
 			return err
@@ -657,13 +657,12 @@ func (w *WAL) log(rec []byte, final bool) error {
 		// Find how much of the record we can fit into the page.
 		var (
 			l = min(len(rec), (pageSize-p.alloc)-recordHeaderSize)
-			// 21/03/15 22:51:42 Mark
 			// 这不是低效操作[只会创建一个新slice结构指针指向原内存地址并初始化len与cap]
 			part = rec[:l]
 			buf  = p.buf[p.alloc:]
 			typ  recType
 		)
-
+		// 写入数据时并没有使用recPageTerm ???
 		switch {
 		case i == 0 && len(part) == len(rec):
 			typ = recFull
@@ -674,19 +673,20 @@ func (w *WAL) log(rec []byte, final bool) error {
 		default:
 			typ = recMiddle
 		}
-		// 21/03/15 22:51:53 Mark
 		// 文档中没有描述此标志位
 		// https://github.com/qstesiro/prometheus/blob/main/tsdb/docs/format/wal.md
 		if compressed {
 			typ |= snappyMask
 		}
-
-		buf[0] = byte(typ)
+		// ┌───────────┬──────────┬────────────┬──────────────┐
+		// │ type <1b> │ len <2b> │ CRC32 <4b> │ data <bytes> │
+		// └───────────┴──────────┴────────────┴──────────────┘
+		buf[0] = byte(typ) // 写入类型
 		crc := crc32.Checksum(part, castagnoliTable)
-		binary.BigEndian.PutUint16(buf[1:], uint16(len(part)))
-		binary.BigEndian.PutUint32(buf[3:], crc)
+		binary.BigEndian.PutUint16(buf[1:], uint16(len(part))) // 写入len
+		binary.BigEndian.PutUint32(buf[3:], crc)               // 写入CRC32
 
-		copy(buf[recordHeaderSize:], part)
+		copy(buf[recordHeaderSize:], part) // 写入data
 		p.alloc += len(part) + recordHeaderSize
 
 		if w.page.full() {
@@ -697,13 +697,11 @@ func (w *WAL) log(rec []byte, final bool) error {
 				return err
 			}
 		}
-		// 21/03/15 22:52:01 Mark
 		// 这不是低效操作[只会创建一个新slice结构指针指向原内存地址并初始化len与cap]
 		rec = rec[l:]
 	}
 
 	// If it's the final record of the batch and the page is not empty, flush it.
-	// 21/03/15 22:52:17 Mark
 	// 尽可能保证一个完整的recrod刷新磁盘
 	if final && w.page.alloc > 0 {
 		if err := w.flushPage(false); err != nil {

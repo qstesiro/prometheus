@@ -648,8 +648,9 @@ func open(dir string, l log.Logger, r prometheus.Registerer, opts *Options, rngs
 	db.compactCancel = cancel
 
 	var wlog *wal.WAL
-	segmentSize := wal.DefaultSegmentSize
+	segmentSize := wal.DefaultSegmentSize // 默认128M,因为不
 	// Wal is enabled.
+	// WAL设计可配制但实际配制参数被隐藏[storage.tsdb.wal-segment-size]
 	if opts.WALSegmentSize >= 0 {
 		// Wal is set to a custom size.
 		if opts.WALSegmentSize > 0 {
