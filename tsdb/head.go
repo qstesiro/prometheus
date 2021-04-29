@@ -1200,6 +1200,8 @@ type headAppender struct {
 var _count = 0
 
 // storage.Appender
+// 记录单条采样数据只写入内存列表
+// 两个列表一个记录采样另一个记录序列
 func (a *headAppender) Append(ref uint64, lset labels.Labels, t int64, v float64) (uint64, error) {
 	if t < a.minValidTime {
 		a.head.metrics.outOfBoundSamples.Inc()
@@ -1245,19 +1247,20 @@ func (a *headAppender) Append(ref uint64, lset labels.Labels, t int64, v float64
 	}
 	s.pendingCommit = true
 	s.Unlock()
-
+	// 调整当前appender的时间区间
 	if t < a.mint {
 		a.mint = t
 	}
 	if t > a.maxt {
 		a.maxt = t
 	}
-
+	// 记录采样值
 	a.samples = append(a.samples, record.RefSample{
 		Ref: s.ref,
 		T:   t,
 		V:   v,
 	})
+	// 记录采样对应的序列
 	a.sampleSeries = append(a.sampleSeries, s)
 	return s.ref, nil
 }
@@ -1293,6 +1296,9 @@ func (a *headAppender) log() error {
 }
 
 // storage.Appender
+// 提交之前写入数据[按批次]
+// 先记录WAL再写入采样对应序列的chunk中
+// 因为记录了WAL所以只要成功提交后就保证数据不会丢失
 func (a *headAppender) Commit() (err error) {
 	if a.closed {
 		return ErrAppenderClosed
@@ -1314,6 +1320,7 @@ func (a *headAppender) Commit() (err error) {
 	var series *memSeries
 	for i, s := range a.samples {
 		series = a.sampleSeries[i]
+		// 写入采样对应序列的chunk中
 		series.Lock()
 		ok, chunkCreated := series.append(s.T, s.V, a.appendID, a.head.chunkDiskMapper)
 		series.cleanupAppendIDsBelow(a.cleanupAppendIDsBelow)
@@ -2121,6 +2128,7 @@ func (s *memSeries) maxTime() int64 {
 	return c.maxTime
 }
 
+// 创建新的Chunk
 func (s *memSeries) cutNewHeadChunk(mint int64, chunkDiskMapper *chunks.ChunkDiskMapper) *memChunk {
 	s.mmapCurrentHeadChunk(chunkDiskMapper)
 
@@ -2132,6 +2140,7 @@ func (s *memSeries) cutNewHeadChunk(mint int64, chunkDiskMapper *chunks.ChunkDis
 
 	// Set upper bound on when the next chunk must be started. An earlier timestamp
 	// may be chosen dynamically at a later point.
+	// 设置下一个切割点
 	s.nextAt = rangeForTimestamp(mint, s.chunkRange)
 
 	app, err := s.headChunk.chunk.Appender()
@@ -2248,6 +2257,7 @@ func (s *memSeries) truncateChunksBefore(mint int64) (removed int) {
 // the appendID for isolation. (The appendID can be zero, which results in no
 // isolation for this append.)
 // It is unsafe to call this concurrently with s.iterator(...) without holding the series lock.
+// 写入采样数据
 func (s *memSeries) append(t int64, v float64, appendID uint64, chunkDiskMapper *chunks.ChunkDiskMapper) (sampleInOrder, chunkCreated bool) {
 	// Based on Gorilla white papers this offers near-optimal compression ratio
 	// so anything bigger that this has diminishing returns and increases

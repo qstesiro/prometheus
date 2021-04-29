@@ -1522,6 +1522,12 @@ func (db *DB) ChunkQuerier(_ context.Context, mint, maxt int64) (storage.ChunkQu
 }
 
 func rangeForTimestamp(t int64, width int64) (maxt int64) {
+	// 重新计算t,保证t是width的整数倍,从而保证range的连续性
+	// t0  t1  t2    t3 无倍数对齐[w=3]
+	// |___|___|_____|_
+	// t0  t1  t2  t3`  有倍数对齐[t3`=(t3/w)*w+w, w=3]
+	// |___|___|___|___
+	//  123 678 ABC DEF
 	return (t/width)*width + width
 }
 
