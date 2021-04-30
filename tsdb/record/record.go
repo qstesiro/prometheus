@@ -173,6 +173,8 @@ type Encoder struct {
 
 // Series appends the encoded series to b and returns the resulting slice.
 // ┌────────────────────────────────────────────┐
+// │ type = 1 <1b>                              │
+// ├────────────────────────────────────────────┤
 // │ ┌─────────┬──────────────────────────────┐ │
 // │ │ id <8b> │ n = len(labels) <uvarint>    │ │
 // │ ├─────────┴────────────┬─────────────────┤ │
@@ -186,7 +188,7 @@ type Encoder struct {
 // └────────────────────────────────────────────┘
 func (e *Encoder) Series(series []RefSeries, b []byte) []byte {
 	buf := encoding.Encbuf{B: b}
-	buf.PutByte(byte(Series)) // 开始实际写入len占位一个字节 ???
+	buf.PutByte(byte(Series)) // Series = 1
 
 	for _, s := range series {
 		buf.PutBE64(s.Ref)
@@ -202,6 +204,8 @@ func (e *Encoder) Series(series []RefSeries, b []byte) []byte {
 
 // Samples appends the encoded samples to b and returns the resulting slice.
 // ┌──────────────────────────────────────────────────────────────────┐
+// │ type = 2 <1b>                                                    │
+// ├──────────────────────────────────────────────────────────────────┤
 // │ ┌────────────────────┬───────────────────────────┐               │
 // │ │ id <8b>            │ timestamp <8b>            │               │
 // │ └────────────────────┴───────────────────────────┘               │
@@ -212,7 +216,7 @@ func (e *Encoder) Series(series []RefSeries, b []byte) []byte {
 // └──────────────────────────────────────────────────────────────────┘
 func (e *Encoder) Samples(samples []RefSample, b []byte) []byte {
 	buf := encoding.Encbuf{B: b}
-	buf.PutByte(byte(Samples)) // 开始实际写入len占位一个字节 ???
+	buf.PutByte(byte(Samples)) // Samples = 2
 
 	if len(samples) == 0 {
 		return buf.Get()
@@ -234,6 +238,8 @@ func (e *Encoder) Samples(samples []RefSample, b []byte) []byte {
 
 // Tombstones appends the encoded tombstones to b and returns the resulting slice.
 // ┌─────────────────────────────────────────────────────┐
+// │ type = 3 <1b>                                       │
+// ├─────────────────────────────────────────────────────┤
 // │ ┌─────────┬───────────────────┬───────────────────┐ │
 // │ │ id <8b> │ min_time <varint> │ max_time <varint> │ │
 // │ └─────────┴───────────────────┴───────────────────┘ │
@@ -242,7 +248,7 @@ func (e *Encoder) Samples(samples []RefSample, b []byte) []byte {
 func (e *Encoder) Tombstones(tstones []tombstones.Stone, b []byte) []byte {
 	buf := encoding.Encbuf{B: b}
 
-	buf.PutByte(byte(Tombstones))
+	buf.PutByte(byte(Tombstones)) // Tombstones = 3
 	for _, s := range tstones {
 		for _, iv := range s.Intervals {
 			buf.PutBE64(s.Ref)

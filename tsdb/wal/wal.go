@@ -67,9 +67,9 @@ func (p *page) full() bool {
 }
 
 func (p *page) reset() {
-	// 21/03/15 22:50:40 Quiz
 	// 突然想到是否可以在标准库增加函数封装内存块清空
 	// 函数内部使用针对特定处理器的块处理指令
+	// 这样处理效率会比较高
 	for i := range p.buf {
 		p.buf[i] = 0
 	}
@@ -554,7 +554,7 @@ func (w *WAL) flushPage(clear bool) error {
 // First Byte of header format:
 // [ 4 bits unallocated] [1 bit snappy compression flag] [ 3 bit record type ]
 const (
-	snappyMask  = 1 << 3
+	snappyMask  = 1 << 3 // 文档中没有标注 ???
 	recTypeMask = snappyMask - 1
 )
 
@@ -595,6 +595,7 @@ func (w *WAL) pagesPerSegment() int {
 
 // Log writes the records into the log.
 // Multiple records can be passed at once to reduce writes and increase throughput.
+// 此函数成功返回后就可保证数据不丢失
 func (w *WAL) Log(recs ...[]byte) error {
 	w.mtx.Lock()
 	defer w.mtx.Unlock()
@@ -623,6 +624,7 @@ func (w *WAL) log(rec []byte, final bool) error {
 	}
 
 	// Compress the record before calculating if a new segment is needed.
+	// 可配制参数storage.tsdb.wal-compression默认为true
 	compressed := false
 	if w.compress && len(rec) > 0 {
 		// The snappy library uses `len` to calculate if we need a new buffer.
@@ -662,7 +664,9 @@ func (w *WAL) log(rec []byte, final bool) error {
 			buf  = p.buf[p.alloc:]
 			typ  recType
 		)
-		// 写入数据时并没有使用recPageTerm ???
+		// 写入数据时虽然没有使用recPageTerm
+		// 但是因为其值为0当前读取时获取到fragment类型为0
+		// 则可以认为segment已经结束,具体还没有分析读后续再分析 ???
 		switch {
 		case i == 0 && len(part) == len(rec):
 			typ = recFull
@@ -673,9 +677,10 @@ func (w *WAL) log(rec []byte, final bool) error {
 		default:
 			typ = recMiddle
 		}
-		// 文档中没有描述此标志位
+		// // 文档中没有标注 ???
 		// https://github.com/qstesiro/prometheus/blob/main/tsdb/docs/format/wal.md
 		if compressed {
+			// 00001[000|001|010|011|100]
 			typ |= snappyMask
 		}
 		// ┌───────────┬──────────┬────────────┬──────────────┐
@@ -702,7 +707,7 @@ func (w *WAL) log(rec []byte, final bool) error {
 	}
 
 	// If it's the final record of the batch and the page is not empty, flush it.
-	// 尽可能保证一个完整的recrod刷新磁盘
+	// 保证一批record一定刷新磁盘
 	if final && w.page.alloc > 0 {
 		if err := w.flushPage(false); err != nil {
 			return err

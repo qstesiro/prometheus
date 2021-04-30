@@ -47,8 +47,7 @@ type CheckpointStats struct {
 
 // LastCheckpoint returns the directory name and index of the most recent checkpoint.
 // If dir does not contain any checkpoints, ErrNotFound is returned.
-// 21/03/15 22:38:32 Mark
-// 只返回最近子目录的全路径
+// 返回上一次检查点目录[因为每次生成检查点都会删除上一次的检查点所以只会返回一个]
 func LastCheckpoint(dir string) (string, int, error) {
 	checkpoints, err := listCheckpoints(dir)
 	if err != nil {
@@ -60,11 +59,11 @@ func LastCheckpoint(dir string) (string, int, error) {
 	}
 
 	checkpoint := checkpoints[len(checkpoints)-1]
+	// 最后一个segment文件索引作为checkpoint目录的索引
 	return filepath.Join(dir, checkpoint.name), checkpoint.index, nil
 }
 
 // DeleteCheckpoints deletes all checkpoints in a directory below a given index.
-// 21/03/15 22:47:13 Mark
 // 删除所有小于等于maxIndex的检查点子目录
 func DeleteCheckpoints(dir string, maxIndex int) error {
 	checkpoints, err := listCheckpoints(dir)
@@ -92,6 +91,10 @@ const checkpointPrefix = "checkpoint."
 // segmented format as the original WAL itself.
 // This makes it easy to read it through the WAL package and concatenate
 // it with the original WAL.
+// 获取上一次查检点目录中的文件与当前WAL目录中的文件
+// 依次读取每个文件解码内容
+// 判定三种不类型record遍历每一个并根据mint进行过滤将符合时间的record记录到新的检查点中[临时目录]
+// 将临时目录替换为正常目录并删除
 func Checkpoint(logger log.Logger, w *WAL, from, to int, keep func(id uint64) bool, mint int64) (*CheckpointStats, error) {
 	stats := &CheckpointStats{}
 	var sgmReader io.ReadCloser
@@ -112,33 +115,30 @@ func Checkpoint(logger log.Logger, w *WAL, from, to int, keep func(id uint64) bo
 			}
 			// Ignore WAL files below the checkpoint. They shouldn't exist to begin with.
 			from = last
-
+			// 添加上一次检查点的segment文件
 			sgmRange = append(sgmRange, SegmentRange{Dir: dir, Last: math.MaxInt32})
 		}
-
+		// 添加当前WAL目录中的文件
 		sgmRange = append(sgmRange, SegmentRange{Dir: w.Dir(), First: from, Last: to})
 		sgmReader, err = NewSegmentsRangeReader(sgmRange...)
 		if err != nil {
 			return nil, errors.Wrap(err, "create segment reader")
 		}
-		// 21/03/15 22:47:39 Quiz
 		// 超出块作用域并不会被调用只会在函数返回前调用
 		defer sgmReader.Close()
 	}
 
 	cpdir := checkpointDir(w.Dir(), to)
-	// 21/03/15 22:49:12 Mark
 	// checkpoint.%08d.tmp
 	cpdirtmp := cpdir + ".tmp"
-
+	// 删除可能存在的旧检查点临时目录
 	if err := os.RemoveAll(cpdirtmp); err != nil {
 		return nil, errors.Wrap(err, "remove previous temporary checkpoint dir")
 	}
-
+	// 创建新的检查点临时目录
 	if err := os.MkdirAll(cpdirtmp, 0777); err != nil {
 		return nil, errors.Wrap(err, "create checkpoint dir")
 	}
-	// 21/03/15 22:49:30 Mark
 	// 创建新WAL对象用于写检查点
 	cp, err := New(nil, nil, cpdirtmp, w.CompressionEnabled())
 	if err != nil {
@@ -148,9 +148,10 @@ func Checkpoint(logger log.Logger, w *WAL, from, to int, keep func(id uint64) bo
 	// Ensures that an early return caused by an error doesn't leave any tmp files.
 	defer func() {
 		cp.Close()
-		os.RemoveAll(cpdirtmp)
+		os.RemoveAll(cpdirtmp) // 最后删除检查点临时目录
 	}()
 
+	// 上一次检查点与当前WAL目录中的文件
 	r := NewReader(sgmReader)
 
 	var (
@@ -178,13 +179,9 @@ func Checkpoint(logger log.Logger, w *WAL, from, to int, keep func(id uint64) bo
 				return nil, errors.Wrap(err, "decode series")
 			}
 			// Drop irrelevant series in place.
-			// 21/03/16 14:42:28 Mark
-			// 这个用法妙使用相同内存空间
 			repl := series[:0]
 			for _, s := range series {
-				// 21/03/16 15:45:51 Quiz
 				// 这个keep函数用于判定是否要保留series
-				// 但是其具体内容没有看明白需要后续进一步分析
 				if keep(s.Ref) {
 					repl = append(repl, s)
 				}
@@ -201,10 +198,9 @@ func Checkpoint(logger log.Logger, w *WAL, from, to int, keep func(id uint64) bo
 				return nil, errors.Wrap(err, "decode samples")
 			}
 			// Drop irrelevant samples in place.
-			// 21/03/16 15:03:28 Mark
-			// 这个用法妙使用相同内存空间
 			repl := samples[:0]
 			for _, s := range samples {
+				// 采样时间在mint之后
 				if s.T >= mint {
 					repl = append(repl, s)
 				}
@@ -221,11 +217,10 @@ func Checkpoint(logger log.Logger, w *WAL, from, to int, keep func(id uint64) bo
 				return nil, errors.Wrap(err, "decode deletes")
 			}
 			// Drop irrelevant tombstones in place.
-			// 21/03/16 15:03:48 Mark
-			// 这个用法妙使用相同内存空间
 			repl := tstones[:0]
 			for _, s := range tstones {
 				for _, iv := range s.Intervals {
+					// mint位于区间之内或是整体个区间超过mint
 					if iv.Maxt >= mint {
 						repl = append(repl, s)
 						break
@@ -289,20 +284,17 @@ func Checkpoint(logger log.Logger, w *WAL, from, to int, keep func(id uint64) bo
 	return stats, nil
 }
 
-// 21/03/15 22:49:44 Mark
 // 创建检查点子目录全路径[index8位十进制]
 func checkpointDir(dir string, i int) string {
 	return filepath.Join(dir, fmt.Sprintf(checkpointPrefix+"%08d", i))
 }
 
 type checkpointRef struct {
-	// 21/03/15 22:49:54 Mark
 	// 检查点目录名称
 	name  string
 	index int
 }
 
-// 21/03/15 22:50:04 Mark
 // 遍历指定目录下所有文件包括子目录筛选出符合检查点目录名称的子目录
 func listCheckpoints(dir string) (refs []checkpointRef, err error) {
 	files, err := ioutil.ReadDir(dir)

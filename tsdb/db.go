@@ -897,11 +897,12 @@ func (db *DB) CompactHead(head *RangeHead) error {
 // compactHead compacts the given RangeHead.
 // The compaction mutex should be held before calling this method.
 func (db *DB) compactHead(head *RangeHead) error {
+	// 将当前headChunk中块区间写入磁盘
 	uid, err := db.compactor.Write(db.dir, head, head.MinTime(), head.BlockMaxTime(), nil)
 	if err != nil {
 		return errors.Wrap(err, "persist head block")
 	}
-
+	// 重新装载块保证新落地的块在内存中有元信息被记录
 	if err := db.reloadBlocks(); err != nil {
 		if errRemoveAll := os.RemoveAll(filepath.Join(db.dir, uid.String())); errRemoveAll != nil {
 			return tsdb_errors.NewMulti(
@@ -911,6 +912,7 @@ func (db *DB) compactHead(head *RangeHead) error {
 		}
 		return errors.Wrap(err, "reloadBlocks blocks")
 	}
+	// 截断内存中所有小于块最大时间内容
 	if err = db.head.truncateMemory(head.BlockMaxTime()); err != nil {
 		return errors.Wrap(err, "head memory truncate")
 	}

@@ -58,7 +58,7 @@
 # b wal.(*LiveReader).fillBuffer
 
 # b storage.(*fanout).Querier
-b tsdb.Open
+# b tsdb.Open
 # b tsdb.open
 # b tsdb.(*DB).reload
 # b tsdb.(*DB).reloadBlocks
@@ -112,15 +112,13 @@ b tsdb.Open
 # b scrape.go:1341
 
 # b chunkenc.(*xorAppender).Append
-# b @1184 head.go:1184
-# cond @1184 s != nil
 
-# b @1206 head.go:1206
-# cond @1206 _count == 353
+# b tsdb.(*headAppender).Append
+# b tsdb.(*headAppender).log
 
 # b storage.(*fanoutAppender).Commit
 # b scrape.go:635
-# b tsdb.(*headAppender).log
+b wal.NewSize
 # b wal.(*WAL).Log
 # b wal.(*WAL).log
 # b record.(*Encoder).Series
@@ -145,6 +143,6 @@ b tsdb.Open
 
 # b tsdb/compact.go:714
 # b tsdb/compact.go:745
-b tsdb/compact.go:752
+# b tsdb/compact.go:752
 # b tsdb/compact.go:763
 g

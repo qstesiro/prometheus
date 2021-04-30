@@ -865,7 +865,7 @@ func (h *Head) truncateMemory(mint int64) (err error) {
 
 	h.metrics.headTruncateTotal.Inc()
 	start := time.Now()
-
+	// 实际清理内存序列与采样
 	actualMint := h.gc()
 	level.Info(h.logger).Log("msg", "Head GC completed", "duration", time.Since(start))
 	h.metrics.gcDuration.Observe(time.Since(start).Seconds())
@@ -884,6 +884,7 @@ func (h *Head) truncateMemory(mint int64) (err error) {
 	}
 
 	// Truncate the chunk m-mapper.
+	// 截断mmap记录
 	if err := h.chunkDiskMapper.Truncate(mint); err != nil {
 		return errors.Wrap(err, "truncate chunks.HeadReadWriter")
 	}
@@ -923,10 +924,8 @@ func (h *Head) truncateWAL(mint int64) error {
 		if h.series.getByID(id) != nil {
 			return true
 		}
-		// 21/03/15 23:10:24 Mark
 		// 可以使用RWMutex
 		h.deletedMtx.Lock()
-		// 21/03/16 15:48:19 Quiz
 		// 不明白为什么要再判定deleted
 		_, ok := h.deleted[id]
 		h.deletedMtx.Unlock()
@@ -1195,10 +1194,6 @@ type headAppender struct {
 	closed                          bool
 }
 
-// 21/03/16 12:25:03 Mark
-// 测试使用
-var _count = 0
-
 // storage.Appender
 // 记录单条采样数据只写入内存列表
 // 两个列表一个记录采样另一个记录序列
@@ -1208,7 +1203,6 @@ func (a *headAppender) Append(ref uint64, lset labels.Labels, t int64, v float64
 		return 0, storage.ErrOutOfBounds
 	}
 
-	// 21/03/15 22:47:02 Quiz
 	// 此处理进行series的过滤操作
 	s := a.head.series.getByID(ref)
 	if s == nil {
@@ -1229,11 +1223,11 @@ func (a *headAppender) Append(ref uint64, lset labels.Labels, t int64, v float64
 			return 0, err
 		}
 		if created {
+			// 只在新写入的序列才会记录
 			a.series = append(a.series, record.RefSeries{
 				Ref:    s.ref,
 				Labels: lset,
 			})
-			_count += 1
 		}
 	}
 
@@ -1422,6 +1416,7 @@ func (h *Head) gc() int64 {
 	// Drop old chunks and remember series IDs and hashes if they can be
 	// deleted entirely.
 	// 所有chunks(包括headChunk)都小于minTime的serie应该被删除
+	// 对于headChunk的处理感觉多余处理了mint本身不会大于headChunk.min
 	deleted, chunksRemoved, actualMint := h.series.gc(mint)
 	seriesRemoved := len(deleted)
 
