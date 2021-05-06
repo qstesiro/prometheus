@@ -926,7 +926,7 @@ func (h *Head) truncateWAL(mint int64) error {
 		}
 		// 可以使用RWMutex
 		h.deletedMtx.Lock()
-		// 不明白为什么要再判定deleted
+		// 判定deleted
 		_, ok := h.deleted[id]
 		h.deletedMtx.Unlock()
 		return ok
