@@ -2152,7 +2152,7 @@ func (s *memSeries) mmapCurrentHeadChunk(chunkDiskMapper *chunks.ChunkDiskMapper
 		// There is no head chunk, so nothing to m-map here.
 		return
 	}
-
+	// s.ref单调递增
 	chunkRef, err := chunkDiskMapper.WriteChunk(s.ref, s.headChunk.minTime, s.headChunk.maxTime, s.headChunk.chunk)
 	if err != nil {
 		if err != chunks.ErrChunkDiskMapperClosed {

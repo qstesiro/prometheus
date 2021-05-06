@@ -273,6 +273,27 @@ func repairLastChunkFile(files map[int]string) (_ map[int]string, returnErr erro
 
 // WriteChunk writes the chunk to the disk.
 // The returned chunk ref is the reference from where the chunk encoding starts for the chunk.
+// 文件格式(在chunks_head目录)
+// ┌──────────────────────────────┐
+// │  magic(0x85BD40DD) <4 byte>  │
+// ├──────────────────────────────┤
+// │    version(1) <1 byte>       │
+// ├──────────────────────────────┤
+// │    padding(0) <3 byte>       │
+// ├──────────────────────────────┤
+// │ ┌──────────────────────────┐ │
+// │ │         Chunk 1          │ │
+// │ ├──────────────────────────┤ │
+// │ │          ...             │ │
+// │ ├──────────────────────────┤ │
+// │ │         Chunk N          │ │
+// │ └──────────────────────────┘ │
+// └──────────────────────────────┘
+// 对应headChunk内存数据
+// ┌─────────────────────┬───────────────────────┬───────────────────────┬───────────────────┬───────────────┬──────────────┬────────────────┐
+// │ series ref <8 byte> │ mint <8 byte, uint64> │ maxt <8 byte, uint64> │ encoding <1 byte> │ len <uvarint> │ data <bytes> │ CRC32 <4 byte> │
+// └─────────────────────┴───────────────────────┴───────────────────────┴───────────────────┴───────────────┴──────────────┴────────────────┘
+// seriesRef单调递增
 func (cdm *ChunkDiskMapper) WriteChunk(seriesRef uint64, mint, maxt int64, chk chunkenc.Chunk) (chkRef uint64, err error) {
 	cdm.writePathMtx.Lock()
 	defer cdm.writePathMtx.Unlock()

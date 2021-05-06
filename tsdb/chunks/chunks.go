@@ -287,6 +287,26 @@ func (w *Writer) write(b []byte) error {
 // WriteChunks writes as many chunks as possible to the current segment,
 // cuts a new segment when the current segment is full and
 // writes the rest of the chunks in the new segment.
+// 文件格式(在chunks目录)
+// ┌──────────────────────────────┐
+// │  magic(0x85BD40DD) <4 byte>  │
+// ├──────────────────────────────┤
+// │    version(1) <1 byte>       │
+// ├──────────────────────────────┤
+// │    padding(0) <3 byte>       │
+// ├──────────────────────────────┤
+// │ ┌──────────────────────────┐ │
+// │ │         Chunk 1          │ │
+// │ ├──────────────────────────┤ │
+// │ │          ...             │ │
+// │ ├──────────────────────────┤ │
+// │ │         Chunk N          │ │
+// │ └──────────────────────────┘ │
+// └──────────────────────────────┘
+// 对应chunks_head目录中的一个文件
+// ┌───────────────┬───────────────────┬──────────────┬────────────────┐
+// │ len <uvarint> │ encoding <1 byte> │ data <bytes> │ CRC32 <4 byte> │
+// └───────────────┴───────────────────┴──────────────┴────────────────┘
 func (w *Writer) WriteChunks(chks ...Meta) error {
 	var (
 		batchSize  = int64(0)
@@ -298,7 +318,8 @@ func (w *Writer) WriteChunks(chks ...Meta) error {
 
 	for i, chk := range chks {
 		// Each chunk contains: data length + encoding + the data itself + crc32
-		// binary.MaxVarintLen32 = 5
+		// MaxChunkLengthFieldSize = binary.MaxVarintLen32 = 5
+		// 此处理计算一个chunk占用字节len<uvarint>假定占用最大长度,而实际计算时使用实际值
 		chkSize := int64(MaxChunkLengthFieldSize) // The data length is a variable length field so use the maximum possible value.
 		chkSize += ChunkEncodingSize              // The chunk encoding. 1B
 		chkSize += int64(len(chk.Chunk.Bytes()))  // The data itself.
@@ -354,6 +375,9 @@ func (w *Writer) WriteChunks(chks ...Meta) error {
 // writeChunks writes the chunks into the current segment irrespective
 // of the configured segment size limit. A segment should have been already
 // started before calling this.
+// ┌───────────────┬───────────────────┬──────────────┬────────────────┐
+// │ len <uvarint> │ encoding <1 byte> │ data <bytes> │ CRC32 <4 byte> │
+// └───────────────┴───────────────────┴──────────────┴────────────────┘
 func (w *Writer) writeChunks(chks []Meta) error {
 	if len(chks) == 0 {
 		return nil
@@ -372,19 +396,21 @@ func (w *Writer) writeChunks(chks []Meta) error {
 		// 此处的修改会对原始数据产生影响,优秀 :)
 		chk.Ref = seq | uint64(w.n)
 
+		// 长度(按实际大小占用实际空间)
 		n := binary.PutUvarint(w.buf[:], uint64(len(chk.Chunk.Bytes())))
-
 		if err := w.write(w.buf[:n]); err != nil {
 			return err
 		}
+		// 编码
 		w.buf[0] = byte(chk.Chunk.Encoding())
 		if err := w.write(w.buf[:1]); err != nil {
 			return err
 		}
+		// 数据
 		if err := w.write(chk.Chunk.Bytes()); err != nil {
 			return err
 		}
-
+		// CRC32
 		w.crc32.Reset()
 		if err := chk.writeHash(w.crc32, w.buf[:]); err != nil {
 			return err

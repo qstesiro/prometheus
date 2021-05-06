@@ -726,7 +726,7 @@ func (c *LeveledCompactor) populateBlock(blocks []BlockReader, meta *BlockMeta, 
 		}
 		symbols = NewMergedStringIter(symbols, syms)
 	}
-
+	// 写符号
 	for symbols.Next() {
 		if err := indexw.AddSymbol(symbols.At()); err != nil {
 			return errors.Wrap(err, "add symbol")
@@ -777,6 +777,7 @@ func (c *LeveledCompactor) populateBlock(blocks []BlockReader, meta *BlockMeta, 
 		if err := chunkw.WriteChunks(chks...); err != nil {
 			return errors.Wrap(err, "write chunks")
 		}
+		// 添加序列
 		if err := indexw.AddSeries(ref, s.Labels(), chks...); err != nil {
 			return errors.Wrap(err, "add series")
 		}
