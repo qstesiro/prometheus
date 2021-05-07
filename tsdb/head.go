@@ -75,12 +75,15 @@ type Head struct {
 	// All series addressable by their ID or hash.
 	series *stripeSeries
 
-	symMtx  sync.RWMutex
-	symbols map[string]struct{} // 记录Symbols为headIndexReader
+	symMtx sync.RWMutex
+	// 记录Symbols为headIndexReader对象
+	// series所有标签名与标签值
+	symbols map[string]struct{}
 
 	deletedMtx sync.Mutex
 
-	// ??? deleted 记录被从Head中删除的series用于处理WAL创建Checkpoint具体用法不明白
+	// 记录compactHead过程中从headChunk中删除的series(因为对应的samples数据都已经落地磁盘)
+	// WAL创建Checkpoint用于判定是否需要保留series
 	deleted map[uint64]int // Deleted series, and what WAL segment they must be kept until.
 
 	// 记录Postings为headIndexReader

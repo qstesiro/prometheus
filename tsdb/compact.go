@@ -82,7 +82,7 @@ type LeveledCompactor struct {
 	logger    log.Logger
 	ranges    []int64
 	chunkPool chunkenc.Pool
-	ctx       context.Context
+	ctx       context.Context // 非正常用法 ???
 }
 
 type compactorMetrics struct {
@@ -587,7 +587,7 @@ func (c *LeveledCompactor) write(dest string, meta *BlockMeta, blocks ...BlockRe
 	if err := c.populateBlock(blocks, meta, indexw, chunkw); err != nil {
 		return errors.Wrap(err, "populate block")
 	}
-
+	// 判定是否需要退出
 	select {
 	case <-c.ctx.Done():
 		return c.ctx.Err()
@@ -617,7 +617,12 @@ func (c *LeveledCompactor) write(dest string, meta *BlockMeta, blocks ...BlockRe
 	}
 
 	// Create an empty tombstones file.
-	// 创建空的墓碑文件在populateBlock函数中写Block时已经进行了过滤,也许吧,后续再分析 ???
+	// 创建空的墓碑文件在populateBlock函数中写Block时已经进行了过滤
+	// 墓碑文件开始时只是创建空文件占位
+	// 在写入chunks目录中的chunk文件时会使用HeadRange读获取时已经过滤了需要删除的内容
+	// 在进行多目录压缩时根据源目录中墓碑文件的内容进行过滤保证新创建的目标文件中只包含有效数据
+	// 所以新创建目录中的墓碑文件也是空的
+	// 墓碑文件只有在手工调用了删除api才会创建实际内容
 	if _, err := tombstones.WriteFile(c.logger, tmp, tombstones.NewMemTombstones()); err != nil {
 		return errors.Wrap(err, "write new tombstones file")
 	}
@@ -727,7 +732,10 @@ func (c *LeveledCompactor) populateBlock(blocks []BlockReader, meta *BlockMeta, 
 		symbols = NewMergedStringIter(symbols, syms)
 	}
 	// 写符号
+	idx := 0 // ??? for debug
 	for symbols.Next() {
+		fmt.Printf("%d: %+v\n", idx, symbols.At())
+		idx += 1
 		if err := indexw.AddSymbol(symbols.At()); err != nil {
 			return errors.Wrap(err, "add symbol")
 		}

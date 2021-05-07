@@ -359,7 +359,7 @@ func (w *Writer) ensureStage(s indexWriterStage) error {
 	}
 
 	// Mark start of sections in table of contents.
-	// 偏移设置穿插于其中 ???
+	// 偏移设置穿插于其中
 	switch s {
 	case idxStageSymbols:
 		w.toc.Symbols = w.f.pos
@@ -416,6 +416,49 @@ func (w *Writer) writeMeta() error {
 
 // AddSeries adds the series one at a time along with its chunks.
 // 写入Series部分
+// ┌───────────────────────────────────────┐
+// │ ┌───────────────────────────────────┐ │
+// │ │   series_1                        │ │
+// │ ├───────────────────────────────────┤ │
+// │ │                 . . .             │ │
+// │ ├───────────────────────────────────┤ │
+// │ │   series_n                        │ │
+// │ └───────────────────────────────────┘ │
+// └───────────────────────────────────────┘
+// ┌──────────────────────────────────────────────────────────────────────────┐
+// │ len <uvarint>                                                            │
+// ├──────────────────────────────────────────────────────────────────────────┤
+// │ ┌──────────────────────────────────────────────────────────────────────┐ │
+// │ │                     labels count <uvarint64>                         │ │
+// │ ├──────────────────────────────────────────────────────────────────────┤ │
+// │ │              ┌────────────────────────────────────────────┐          │ │
+// │ │              │ ref(l_i.name) <uvarint32>                  │          │ │
+// │ │              ├────────────────────────────────────────────┤          │ │
+// │ │              │ ref(l_i.value) <uvarint32>                 │          │ │
+// │ │              └────────────────────────────────────────────┘          │ │
+// │ │                             ...                                      │ │
+// │ ├──────────────────────────────────────────────────────────────────────┤ │
+// │ │                     chunks count <uvarint64>                         │ │
+// │ ├──────────────────────────────────────────────────────────────────────┤ │
+// │ │              ┌────────────────────────────────────────────┐          │ │
+// │ │              │ c_0.mint <varint64>                        │          │ │
+// │ │              ├────────────────────────────────────────────┤          │ │
+// │ │              │ c_0.maxt - c_0.mint <uvarint64>            │          │ │
+// │ │              ├────────────────────────────────────────────┤          │ │
+// │ │              │ ref(c_0.data) <uvarint64>                  │          │ │
+// │ │              └────────────────────────────────────────────┘          │ │
+// │ │              ┌────────────────────────────────────────────┐          │ │
+// │ │              │ c_i.mint - c_i-1.maxt <uvarint64>          │          │ │
+// │ │              ├────────────────────────────────────────────┤          │ │
+// │ │              │ c_i.maxt - c_i.mint <uvarint64>            │          │ │
+// │ │              ├────────────────────────────────────────────┤          │ │
+// │ │              │ ref(c_i.data) - ref(c_i-1.data) <varint64> │          │ │
+// │ │              └────────────────────────────────────────────┘          │ │
+// │ │                             ...                                      │ │
+// │ └──────────────────────────────────────────────────────────────────────┘ │
+// ├──────────────────────────────────────────────────────────────────────────┤
+// │ CRC32 <4b>                                                               │
+// └──────────────────────────────────────────────────────────────────────────┘
 func (w *Writer) AddSeries(ref uint64, lset labels.Labels, chunks ...chunks.Meta) error {
 	if err := w.ensureStage(idxStageSeries); err != nil {
 		return err
@@ -436,10 +479,18 @@ func (w *Writer) AddSeries(ref uint64, lset labels.Labels, chunks ...chunks.Meta
 	if w.f.pos%16 != 0 {
 		return errors.Errorf("series write not 16-byte aligned at %d", w.f.pos)
 	}
-
+	// ┌──────────────────────────────────────────────────────────────────────┐
+	// │                     labels count <uvarint64>                         │
+	// ├──────────────────────────────────────────────────────────────────────┤
+	// │              ┌────────────────────────────────────────────┐          │
+	// │              │ ref(l_i.name) <uvarint32>                  │          │
+	// │              ├────────────────────────────────────────────┤          │
+	// │              │ ref(l_i.value) <uvarint32>                 │          │
+	// │              └────────────────────────────────────────────┘          │
+	// │                             ...                                      │
+	// └──────────────────────────────────────────────────────────────────────┘
 	w.buf2.Reset()
 	w.buf2.PutUvarint(len(lset))
-
 	for _, l := range lset {
 		var err error
 		cacheEntry, ok := w.symbolCache[l.Name]
@@ -467,9 +518,26 @@ func (w *Writer) AddSeries(ref uint64, lset labels.Labels, chunks ...chunks.Meta
 		}
 		w.buf2.PutUvarint32(valueIndex)
 	}
-
+	// ┌──────────────────────────────────────────────────────────────────────┐
+	// │                     chunks count <uvarint64>                         │
+	// ├──────────────────────────────────────────────────────────────────────┤
+	// │              ┌────────────────────────────────────────────┐          │
+	// │              │ c_0.mint <varint64>                        │          │
+	// │              ├────────────────────────────────────────────┤          │
+	// │              │ c_0.maxt - c_0.mint <uvarint64>            │          │
+	// │              ├────────────────────────────────────────────┤          │
+	// │              │ ref(c_0.data) <uvarint64>                  │          │
+	// │              └────────────────────────────────────────────┘          │
+	// │              ┌────────────────────────────────────────────┐          │
+	// │              │ c_i.mint - c_i-1.maxt <uvarint64>          │          │
+	// │              ├────────────────────────────────────────────┤          │
+	// │              │ c_i.maxt - c_i.mint <uvarint64>            │          │
+	// │              ├────────────────────────────────────────────┤          │
+	// │              │ ref(c_i.data) - ref(c_i-1.data) <varint64> │          │
+	// │              └────────────────────────────────────────────┘          │
+	// │                             ...                                      │
+	// └──────────────────────────────────────────────────────────────────────┘
 	w.buf2.PutUvarint(len(chunks))
-
 	if len(chunks) > 0 {
 		c := chunks[0]
 		w.buf2.PutVarint64(c.MinTime)
@@ -489,8 +557,9 @@ func (w *Writer) AddSeries(ref uint64, lset labels.Labels, chunks ...chunks.Meta
 	}
 
 	w.buf1.Reset()
+	// 写入len
 	w.buf1.PutUvarint(w.buf2.Len())
-
+	// 写入crc32
 	w.buf2.PutHash(w.crc32)
 
 	if err := w.write(w.buf1.Get(), w.buf2.Get()); err != nil {
@@ -507,6 +576,7 @@ func (w *Writer) startSymbols() error {
 	// We are at w.toc.Symbols.
 	// Leave 4 bytes of space for the length, and another 4 for the number of symbols
 	// which will both be calculated later.
+	// 占位4字节用于写入长度
 	return w.write([]byte("alenblen"))
 }
 
@@ -519,12 +589,25 @@ func (w *Writer) AddSymbol(sym string) error {
 		return errors.Errorf("symbol %q out-of-order", sym)
 	}
 	w.lastSymbol = sym
-	w.numSymbols++
+	w.numSymbols++ // 符号计数
 	w.buf1.Reset()
 	w.buf1.PutUvarintStr(sym)
 	return w.write(w.buf1.Get())
 }
 
+// ┌────────────────────┬─────────────────────┐
+// │ len <4b>           │ #symbols <4b>       │
+// ├────────────────────┴─────────────────────┤
+// │ ┌──────────────────────┬───────────────┐ │
+// │ │ len(str_1) <uvarint> │ str_1 <bytes> │ │
+// │ ├──────────────────────┴───────────────┤ │
+// │ │                . . .                 │ │
+// │ ├──────────────────────┬───────────────┤ │
+// │ │ len(str_n) <uvarint> │ str_n <bytes> │ │
+// │ └──────────────────────┴───────────────┘ │
+// ├──────────────────────────────────────────┤
+// │ CRC32 <4b>                               │
+// └──────────────────────────────────────────┘
 func (w *Writer) finishSymbols() error {
 	// Write out the length and symbol count.
 	w.buf1.Reset()
@@ -1023,8 +1106,8 @@ func (w *Writer) writePosting(name, value string, offs []uint32) error {
 	w.cntPO++
 
 	w.buf1.Reset()
-	w.buf1.PutBE32int(len(offs))
-
+	w.buf1.PutBE32int(len(offs)) // entries
+	// ref(series_x)
 	for _, off := range offs {
 		if off > (1<<32)-1 {
 			return errors.Errorf("series offset %d exceeds 4 bytes", off)
@@ -1033,8 +1116,8 @@ func (w *Writer) writePosting(name, value string, offs []uint32) error {
 	}
 
 	w.buf2.Reset()
-	w.buf2.PutBE32int(w.buf1.Len())
-	w.buf1.PutHash(w.crc32)
+	w.buf2.PutBE32int(w.buf1.Len()) // len
+	w.buf1.PutHash(w.crc32)         // CRC32
 	return w.fP.Write(w.buf2.Get(), w.buf1.Get())
 }
 
@@ -1087,7 +1170,7 @@ type labelIndexHashEntry struct {
 func (w *Writer) Close() error {
 	// Even if this fails, we need to close all the files.
 	// 关闭前写入除符号表与序列之外的其它部分
-	// 感觉真是思维方式奇特[与MemPostings中保存ID有异曲同工之妙,呵呵] ???
+	// 感觉真是思维方式奇特[与MemPostings中保存ID有异曲同工之妙,呵呵]
 	ensureErr := w.ensureStage(idxStageDone)
 
 	if w.symbolFile != nil {
