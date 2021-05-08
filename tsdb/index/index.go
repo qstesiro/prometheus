@@ -502,7 +502,7 @@ func (w *Writer) AddSeries(ref uint64, lset labels.Labels, chunks ...chunks.Meta
 			}
 		}
 		w.labelNames[l.Name]++
-		w.buf2.PutUvarint32(nameIndex)
+		w.buf2.PutUvarint32(nameIndex) // 符号表中的索引
 
 		valueIndex := cacheEntry.lastValueIndex
 		if !ok || cacheEntry.lastValue != l.Value {
@@ -516,7 +516,7 @@ func (w *Writer) AddSeries(ref uint64, lset labels.Labels, chunks ...chunks.Meta
 				lastValueIndex: valueIndex,
 			}
 		}
-		w.buf2.PutUvarint32(valueIndex)
+		w.buf2.PutUvarint32(valueIndex) // 符号表中的索引
 	}
 	// ┌──────────────────────────────────────────────────────────────────────┐
 	// │                     chunks count <uvarint64>                         │
@@ -695,6 +695,7 @@ func (w *Writer) writeLabelIndices() error {
 	}
 
 	// Handle the last label.
+	// 处理可能的剩余
 	if len(values) > 0 {
 		if err := w.writeLabelIndex(string(current), values); err != nil {
 			return err
@@ -703,12 +704,26 @@ func (w *Writer) writeLabelIndices() error {
 	return nil
 }
 
+// ┌───────────────┬────────────────┬────────────────┐
+// │ len <4b>      │ #names <4b>    │ #entries <4b>  │
+// ├───────────────┴────────────────┴────────────────┤
+// │ ┌─────────────────────────────────────────────┐ │
+// │ │ ref(value_0) <4b>                           │ │
+// │ ├─────────────────────────────────────────────┤ │
+// │ │ ...                                         │ │
+// │ ├─────────────────────────────────────────────┤ │
+// │ │ ref(value_n) <4b>                           │ │
+// │ └─────────────────────────────────────────────┘ │
+// │                      . . .                      │
+// ├─────────────────────────────────────────────────┤
+// │ CRC32 <4b>                                      │
+// └─────────────────────────────────────────────────┘
 func (w *Writer) writeLabelIndex(name string, values []uint32) error {
 	// Align beginning to 4 bytes for more efficient index list scans.
 	if err := w.addPadding(4); err != nil {
 		return err
 	}
-
+	// 写入标签索引表时使用
 	w.labelIndexes = append(w.labelIndexes, labelIndexHashEntry{
 		keys:   []string{name},
 		offset: w.f.pos,
@@ -722,7 +737,9 @@ func (w *Writer) writeLabelIndex(name string, values []uint32) error {
 	w.crc32.Reset()
 
 	w.buf1.Reset()
-	w.buf1.PutBE32int(1) // Number of names. 恒定为1
+	// 代表标签名称的个数,当前恒定为1,代表只记录一个标签名称
+	w.buf1.PutBE32int(1) // Number of names.
+	// 值的符号表索引
 	w.buf1.PutBE32int(len(values))
 	w.buf1.WriteToHash(w.crc32)
 	if err := w.write(w.buf1.Get()); err != nil {
@@ -752,15 +769,31 @@ func (w *Writer) writeLabelIndex(name string, values []uint32) error {
 
 // writeLabelIndexesOffsetTable writes the label indices offset table.
 // 文档中说明 This is no longer used. ???
+// ┌─────────────────────┬──────────────────────┐
+// │ len <4b>            │ #entries <4b>        │
+// ├─────────────────────┴──────────────────────┤
+// │ ┌────────────────────────────────────────┐ │
+// │ │  n = 1 <1b>                            │ │
+// │ ├──────────────────────┬─────────────────┤ │
+// │ │ len(name) <uvarint>  │ name <bytes>    │ │
+// │ ├──────────────────────┴─────────────────┤ │
+// │ │  offset <uvarint64>                    │ │
+// │ └────────────────────────────────────────┘ │
+// │                    . . .                   │
+// ├────────────────────────────────────────────┤
+// │  CRC32 <4b>                                │
+// └────────────────────────────────────────────┘
 func (w *Writer) writeLabelIndexesOffsetTable() error {
 	startPos := w.f.pos
 	// Leave 4 bytes of space for the length, which will be calculated later.
+	// 长度占位
 	if err := w.write([]byte("alen")); err != nil {
 		return err
 	}
 	w.crc32.Reset()
 
 	w.buf1.Reset()
+	// entries个数
 	w.buf1.PutBE32int(len(w.labelIndexes))
 	w.buf1.WriteToHash(w.crc32)
 	if err := w.write(w.buf1.Get()); err != nil {
@@ -811,7 +844,8 @@ func (w *Writer) writePostingsOffsetTable() error {
 
 	w.buf1.Reset()
 	w.crc32.Reset()
-	w.buf1.PutBE32int(int(w.cntPO)) // Count. 项个数
+	// entries个数
+	w.buf1.PutBE32int(int(w.cntPO)) // Count.
 	w.buf1.WriteToHash(w.crc32)
 	if err := w.write(w.buf1.Get()); err != nil {
 		return err
@@ -834,7 +868,8 @@ func (w *Writer) writePostingsOffsetTable() error {
 		w.buf1.PutUvarint(d.Uvarint())                     // Keycount.
 		w.buf1.PutUvarintStr(yoloString(d.UvarintBytes())) // Label name.
 		w.buf1.PutUvarintStr(yoloString(d.UvarintBytes())) // Label value.
-		w.buf1.PutUvarint64(d.Uvarint64() + adjustment)    // Offset.
+		// 指向Postings段中对应Posting项的offset
+		w.buf1.PutUvarint64(d.Uvarint64() + adjustment) // Offset.
 		w.buf1.WriteToHash(w.crc32)
 		if err := w.write(w.buf1.Get()); err != nil {
 			return err
@@ -919,6 +954,7 @@ func (w *Writer) writePostingsToTmpFiles() error {
 		}
 		offsets = append(offsets, uint32(startPos/16)) // ??? 为什么除16,用时再乘
 		// Skip to next series.
+		// 跳过当前series
 		x := d.Uvarint()       // 单个序列长度
 		d.Skip(x + crc32.Size) // 加单个序列CRC32的4字节
 		if err := d.Err(); err != nil {
@@ -1106,6 +1142,7 @@ func (w *Writer) writePosting(name, value string, offs []uint32) error {
 	w.cntPO++
 
 	w.buf1.Reset()
+	// offs[i] = series-startpos(每个series启始位置)/16
 	w.buf1.PutBE32int(len(offs)) // entries
 	// ref(series_x)
 	for _, off := range offs {
