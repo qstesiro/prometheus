@@ -505,6 +505,7 @@ func (sp *scrapePool) sync(targets []*Target) {
 	for _, l := range sp.loops {
 		l.setForcedError(forcedErr)
 	}
+	// 启动scrapeLoop(并行抓取每个target独立协程)
 	for _, l := range uniqueLoops {
 		if l != nil {
 			go l.run(interval, timeout, nil)
