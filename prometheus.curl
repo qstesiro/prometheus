@@ -65,3 +65,54 @@ curl 192.168.56.104:9090/service-discovery -X GET
 curl 192.168.56.104:9090/status -X GET
 curl 192.168.56.104:9090/targets -X GET
 curl 192.168.56.104:9090/tsdb-status -X GET
+
+# query
+curl localhost:9090/api/v1/query -g \
+     --data-urlencode 'query={__name__="go_gc_duration_seconds_count"}' \
+     --data-urlencode 'time=2021-06-03T15:06:21.102+08:00' \
+     -X POST | python -m json.tool
+curl localhost:9090/api/v1/query_range -g \
+     --data-urlencode 'query={__name__="go_gc_duration_seconds_count"}' \
+     --data-urlencode 'start=2021-06-03T15:01:16.666+08:00' \
+     --data-urlencode 'end=2021-06-03T15:01:51.900+08:00' \
+     --data-urlencode 'step=10s' \
+     -X POST | python -m json.tool
+curl localhost:9090/api/v1/series -g \
+     --data-urlencode 'match[]={__name__="go_gc_duration_seconds",quantile="1"}' \
+     --data-urlencode 'match[]={__name__="go_gc_duration_seconds",quantile="0.5"}' \
+     --data-urlencode 'start=2021-06-03T15:01:16.666+08:00' \
+     --data-urlencode 'end=2021-06-03T15:01:51.900+08:00' \
+     -X POST | python -m json.tool
+curl localhost:9090/api/v1/series -g \
+     --data-urlencode 'match[]={__name__="go_gc_duration_seconds",quantile="1"}' \
+     --data-urlencode 'match[]={__name__="go_gc_duration_seconds",quantile="0.5"}' \
+     --data-urlencode 'start=2021-06-03T15:01:16.666+08:00' \
+     --data-urlencode 'end=2021-06-03T15:01:51.900+08:00' \
+     -X POST | python -m json.tool
+curl localhost:9090/api/v1/labels \
+     -X GET | python -m json.tool
+curl localhost:9090/api/v1/labels -g \
+     --data-urlencode 'match[]={__name__="go_gc_duration_seconds"}' \
+     --data-urlencode 'start=2021-06-03T15:01:16.666+08:00' \
+     --data-urlencode 'end=2021-06-03T15:01:51.900+08:00' \
+     -X POST | python -m json.tool
+# 查询值只支持GET方法     
+curl localhost:9090/api/v1/label/quantile/values \
+     -X GET | python -m json.tool
+curl localhost:9090/api/v1/label/quantile/values -G \
+     --data-urlencode 'match[]={__name__="go_gc_duration_seconds"}' \
+     --data-urlencode 'start=2021-06-03T15:01:16.666+08:00' \
+     --data-urlencode 'end=2021-06-03T15:01:51.900+08:00' \
+     -X GET | python -m json.tool     
+curl localhost:9090/api/v1/label/quantile/values -G \
+     --data-urlencode 'match[]={__name__="go_gc_duration_seconds",quantile="1"}' \
+     --data-urlencode 'start=2021-06-03T15:01:16.666+08:00' \
+     --data-urlencode 'end=2021-06-03T15:01:51.900+08:00' \
+     -X GET | python -m json.tool
+# 线上环境
+curl 10.138.16.190:9090/api/v1/query_range -g \
+     --data-urlencode "query=max(floor((timestamp(log_consume_timestamp{cluster = 'qd-hongdao', group =~ '^storage.*'})) - floor((log_consume_timestamp{cluster = 'qd-hongdao', group =~ '^storage.*'} > 0) / 1000) < 86400 * 7)) by (topic)" \
+     --data-urlencode 'start=2021-06-03T15:01:51.000+08:00' \
+     --data-urlencode 'end=2021-06-03T15:02:51.000+08:00' \
+     --data-urlencode 'step=10s' \
+     -X POST | python -m json.tool     
