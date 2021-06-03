@@ -134,7 +134,7 @@
 # b index.(*Writer).finishSymbols
 # b index.(*Writer).AddSeries
 # b tsdb/index/index.go:438
-b tsdb/index/index.go:486
+# b tsdb/index/index.go:486
 # b index.(*Writer).writePostingsToTmpFiles
 # b index.(*Writer).writeLabelIndices
 # b index.(*Writer).writePostings

@@ -732,10 +732,10 @@ func (c *LeveledCompactor) populateBlock(blocks []BlockReader, meta *BlockMeta, 
 		symbols = NewMergedStringIter(symbols, syms)
 	}
 	// 写符号
-	idx := 0 // ??? for debug
+	// idx := 0 // ??? for debug
 	for symbols.Next() {
-		fmt.Printf("%d: %+v\n", idx, symbols.At())
-		idx += 1
+		// fmt.Printf("%d: %+v\n", idx, symbols.At())
+		// idx += 1
 		if err := indexw.AddSymbol(symbols.At()); err != nil {
 			return errors.Wrap(err, "add symbol")
 		}
