@@ -178,6 +178,7 @@ type DB struct {
 	compactCancel context.CancelFunc
 }
 
+// ??? 学习指标好样例
 type dbMetrics struct {
 	loadedBlocks         prometheus.GaugeFunc
 	symbolTableSize      prometheus.GaugeFunc

@@ -1,5 +1,5 @@
 # b main.main
-
+#
 # web handler
 # b prometheus/main.go:156
 # b prometheus/main.go:458
@@ -30,7 +30,7 @@
 # b web.go:384
 # b web.go:175
 # b web.(*metrics).instrumentHandler
-
+#
 # remote storage
 # b remote.NewStorage
 # b remote.NewWriteStorage
@@ -45,7 +45,7 @@
 # b remote.(*WriteStorage).ApplyConfig
 # b remote.(*QueueManager).Append
 # b remote.(*Client).Store
-
+#
 # wal
 # b wal.NewWatcher
 # b wal.(*Watcher).Start
@@ -56,7 +56,7 @@
 # b wal.(*LiveReader).buildRecord
 # b wal.(*LiveReader).readRecord
 # b wal.(*LiveReader).fillBuffer
-
+# 
 # b storage.(*fanout).Querier
 # b tsdb.Open
 # b tsdb.open
@@ -72,7 +72,7 @@
 # b tsdb.(*noopSeriesLifecycleCallback).PreCreation
 # b tsdb.(*noopSeriesLifecycleCallback).PostCreation
 # b tsdb.(*noopSeriesLifecycleCallback).PostDeletion
-
+# 
 # b tsdb.NewHead
 # b tsdb.NewHead
 # b tsdb.(*Head).getOrCreateWithID
@@ -80,17 +80,17 @@
 # b tsdb.(*Head).truncateMemory
 # b tsdb.(*Head).truncateWAL
 # b tsdb.(*Head).gc
-
+#
 # b tsdb.(*headAppender).Append
 # b tsdb.(*headAppender).Commit
-
+#
 # b tsdb.newMemSeries
 # b tsdb.(*memSeries).append
 # b tsdb.(*memSeries).cutNewHeadChunk
 # b head.go:2262
-
+#
 # b chunks.(*ChunkDiskMapper).cut
-
+#
 # b chunks.(*ChunkDiskMapper).Truncate
 # b tsdb.NewBlockQuerier
 # b tsdb.newBlockBaseQuerier
@@ -98,24 +98,24 @@
 # b tsdb.(*blockBaseQuerier).LabelValues
 # b tsdb.(*blockBaseQuerier).LabelNames
 # b tsdb.(*blockQuerier).Close
-
+#
 # b remote.(*querier).Select
 # b remote.(*querier).LabelValues
 # b remote.(*querier).LabelNames
 # b remote.(*querier).Close
-
+#
 # b scrape.(*scrapeLoop).scrapeAndReport
 # b scrape.go:1118
 # b scrape.go:1086
 # b scrape.(*targetScraper).scrape
 # b scrape.(*scrapeLoop).append
 # b scrape.go:1341
-
+#
 # b chunkenc.(*xorAppender).Append
-
+#
 # b tsdb.(*headAppender).Append
 # b tsdb.(*headAppender).log
-
+#
 # b storage.(*fanoutAppender).Commit
 # b scrape.go:635
 # b wal.NewSize
@@ -124,11 +124,11 @@
 # b record.(*Encoder).Series
 # b record.(*Encoder).Samples
 # b record.(*Encoder).Tombstones
-
+#
 # b index.NewMemPostings
 # b index.NewUnorderedMemPostings
 # b index.(*MemPostings).Add
-
+#
 # b index.(*Writer).startSymbols
 # b index.(*Writer).AddSymbol
 # b index.(*Writer).finishSymbols
@@ -141,7 +141,7 @@
 # b index.(*Writer).writeLabelIndexesOffsetTable
 # b index.(*Writer).writePostingsOffsetTable
 # b index.(*Writer).writeTOC
-
+#
 # b tsdb/compact.go:714
 # b tsdb/compact.go:727
 # b tsdb/compact.go:735
