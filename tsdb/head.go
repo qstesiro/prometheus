@@ -1902,7 +1902,7 @@ type stripeSeries struct {
 	size                    int
 	series                  []map[uint64]*memSeries
 	hashes                  []seriesHashmap
-	locks                   []stripeLock
+	locks                   []stripeLock // 不明白 ???
 	seriesLifecycleCallback SeriesLifecycleCallback
 }
 
@@ -1920,8 +1920,7 @@ type stripeLock struct {
 	// }
 	sync.RWMutex // 24byte
 	// Padding to avoid multiple locks being on the same cache line.
-	// 21/03/16 13:59:26 Quiz
-	// 后续再分析
+	// 后续再分析 ???
 	_ [40]byte
 }
 
