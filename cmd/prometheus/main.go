@@ -385,11 +385,12 @@ func main() {
 				panic(err)
 			}
 			// When the time retention is set and not too big use to define the max block duration.
+			// 默认RetentionDuration=15d
 			if cfg.tsdb.RetentionDuration != 0 && cfg.tsdb.RetentionDuration/10 < maxBlockDuration {
 				maxBlockDuration = cfg.tsdb.RetentionDuration / 10
 			}
 
-			cfg.tsdb.MaxBlockDuration = maxBlockDuration
+			cfg.tsdb.MaxBlockDuration = maxBlockDuration // 1.5d
 		}
 	}
 

@@ -575,6 +575,7 @@ func open(dir string, l log.Logger, r prometheus.Registerer, opts *Options, rngs
 		l = log.NewNopLogger()
 	}
 
+	// 最长10个时间段或不超过最大驻留
 	for i, v := range rngs {
 		if v > opts.MaxBlockDuration {
 			rngs = rngs[:i]
@@ -609,6 +610,7 @@ func open(dir string, l log.Logger, r prometheus.Registerer, opts *Options, rngs
 		chunkPool:      chunkenc.NewPool(),
 		blocksToDelete: opts.BlocksToDelete,
 	}
+	// 失败情况进行清理
 	defer func() {
 		// Close files if startup fails somewhere.
 		if returnedErr == nil {
