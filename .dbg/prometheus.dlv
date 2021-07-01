@@ -1,5 +1,5 @@
 # b main.main
-b cmd/prometheus/main.go:382
+# b cmd/prometheus/main.go:382
 #
 # web handler
 # b prometheus/main.go:156
@@ -59,7 +59,7 @@ b cmd/prometheus/main.go:382
 # b wal.(*LiveReader).fillBuffer
 # 
 # b storage.(*fanout).Querier
-b tsdb.Open
+# b tsdb.Open
 b tsdb.open
 # b tsdb.(*DB).reload
 # b tsdb.(*DB).reloadBlocks

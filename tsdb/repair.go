@@ -30,6 +30,11 @@ import (
 
 // repairBadIndexVersion repairs an issue in index and meta.json persistence introduced in
 // commit 129773b41a565fde5156301e37f9a87158030443.
+// 枚举数据目录下所有block文件夹
+// 判定其中meta.json文件的version是1跳过2执行修复
+// 创建新的index.repaired文件并将现有index内容复制到index.repaired
+// 修改index.repaired第5个字节为2并替换index.repaired为index
+// 删除index.repaired
 func repairBadIndexVersion(logger log.Logger, dir string) error {
 	// All blocks written by Prometheus 2.1 with a meta.json version of 2 are affected.
 	// We must actually set the index file version to 2 and revert the meta.json version back to 1.
@@ -102,6 +107,7 @@ func repairBadIndexVersion(logger log.Logger, dir string) error {
 		if err := broken.Close(); err != nil {
 			return errors.Wrapf(repl.Close(), "close broken index for block dir: %v", d)
 		}
+		// fileutil.Replace内部为rename所以实际不需要defer中再删除 ???
 		if err := fileutil.Replace(repl.Name(), broken.Name()); err != nil {
 			return errors.Wrapf(repl.Close(), "replaced broken index with index.repaired for block dir: %v", d)
 		}

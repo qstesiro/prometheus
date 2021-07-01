@@ -1270,7 +1270,7 @@ func MigrateWAL(logger log.Logger, dir string) (err error) {
 			if err != nil {
 				return
 			}
-			err = repl.Log(enc.Series(s, b[:0]))
+			err = repl.Log(enc.Series(s, b[:0])) // 优化用法 ???
 		},
 		func(s []record.RefSample) {
 			if err != nil {
@@ -1300,6 +1300,7 @@ func MigrateWAL(logger log.Logger, dir string) (err error) {
 	if err := repl.Close(); err != nil {
 		return errors.Wrap(err, "close new WAL")
 	}
+	// fileutil.Replace 内部实现为rename操作所以不需要删除tmpdir
 	if err := fileutil.Replace(tmpdir, dir); err != nil {
 		return errors.Wrap(err, "replace old WAL")
 	}
