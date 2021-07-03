@@ -1227,6 +1227,10 @@ func deprecatedWALExists(logger log.Logger, dir string) (bool, error) {
 }
 
 // MigrateWAL rewrites the deprecated write ahead log into the new format.
+// 判定是否存在已经弃用WAL
+// 如果存在创建一个临时目录.tmp将弃用wal内容写入新文件中
+// 使用新wal替换弃用的wal
+// 其中文件写入的方式没有看明白为什么这样写而不是直接读写 ???
 func MigrateWAL(logger log.Logger, dir string) (err error) {
 	if logger == nil {
 		logger = log.NewNopLogger()

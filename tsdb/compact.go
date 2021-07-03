@@ -161,7 +161,7 @@ func NewLeveledCompactor(ctx context.Context, r prometheus.Registerer, l log.Log
 		chunkPool: pool,
 		logger:    l,
 		metrics:   newCompactorMetrics(r),
-		ctx:       ctx,
+		ctx:       ctx, // 非正常用法 ???
 	}, nil
 }
 
