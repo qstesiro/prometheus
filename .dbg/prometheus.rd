@@ -11,6 +11,9 @@ git config --local -l
 ./prometheus --config.file=documentation/examples/prometheus.yml
 
 alias gob='CGO_ENABLED=0 go build -v -gcflags "all=-N -l" -o prometheus cmd/prometheus/main.go'
+# 不删除data
+alias dlv='gob && dlv exec ./prometheus --init .dbg/prometheus.dlv -- --config.file=documentation/examples/prometheus.yml'
+# 删除data
 alias dlv='gob && rm -rf data/ && dlv exec ./prometheus --init .dbg/prometheus.dlv -- --config.file=documentation/examples/prometheus.yml'
 
  0  0x0000000002a6d8d8 in github.com/prometheus/prometheus/tsdb.(*memSeries).append

@@ -61,7 +61,7 @@
 # b storage.(*fanout).Querier
 # b tsdb.Open
 b tsdb.open
-# b tsdb.(*DB).reload
+b tsdb.(*DB).reload
 # b tsdb.(*DB).reloadBlocks
 # b tsdb.openBlocks
 # b tsdb.newStripeSeries
@@ -77,8 +77,8 @@ b tsdb.open
 # b tsdb.NewHead
 # b tsdb.NewHead
 # b tsdb.(*Head).getOrCreateWithID
-# b tsdb.(*Head).Truncate
-# b tsdb.(*Head).truncateMemory
+b tsdb.(*Head).Truncate
+b tsdb.(*Head).truncateMemory
 # b tsdb.(*Head).truncateWAL
 # b tsdb.(*Head).gc
 #
