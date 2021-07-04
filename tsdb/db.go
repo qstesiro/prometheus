@@ -902,7 +902,7 @@ func (db *DB) CompactHead(head *RangeHead) error {
 // compactHead compacts the given RangeHead.
 // The compaction mutex should be held before calling this method.
 func (db *DB) compactHead(head *RangeHead) error {
-	// 将当前headChunk中块区间写入磁盘
+	// 将当前headChunk中块区间m-map文件压缩成block
 	uid, err := db.compactor.Write(db.dir, head, head.MinTime(), head.BlockMaxTime(), nil)
 	if err != nil {
 		return errors.Wrap(err, "persist head block")

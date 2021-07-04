@@ -1,3 +1,10 @@
+Todo:
+- db.reloadBlocks 汇总注释
+- head.Chunk 数据写入与db.Compact关系
+- head.Chunk 写mmap时间并不严格的是超过截断时间的第一个时间
+- metrics 在head中存储是使用memSeries,每个memSeries关联一个chunc(xor)存储采样数据
+- HeadChunkMapper 是多个memSeries共用(只有一个实例)
+
 git config --local http.proxy http://192.168.56.1:4780
 git config --local https.proxy https://192.168.56.1:4780
 git config --local https.proxy socks5://192.168.56.1:4781
