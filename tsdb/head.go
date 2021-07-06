@@ -129,7 +129,7 @@ func DefaultHeadOptions() *HeadOptions {
 	}
 }
 
-// ??? 记录Head运行时各种指标
+// 记录Head运行时各种指标
 type headMetrics struct {
 	activeAppenders          prometheus.Gauge
 	series                   prometheus.GaugeFunc
@@ -155,8 +155,7 @@ type headMetrics struct {
 	mmapChunkCorruptionTotal prometheus.Counter
 }
 
-// 21/03/17 23:08:27 Mark
-// 从学习prometheus指标相关库的角度来看源码是比较好的学习资料
+// 从学习prometheus指标相关库的角度来看源码是比较好的学习资料 ???
 func newHeadMetrics(h *Head, r prometheus.Registerer) *headMetrics {
 	m := &headMetrics{
 		activeAppenders: prometheus.NewGauge(prometheus.GaugeOpts{
@@ -445,7 +444,7 @@ func (h *Head) updateMinMaxTime(mint, maxt int64) {
 	}
 }
 
-// 函数这么多代码应该进一步拆分
+// 函数这么多代码应该进一步拆分 ???
 // 内部调用updateMinMaxTime更新区间
 func (h *Head) loadWAL(r *wal.Reader, multiRef map[uint64]uint64, mmappedChunks map[uint64][]*mmappedChunk) (err error) {
 	// Track number of samples that referenced a series we don't know about
@@ -498,8 +497,7 @@ func (h *Head) loadWAL(r *wal.Reader, multiRef map[uint64]uint64, mmappedChunks 
 
 	wg.Add(n)
 	for i := 0; i < n; i++ {
-		// 21/03/16 16:33:39 Mark
-		// 使用300为什么不使用2^x
+		// 使用300为什么不使用2^x ???
 		outputs[i] = make(chan []record.RefSample, 300)
 		inputs[i] = make(chan []record.RefSample, 300)
 
@@ -516,8 +514,7 @@ func (h *Head) loadWAL(r *wal.Reader, multiRef map[uint64]uint64, mmappedChunks 
 			rec := r.Record()
 			switch dec.Type(rec) {
 			case record.Series:
-				// 21/03/16 22:47:56 Mark
-				// 代码中多次使用此种处理方式节省空间且高效
+				// 代码中多次使用此种处理方式节省空间且高效 ???
 				series := seriesPool.Get().([]record.RefSeries)[:0]
 				series, err = dec.Series(rec, series)
 				if err != nil {
@@ -641,8 +638,7 @@ Outer:
 				}
 			}
 			//nolint:staticcheck // Ignore SA6002 relax staticcheck verification.
-			// 21/03/16 22:44:38 Quiz
-			// 不明白
+			// 不明白 ???
 			tstonesPool.Put(v)
 		default:
 			panic(fmt.Errorf("unexpected decoded type: %T", d))
@@ -977,6 +973,7 @@ func (h *Head) truncateWAL(mint int64) error {
 
 // initTime initializes a head with the first timestamp. This only needs to be called
 // for a completely fresh head with an empty WAL.
+// 设置设置[mint,maxt] mint == maxt
 func (h *Head) initTime(t int64) {
 	if !h.minTime.CAS(math.MaxInt64, t) {
 		return
@@ -1071,6 +1068,7 @@ func (h *RangeHead) String() string {
 
 // initAppender is a helper to initialize the time bounds of the head
 // upon the first sample it receives.
+// 只有当data下没有任何历史数据时才会创建initAppender
 type initAppender struct {
 	app  storage.Appender
 	head *Head
@@ -1106,6 +1104,10 @@ func (h *Head) Appender(_ context.Context) storage.Appender {
 
 	// The head cache might not have a starting point yet. The init appender
 	// picks up the first appended timestamp as the base.
+	// 只有当data下没有任何历史数据时才会创建initAppender
+	// initAppender主要用于初始化minTime与maxTime
+	// NewHead中设置minTime=math.MaxInt64,maxTime=math.MinIn64
+	// data目录下有数据情况下会在truncateMemory中设置minTime=maxTime=Blocks.MaxTime
 	if h.MinTime() == math.MaxInt64 {
 		return &initAppender{
 			head: h,
