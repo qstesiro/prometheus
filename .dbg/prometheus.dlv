@@ -74,20 +74,20 @@
 # b tsdb.(*noopSeriesLifecycleCallback).PostCreation
 # b tsdb.(*noopSeriesLifecycleCallback).PostDeletion
  
-b tsdb.NewHead
-b tsdb.(*Head).Appender
-b tsdb.(*Head).initTime
+# b tsdb.NewHead
+# b tsdb.(*Head).Appender
+# b tsdb.(*Head).initTime
 # b tsdb.(*Head).getOrCreateWithID
-b tsdb.(*Head).Truncate
-b tsdb.(*Head).truncateMemory
-b tsdb.(*Head).truncateWAL
+# b tsdb.(*Head).Truncate
+# b tsdb.(*Head).truncateMemory
+# b tsdb.(*Head).truncateWAL
 # b tsdb.(*Head).gc
 
-b tsdb.(*initAppender).Append
-b tsdb.(*initAppender).Commit
-b tsdb.(*initAppender).Rollback
+# b tsdb.(*initAppender).Append
+# b tsdb.(*initAppender).Commit
+# b tsdb.(*initAppender).Rollback
 
-# b tsdb.(*headAppender).Append
+b tsdb.(*headAppender).Append
 # b tsdb.(*headAppender).log
 # b tsdb.(*headAppender).Commit
 # b tsdb.(*headAppender).Rollback
@@ -115,6 +115,7 @@ b tsdb.(*initAppender).Rollback
 # b scrape.(*scrapeLoop).scrapeAndReport
 # b scrape.go:1118
 # b scrape.go:1086
+b scrape.go:1312
 # b scrape.(*targetScraper).scrape
 # b scrape.(*scrapeLoop).append
 # b scrape.go:1341

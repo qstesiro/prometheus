@@ -1892,7 +1892,7 @@ func (m seriesHashmap) del(hash uint64, lset labels.Labels) {
 
 const (
 	// DefaultStripeSize is the default number of entries to allocate in the stripeSeries hash map.
-	// 21/03/16 12:25:39 Mark 16K
+	// 16K
 	DefaultStripeSize = 1 << 14
 )
 
@@ -1926,6 +1926,7 @@ type stripeLock struct {
 	_ [40]byte
 }
 
+// stripeSize = 16384(16K)
 func newStripeSeries(stripeSize int, seriesCallback SeriesLifecycleCallback) *stripeSeries {
 	s := &stripeSeries{
 		size:                    stripeSize,
