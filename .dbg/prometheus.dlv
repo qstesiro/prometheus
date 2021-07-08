@@ -87,7 +87,7 @@
 # b tsdb.(*initAppender).Commit
 # b tsdb.(*initAppender).Rollback
 
-b tsdb.(*headAppender).Append
+# b tsdb.(*headAppender).Append
 # b tsdb.(*headAppender).log
 # b tsdb.(*headAppender).Commit
 # b tsdb.(*headAppender).Rollback
@@ -115,10 +115,14 @@ b tsdb.(*headAppender).Append
 # b scrape.(*scrapeLoop).scrapeAndReport
 # b scrape.go:1118
 # b scrape.go:1086
-b scrape.go:1312
+# b scrape.go:1312
+# b scrape.go:1357
 # b scrape.(*targetScraper).scrape
 # b scrape.(*scrapeLoop).append
 # b scrape.go:1341
+
+b scrape.(*scrapeCache).get
+b scrape.(*scrapeCache).addRef
 
 # b chunkenc.(*xorAppender).Append
 

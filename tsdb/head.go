@@ -98,6 +98,7 @@ type Head struct {
 	lastPostingsStatsCall time.Duration        // Last posting stats call (PostingsCardinalityStats()) time for caching.
 
 	// chunkDiskMapper is used to write and read Head chunks to/from disk.
+	// 是多个memSeries共用(单实例)
 	chunkDiskMapper *chunks.ChunkDiskMapper
 
 	closedMtx sync.Mutex
@@ -1223,7 +1224,7 @@ func (a *headAppender) Append(ref uint64, lset labels.Labels, t int64, v float64
 
 		var created bool
 		var err error
-		s, created, err = a.head.getOrCreate(lset.Hash(), lset)
+		s, created, err = a.head.getOrCreate(lset.Hash(), lset) // hash与scrapeLoop.append中重复计算 ???
 		if err != nil {
 			return 0, err
 		}
@@ -1902,9 +1903,9 @@ const (
 // dereferences.
 type stripeSeries struct {
 	size                    int
-	series                  []map[uint64]*memSeries
-	hashes                  []seriesHashmap
-	locks                   []stripeLock // 不明白 ???
+	series                  []map[uint64]*memSeries // 主要用于存储(猜测)
+	hashes                  []seriesHashmap         // 主要用于存储(猜测)
+	locks                   []stripeLock
 	seriesLifecycleCallback SeriesLifecycleCallback
 }
 
@@ -1922,7 +1923,8 @@ type stripeLock struct {
 	// }
 	sync.RWMutex // 24byte
 	// Padding to avoid multiple locks being on the same cache line.
-	// 后续再分析 ???
+	// 提升效率避免在乒乓效应 ???
+	// https://juejin.cn/post/6844903779276439560
 	_ [40]byte
 }
 

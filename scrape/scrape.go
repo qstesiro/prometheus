@@ -724,6 +724,11 @@ type scrapeCache struct {
 
 	// Parsed string to an entry with information about the actual label set
 	// and its storage reference.
+	// 存储key形式如下:
+	// go_gc_duration_seconds{quantile="0"}
+	// go_info{version="go1.15.6"}
+	// net_conntrack_dialer_conn_attempted_total{dialer_name="alertmanager"}
+	// 存储长字符串key性能较低 ???
 	series map[string]*cacheEntry
 
 	// Cache of dropped metric strings and their iteration. The iteration must
@@ -1309,6 +1314,7 @@ loop:
 		if sl.cache.getDropped(yoloString(met)) {
 			continue
 		}
+		// 低效查找,为何不存储为hash值(必须是没有碰撞或是极小碰撞的hash算法) ???
 		ce, ok := sl.cache.get(yoloString(met))
 		var (
 			ref  uint64
@@ -1322,6 +1328,7 @@ loop:
 			lset = ce.lset
 		} else {
 			mets = p.Metric(&lset)
+			// hash与headAppender.Append中重复计算 ???
 			hash = lset.Hash()
 
 			// Hash label set as it is seen local to the target. Then add target labels
@@ -1397,8 +1404,7 @@ loop:
 	return
 }
 
-// 21/03/15 22:46:14 Quiz
-// 不直接使用string(b)估计效率更高
+// 避免内容复制比string(b)效率更高 ???
 func yoloString(b []byte) string {
 	return *((*string)(unsafe.Pointer(&b)))
 }

@@ -986,6 +986,9 @@ func (db *DB) reload() error {
 
 // reloadBlocks reloads blocks without touching head.
 // Blocks that are obsolete due to replacement or retention will be deleted.
+// reloadBlocks执行以下几步操作:
+// - 删除已损坏的block文件及其父block(如果存在)
+// - 装载所有正常的block
 func (db *DB) reloadBlocks() (err error) {
 	defer func() {
 		if err != nil {
