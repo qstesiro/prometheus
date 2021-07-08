@@ -918,6 +918,7 @@ func (db *DB) compactHead(head *RangeHead) error {
 		return errors.Wrap(err, "reloadBlocks blocks")
 	}
 	// 截断内存中所有小于块最大时间内容
+	// truncateMemory中更新head.minTime
 	if err = db.head.truncateMemory(head.BlockMaxTime()); err != nil {
 		return errors.Wrap(err, "head memory truncate")
 	}

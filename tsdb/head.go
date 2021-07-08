@@ -426,6 +426,7 @@ func (h *Head) processWALSamples(
 
 func (h *Head) updateMinMaxTime(mint, maxt int64) {
 	for {
+		// 正常情况下只执行一次
 		lt := h.MinTime()
 		if mint >= lt {
 			break
@@ -435,6 +436,7 @@ func (h *Head) updateMinMaxTime(mint, maxt int64) {
 		}
 	}
 	for {
+		// 每次都执行
 		ht := h.MaxTime()
 		if maxt <= ht {
 			break
@@ -624,6 +626,7 @@ Outer:
 				samples = samples[m:]
 			}
 			//nolint:staticcheck // Ignore SA6002 relax staticcheck verification.
+			// tag作用 ???
 			samplesPool.Put(v)
 		case []tombstones.Stone:
 			for _, s := range v {
@@ -1028,12 +1031,14 @@ func (h *RangeHead) Tombstones() (tombstones.Reader, error) {
 	return h.head.tombstones, nil
 }
 
+// 以为会有什么文章 :(
 func (h *RangeHead) MinTime() int64 {
 	return h.mint
 }
 
 // MaxTime returns the max time of actual data fetch-able from the head.
 // This controls the chunks time range which is closed [b.MinTime, b.MaxTime].
+// 以为会有什么文章 :(
 func (h *RangeHead) MaxTime() int64 {
 	return h.maxt
 }
@@ -1248,9 +1253,11 @@ func (a *headAppender) Append(ref uint64, lset labels.Labels, t int64, v float64
 	s.pendingCommit = true
 	s.Unlock()
 	// 调整当前appender的时间区间
+	// 正常情况下只执行一次
 	if t < a.mint {
 		a.mint = t
 	}
+	// 每次都执行
 	if t > a.maxt {
 		a.maxt = t
 	}
@@ -1323,8 +1330,8 @@ func (a *headAppender) Commit() (err error) {
 		series = a.sampleSeries[i]
 		// 写入采样对应序列的chunk中
 		series.Lock()
-		ok, chunkCreated := series.append(s.T, s.V, a.appendID, a.head.chunkDiskMapper)
-		series.cleanupAppendIDsBelow(a.cleanupAppendIDsBelow)
+		ok, chunkCreated := series.append(s.T, s.V, a.appendID, a.head.chunkDiskMapper) /
+			series.cleanupAppendIDsBelow(a.cleanupAppendIDsBelow)
 		series.pendingCommit = false
 		series.Unlock()
 
@@ -2138,7 +2145,7 @@ func (s *memSeries) cutNewHeadChunk(mint int64, chunkDiskMapper *chunks.ChunkDis
 	s.headChunk = &memChunk{
 		chunk:   chunkenc.NewXORChunk(),
 		minTime: mint,
-		maxTime: math.MinInt64,
+		maxTime: math.MinInt64, // append中会设置
 	}
 
 	// Set upper bound on when the next chunk must be started. An earlier timestamp
