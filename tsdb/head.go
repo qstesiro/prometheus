@@ -121,7 +121,7 @@ type HeadOptions struct {
 
 func DefaultHeadOptions() *HeadOptions {
 	return &HeadOptions{
-		ChunkRange:           DefaultBlockDuration, // 21/03/17 23:39:20 Mark 2h
+		ChunkRange:           DefaultBlockDuration, // 2h
 		ChunkDirRoot:         "",
 		ChunkPool:            chunkenc.NewPool(),
 		ChunkWriteBufferSize: chunks.DefaultWriteBufferSize, // ??? 4M
@@ -1330,8 +1330,8 @@ func (a *headAppender) Commit() (err error) {
 		series = a.sampleSeries[i]
 		// 写入采样对应序列的chunk中
 		series.Lock()
-		ok, chunkCreated := series.append(s.T, s.V, a.appendID, a.head.chunkDiskMapper) /
-			series.cleanupAppendIDsBelow(a.cleanupAppendIDsBelow)
+		ok, chunkCreated := series.append(s.T, s.V, a.appendID, a.head.chunkDiskMapper)
+		series.cleanupAppendIDsBelow(a.cleanupAppendIDsBelow)
 		series.pendingCommit = false
 		series.Unlock()
 
@@ -1775,9 +1775,10 @@ func (h *headIndexReader) Series(ref uint64, lbls *labels.Labels, chks *[]chunks
 	defer s.Unlock()
 
 	*chks = (*chks)[:0]
-
+	// 获取mmap-chunk
 	for i, c := range s.mmappedChunks {
 		// Do not expose chunks that are outside of the specified range.
+		// 有重叠的mmampChunk也会被处理
 		if !c.OverlapsClosedInterval(h.mint, h.maxt) {
 			continue
 		}
@@ -1787,8 +1788,7 @@ func (h *headIndexReader) Series(ref uint64, lbls *labels.Labels, chks *[]chunks
 			Ref:     packChunkID(s.ref, uint64(s.chunkID(i))),
 		})
 	}
-	// 还需要获取当前headChunk中的内容吗???
-	// 后续有过滤不会产生问题
+	// 如果headChunk与时间区间重叠需要在压缩时一并处理headChunk ???
 	if s.headChunk != nil && s.headChunk.OverlapsClosedInterval(h.mint, h.maxt) {
 		*chks = append(*chks, chunks.Meta{
 			MinTime: s.headChunk.minTime,
@@ -2242,6 +2242,8 @@ func (s *memSeries) chunkID(pos int) int {
 // have no timestamp at or after mint.
 // Chunk IDs remain unchanged.
 func (s *memSeries) truncateChunksBefore(mint int64) (removed int) {
+	// 在压缩处理时如果headChunk有重叠会对headChunk进行压缩
+	// 所以有可能出现headChunk与压缩区间完全重叠且被压缩的情况 ???
 	if s.headChunk != nil && s.headChunk.maxTime < mint {
 		// If head chunk is truncated, we can truncate all mmapped chunks.
 		removed = 1 + len(s.mmappedChunks)
@@ -2252,6 +2254,9 @@ func (s *memSeries) truncateChunksBefore(mint int64) (removed int) {
 	}
 	if len(s.mmappedChunks) > 0 {
 		for i, c := range s.mmappedChunks {
+			// chunk.maxt > head.mint
+			// 保证重叠情况下会保留这个chunk(在压缩时只处理重叠部分)
+			// 未重叠部分会在下次压缩被处理
 			if c.maxTime >= mint {
 				break
 			}

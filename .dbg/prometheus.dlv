@@ -121,8 +121,8 @@
 # b scrape.(*scrapeLoop).append
 # b scrape.go:1341
 
-b scrape.(*scrapeCache).get
-b scrape.(*scrapeCache).addRef
+# b scrape.(*scrapeCache).get
+# b scrape.(*scrapeCache).addRef
 
 # b chunkenc.(*xorAppender).Append
 
@@ -157,5 +157,6 @@ b scrape.(*scrapeCache).addRef
 # b tsdb/compact.go:735
 # b tsdb/compact.go:745
 # b tsdb/compact.go:752
+b tsdb/compact.go:760
 
 g
