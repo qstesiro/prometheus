@@ -476,6 +476,7 @@ func (b *blockBaseSeriesSet) Next() bool {
 
 			// 不在任何墓碑区间内
 			if !(tombstones.Interval{Mint: chk.MinTime, Maxt: chk.MaxTime}.IsSubrange(intervals)) {
+				// 部分重叠也会被处理
 				chks = append(chks, chk)
 			}
 
@@ -493,6 +494,8 @@ func (b *blockBaseSeriesSet) Next() bool {
 			continue
 		}
 
+		// 以下部分是针对时间区间重叠的特殊处理
+		// 对部分重叠chunk的非重叠部分增加tombstone(思路清奇) ???
 		// 增加墓碑时间左部
 		if trimFront {
 			intervals = intervals.Add(tombstones.Interval{Mint: math.MinInt64, Maxt: b.mint - 1})
@@ -673,6 +676,10 @@ func (p *populateWithDelChunkSeriesIterator) Next() bool {
 	}
 
 	// Re-encode the chunk if iterator is provider. This means that it has some samples to be deleted or chunk is opened.
+	// 对于区间重叠的chunk创建一个新chunk将重叠时间区间的内容写入新的
+	// 本次压缩只处理新chunk(重叠部分)
+	// 后续压缩处理会处理本次未重叠的chunk数据
+	// 过滤非重叠数据的方式是基于tombstone实现(思路清奇) ???
 	newChunk := chunkenc.NewXORChunk()
 	app, err := newChunk.Appender()
 	if err != nil {
