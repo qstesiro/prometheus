@@ -73,8 +73,8 @@ curl localhost:9090/api/v1/query -g \
      -X POST | python -m json.tool
 curl localhost:9090/api/v1/query_range -g \
      --data-urlencode 'query={__name__="go_gc_duration_seconds_count"}' \
-     --data-urlencode 'start=2021-06-03T15:01:16.666+08:00' \
-     --data-urlencode 'end=2021-06-03T15:01:51.900+08:00' \
+     --data-urlencode 'start=2021-07-12T13:00:16.666+08:00' \
+     --data-urlencode 'end=2021-07-12T13:45:51.900+08:00' \
      --data-urlencode 'step=10s' \
      -X POST | python -m json.tool
 curl localhost:9090/api/v1/series -g \

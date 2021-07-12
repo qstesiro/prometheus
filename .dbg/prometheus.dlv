@@ -121,8 +121,8 @@
 # b scrape.(*scrapeLoop).append
 # b scrape.go:1341
 
-b scrape.(*scrapeCache).get
-b scrape.(*scrapeCache).addRef
+# b scrape.(*scrapeCache).get
+# b scrape.(*scrapeCache).addRef
 
 # b chunkenc.(*xorAppender).Append
 

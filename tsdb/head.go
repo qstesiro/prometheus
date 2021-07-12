@@ -1330,8 +1330,8 @@ func (a *headAppender) Commit() (err error) {
 		series = a.sampleSeries[i]
 		// 写入采样对应序列的chunk中
 		series.Lock()
-		ok, chunkCreated := series.append(s.T, s.V, a.appendID, a.head.chunkDiskMapper) /
-			series.cleanupAppendIDsBelow(a.cleanupAppendIDsBelow)
+		ok, chunkCreated := series.append(s.T, s.V, a.appendID, a.head.chunkDiskMapper)
+		series.cleanupAppendIDsBelow(a.cleanupAppendIDsBelow)
 		series.pendingCommit = false
 		series.Unlock()
 

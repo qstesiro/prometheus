@@ -303,6 +303,7 @@ func New(logger log.Logger, o *Options) *Handler {
 		app = h.storage
 	}
 
+	// 参数过多合并为一个结构是不是更好 ???
 	h.apiV1 = api_v1.NewAPI(h.queryEngine, h.storage, app, factoryTr, factoryAr,
 		func() config.Config {
 			h.mtx.RLock()
