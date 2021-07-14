@@ -1610,7 +1610,7 @@ func (h *headChunkReader) Chunk(ref uint64) (chunkenc.Chunk, error) {
 	s.Lock()
 	c, garbageCollect, err := s.chunk(int(cid), h.head.chunkDiskMapper)
 	if err != nil {
-		s.Unlock()
+		s.Unlock() // defer s.Unlock() ???
 		return nil, err
 	}
 	defer func() {
@@ -1623,7 +1623,7 @@ func (h *headChunkReader) Chunk(ref uint64) (chunkenc.Chunk, error) {
 
 	// This means that the chunk is outside the specified range.
 	if !c.OverlapsClosedInterval(h.mint, h.maxt) {
-		s.Unlock()
+		s.Unlock() // defer s.Unlock() ???
 		return nil, storage.ErrNotFound
 	}
 	s.Unlock()
@@ -2095,7 +2095,7 @@ type memSeries struct {
 	mmappedChunks []*mmappedChunk
 	headChunk     *memChunk
 	chunkRange    int64
-	firstChunkID  int
+	firstChunkID  int // 每次截断会增加被删除的chunk个数,所以是单调递增
 
 	nextAt        int64     // Timestamp at which to cut the next chunk.
 	sampleBuf     [4]sample // 记录最新写入headChunk的4个采样[具体作用还没有看明白] ???
@@ -2234,6 +2234,7 @@ func (s *memSeries) chunk(id int, chunkDiskMapper *chunks.ChunkDiskMapper) (chun
 	return mc, true, nil
 }
 
+// pos实际是当前index
 func (s *memSeries) chunkID(pos int) int {
 	return pos + s.firstChunkID
 }
