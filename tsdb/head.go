@@ -1010,7 +1010,7 @@ type RangeHead struct {
 }
 
 // NewRangeHead returns a *RangeHead.
-// 实现tsdb.BlockReader接口(Size定义在head.go最后)
+// 实现tsdb.BlockReader接口(Size函数定义在head.go最后)
 func NewRangeHead(head *Head, mint, maxt int64) *RangeHead {
 	return &RangeHead{
 		head: head,
