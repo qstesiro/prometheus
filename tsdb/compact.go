@@ -765,6 +765,7 @@ func (c *LeveledCompactor) populateBlock(blocks []BlockReader, meta *BlockMeta, 
 			return c.ctx.Err()
 		default:
 		}
+		// 一次循环获取的元素与一个series对应
 		s := set.At()
 		chksIter := s.Iterator()
 		chks = chks[:0]

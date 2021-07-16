@@ -727,7 +727,7 @@ func (p *populateWithDelChunkSeriesIterator) At() chunks.Meta { return p.curr }
 // Samples from chunks are also trimmed to requested min and max time.
 // 继承blockBaseSeriesSet
 // 实现storage.SeriesSet.At函数
-// 完整实现storage.SeriesSet接口
+// 通过继承blockBaseSeriesSet完整实现storage.SeriesSet接口
 type blockSeriesSet struct {
 	blockBaseSeriesSet
 }
