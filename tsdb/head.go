@@ -1637,6 +1637,7 @@ func (h *headChunkReader) Chunk(ref uint64) (chunkenc.Chunk, error) {
 	}, nil
 }
 
+// headChunk压缩时不是并发安全(具体细节后续还研究) ???
 type safeChunk struct {
 	chunkenc.Chunk
 	s               *memSeries
@@ -1778,7 +1779,7 @@ func (h *headIndexReader) Series(ref uint64, lbls *labels.Labels, chks *[]chunks
 	// 获取mmap-chunk
 	for i, c := range s.mmappedChunks {
 		// Do not expose chunks that are outside of the specified range.
-		// 有重叠的mmampChunk也会被处理
+		// 有重叠的mmapChunk也会被处理
 		if !c.OverlapsClosedInterval(h.mint, h.maxt) {
 			continue
 		}
@@ -1911,7 +1912,7 @@ const (
 type stripeSeries struct {
 	size                    int
 	series                  []map[uint64]*memSeries // 主要用于存储(猜测)
-	hashes                  []seriesHashmap         // 主要用于存储(猜测)
+	hashes                  []seriesHashmap         // 主要用于查询(猜测)
 	locks                   []stripeLock
 	seriesLifecycleCallback SeriesLifecycleCallback
 }
@@ -1930,7 +1931,7 @@ type stripeLock struct {
 	// }
 	sync.RWMutex // 24byte
 	// Padding to avoid multiple locks being on the same cache line.
-	// 提升效率避免在乒乓效应 ???
+	// 提升效率避免乒乓效应 ???
 	// https://juejin.cn/post/6844903779276439560
 	_ [40]byte
 }

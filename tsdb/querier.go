@@ -417,7 +417,10 @@ func labelValuesWithMatchers(r IndexReader, name string, matchers ...*labels.Mat
 // blockBaseSeriesSet allows to iterate over all series in the single block.
 // Iterated series are trimmed with given min and max time as well as tombstones.
 // See newBlockSeriesSet and newBlockChunkSeriesSet to use it for either sample or chunk iterating.
-// 实现storage.SeriesSet与storage.ChunkSeriesSet中Next,Err,Warnings三个函数
+// 实现storage.SeriesSet与storage.ChunkSeriesSet中以下三个函数:
+// Next() bool
+// Err() error
+// Warnings() Warnings
 type blockBaseSeriesSet struct {
 	p          index.Postings
 	index      IndexReader
@@ -434,6 +437,7 @@ type blockBaseSeriesSet struct {
 }
 
 func (b *blockBaseSeriesSet) Next() bool {
+	// 一次循环处理一个series
 	for b.p.Next() {
 		if err := b.index.Series(b.p.At(), &b.bufLbls, &b.bufChks); err != nil {
 			// Postings may be stale. Skip if no underlying series exists.
@@ -758,7 +762,7 @@ func (b *blockSeriesSet) At() storage.Series {
 // Chunks are also trimmed to requested [min and max] (keeping samples with min and max timestamps).
 // 继承blockBaseSeriesSet
 // 实现storage.ChunkSeriesSet.At函数
-// 完整实现storage.ChunkSeriesSet接口
+// 通过继承blockBaseSeriesSet完整实现storage.ChunkSeriesSet接口
 type blockChunkSeriesSet struct {
 	blockBaseSeriesSet
 }
