@@ -601,6 +601,7 @@ func (p *populateWithDelGenericSeriesIterator) next() bool {
 
 	// We don't want full chunk or it's potentially still opened, take just part of it.
 	p.bufIter.Iter = p.currChkMeta.Chunk.Iterator(nil)
+	// 因DeletedIterator实现了chunkenc.Iterator所以可以直接赋值currDelIter ???
 	p.currDelIter = p.bufIter
 	return true
 }
@@ -838,6 +839,7 @@ func (m mergedStringIter) Err() error {
 }
 
 // DeletedIterator wraps chunk Iterator and makes sure any deleted metrics are not returned.
+// 实现了chunkenc.Iterator
 type DeletedIterator struct {
 	// Iter is an Iterator to be wrapped.
 	Iter chunkenc.Iterator
