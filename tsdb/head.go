@@ -86,7 +86,7 @@ type Head struct {
 	// WAL创建Checkpoint用于判定是否需要保留series
 	deleted map[uint64]int // Deleted series, and what WAL segment they must be kept until.
 
-	// 记录Postings为headIndexReader
+	// 记录Postings为headIndexReader所用
 	postings *index.MemPostings // Postings lists for terms.
 
 	tombstones *tombstones.MemTombstones
@@ -1733,6 +1733,7 @@ func (h *headIndexReader) Postings(name string, values ...string) (index.Posting
 	return index.Merge(res...), nil
 }
 
+// 按label.name与label.value排序而按series.id排序
 func (h *headIndexReader) SortedPostings(p index.Postings) index.Postings {
 	series := make([]*memSeries, 0, 128)
 

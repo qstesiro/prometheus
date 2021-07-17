@@ -722,7 +722,9 @@ func (c *LeveledCompactor) populateBlock(blocks []BlockReader, meta *BlockMeta, 
 		if err != nil {
 			return err
 		}
-		all = indexr.SortedPostings(all) // 返回index.ListPostings
+		// 按label.name与label.value排序而按series.id排序
+		// 返回index.ListPostings包含排序后series.id
+		all = indexr.SortedPostings(all)
 		// Blocks meta is half open: [min, max), so subtract 1 to ensure we don't hold samples with exact meta.MaxTime timestamp.
 		sets = append(sets, newBlockChunkSeriesSet(indexr, chunkr, tombsr, all, meta.MinTime, meta.MaxTime-1))
 		syms := indexr.Symbols()

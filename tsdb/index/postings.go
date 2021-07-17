@@ -24,6 +24,7 @@ import (
 	"github.com/prometheus/prometheus/pkg/labels"
 )
 
+// map[""]map[""][]{1,2,3,...} (所有id)
 var allPostingsKey = labels.Label{}
 
 // AllPostingsKey returns the label key that is used to store the postings list of all existing IDs.
@@ -39,7 +40,7 @@ func AllPostingsKey() (name, value string) {
 // unordered batch fills on startup.
 type MemPostings struct {
 	mtx     sync.RWMutex
-	m       map[string]map[string][]uint64
+	m       map[string]map[string][]uint64 // map[label.name]map[label.value][]series.id
 	ordered bool
 }
 
@@ -71,7 +72,7 @@ func (p *MemPostings) SortedKeys() []labels.Label {
 		}
 	}
 	p.mtx.RUnlock()
-
+	// 按名称排序,名称相同则按值排序
 	sort.Slice(keys, func(i, j int) bool {
 		if d := strings.Compare(keys[i].Name, keys[j].Name); d != 0 {
 			return d < 0
@@ -92,7 +93,7 @@ func (p *MemPostings) LabelNames() []string {
 
 	names := make([]string, 0, n-1)
 	for name := range p.m {
-		if name != allPostingsKey.Name {
+		if name != allPostingsKey.Name { // 过滤allPostingsKey
 			names = append(names, name)
 		}
 	}
@@ -198,7 +199,7 @@ func (p *MemPostings) EnsureOrder() {
 	}
 
 	n := runtime.GOMAXPROCS(0)
-	workc := make(chan []uint64)
+	workc := make(chan []uint64) // 注意此处使用了无缓冲chan
 
 	var wg sync.WaitGroup
 	wg.Add(n)
@@ -217,13 +218,14 @@ func (p *MemPostings) EnsureOrder() {
 			workc <- l
 		}
 	}
-	close(workc)
+	close(workc) // 因为workc是无缓冲所以才可以先关闭不必等待
 	wg.Wait()
 
 	p.ordered = true
 }
 
 // Delete removes all ids in the given map from the postings lists.
+// 为什么不使用切片为参数 ???
 func (p *MemPostings) Delete(deleted map[uint64]struct{}) {
 	var keys, vals []string
 
@@ -304,6 +306,7 @@ func (p *MemPostings) Add(id uint64, lset labels.Labels) {
 	for _, l := range lset {
 		p.addFor(id, l)
 	}
+	// map[""]map[""][]{1,2,3,...} (所有id)
 	p.addFor(id, allPostingsKey)
 
 	p.mtx.Unlock()
@@ -326,6 +329,7 @@ func (p *MemPostings) addFor(id uint64, l labels.Label) {
 	// We repair order violations on insert. The invariant is that the first n-1
 	// items in the list are already sorted.
 	// 插入排序 ???
+	// 因为id是单调递增所以基本不会触发排序行为
 	for i := len(list) - 1; i >= 1; i-- {
 		if list[i] >= list[i-1] {
 			break
@@ -343,7 +347,7 @@ func ExpandPostings(p Postings) (res []uint64, err error) {
 }
 
 // Postings provides iterative access over a postings list.
-// 实际是Iterator
+// 实际是series.id的Iterator
 type Postings interface {
 	// Next advances the iterator and returns true if another value was found.
 	Next() bool
