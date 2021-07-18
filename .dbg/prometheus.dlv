@@ -161,7 +161,10 @@
 
 # b tsdb.(*headChunkReader).Chunk
 
-b tsdb.(*blockBaseSeriesSet).Next
-b tsdb.(*blockChunkSeriesSet).At
+# b tsdb.(*blockBaseSeriesSet).Next
+# b tsdb.(*blockChunkSeriesSet).At
+
+b chunks.(*ChunkDiskMapper).WriteChunk
+b chunks.(*ChunkDiskMapper).flushBuffer
 
 g

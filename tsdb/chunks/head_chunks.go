@@ -492,6 +492,7 @@ func (cdm *ChunkDiskMapper) writeCRC32() error {
 // flushBuffer flushes the current in-memory chunks.
 // Assumes that writePathMtx is _write_ locked before calling this method.
 func (cdm *ChunkDiskMapper) flushBuffer() error {
+	// 数据刷新后立即同步内存(刷新之前内存为空)
 	if err := cdm.chkWriter.Flush(); err != nil {
 		return err
 	}
