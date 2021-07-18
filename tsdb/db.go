@@ -607,7 +607,7 @@ func open(dir string, l log.Logger, r prometheus.Registerer, opts *Options, rngs
 		donec:          make(chan struct{}),
 		stopc:          make(chan struct{}),
 		autoCompact:    true,
-		chunkPool:      chunkenc.NewPool(),
+		chunkPool:      chunkenc.NewPool(), // 基于sync.Pool
 		blocksToDelete: opts.BlocksToDelete,
 	}
 	// 失败情况进行清理
@@ -669,8 +669,8 @@ func open(dir string, l log.Logger, r prometheus.Registerer, opts *Options, rngs
 	headOpts.ChunkRange = rngs[0] // ??? 2h
 	headOpts.ChunkDirRoot = dir
 	headOpts.ChunkPool = db.chunkPool
-	headOpts.ChunkWriteBufferSize = opts.HeadChunksWriteBufferSize // ??? 4k
-	headOpts.StripeSize = opts.StripeSize                          // ??? 16k
+	headOpts.ChunkWriteBufferSize = opts.HeadChunksWriteBufferSize // ??? 4M
+	headOpts.StripeSize = opts.StripeSize                          // ??? 16K
 	headOpts.SeriesCallback = opts.SeriesLifecycleCallback         // ??? 当前版本总是空
 	db.head, err = NewHead(r, l, wlog, headOpts)
 	if err != nil {

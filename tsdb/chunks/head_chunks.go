@@ -54,6 +54,14 @@ const (
 	// SeriesRefSize is the size of series reference on disk.
 	SeriesRefSize = 8
 	// HeadChunkFileHeaderSize is the total size of the header for the head chunk file.
+	// MagicChunksSize + ChunksFormatVersionSize + segmentHeaderPaddingSize = 8B
+	// ┌──────────────────────────────┐
+	// │  magic(0x85BD40DD) <4 byte>  │
+	// ├──────────────────────────────┤
+	// │    version(1) <1 byte>       │
+	// ├──────────────────────────────┤
+	// │    padding(0) <3 byte>       │
+	// ├──────────────────────────────┤
 	HeadChunkFileHeaderSize = SegmentHeaderSize
 	// MaxHeadChunkFileSize is the max size of a head chunk file.
 	MaxHeadChunkFileSize = 128 * 1024 * 1024 // 128 MiB.
@@ -61,6 +69,10 @@ const (
 	CRCSize = 4
 	// MaxHeadChunkMetaSize is the max size of an mmapped chunks minus the chunks data.
 	// Max because the uvarint size can be smaller.
+	// ChunksFormatVersionSize = encoding(实际存储) = 1
+	// ┌─────────────────────┬───────────────────────┬───────────────────────┬───────────────────┬───────────────┬──────────────┬────────────────┐
+	// │ series ref <8 byte> │ mint <8 byte, uint64> │ maxt <8 byte, uint64> │ encoding <1 byte> │ len <uvarint> │ data <bytes> │ CRC32 <4 byte> │
+	// └─────────────────────┴───────────────────────┴───────────────────────┴───────────────────┴───────────────┴──────────────┴────────────────┘
 	MaxHeadChunkMetaSize = SeriesRefSize + 2*MintMaxtSize + ChunksFormatVersionSize + MaxChunkLengthFieldSize + CRCSize
 	// MinWriteBufferSize is the minimum write buffer size allowed.
 	MinWriteBufferSize = 64 * 1024 // 64KB.
@@ -310,6 +322,10 @@ func (cdm *ChunkDiskMapper) WriteChunk(seriesRef uint64, mint, maxt int64, chk c
 
 	// if len(chk.Bytes())+MaxHeadChunkMetaSize >= writeBufferSize, it means that chunk >= the buffer size;
 	// so no need to flush here, as we have to flush at the end (to not keep partial chunks in buffer).
+	// 以下两个条件保证不会出现chunk数据刷新空间分裂(部分在缓冲,另一部分在磁盘)
+	// - 如果大于writeBufferSize刷新
+	// - 如果小于writeBufferSize但是缓冲空间不足刷新
+	// 并且在此基础上尽量减少了刷新操作(减少磁盘I/O)
 	if len(chk.Bytes())+MaxHeadChunkMetaSize < cdm.writeBufferSize && cdm.chkWriter.Available() < MaxHeadChunkMetaSize+len(chk.Bytes()) {
 		if err := cdm.flushBuffer(); err != nil {
 			return 0, err
@@ -333,10 +349,11 @@ func (cdm *ChunkDiskMapper) WriteChunk(seriesRef uint64, mint, maxt int64, chk c
 	bytesWritten += ChunkEncodingSize
 	n := binary.PutUvarint(cdm.byteBuf[bytesWritten:], uint64(len(chk.Bytes())))
 	bytesWritten += n
-	// ???
+	// 将byteBuf中缓存数据(非data部分)写入文件与crc计算缓冲
 	if err := cdm.writeAndAppendToCRC32(cdm.byteBuf[:bytesWritten]); err != nil {
 		return 0, err
 	}
+	// 将具体head-chunk数据写入文件与crc计算缓冲
 	if err := cdm.writeAndAppendToCRC32(chk.Bytes()); err != nil {
 		return 0, err
 	}
@@ -348,8 +365,12 @@ func (cdm *ChunkDiskMapper) WriteChunk(seriesRef uint64, mint, maxt int64, chk c
 		cdm.curFileMaxt = maxt
 	}
 
+	// 保证被刷新到写缓冲区的数据在内存中以chunkenc.Chunk形式存在
+	// 为了保证未落地磁盘之前数据可以被正常查询
+	// 与写缓冲区刷新保持同步一但写缓冲被刷新到磁盘则立即清理
 	cdm.chunkBuffer.put(chkRef, chk)
 
+	// 大于writeBufferSize刷新
 	if len(chk.Bytes())+MaxHeadChunkMetaSize >= cdm.writeBufferSize {
 		// The chunk was bigger than the buffer itself.
 		// Flushing to not keep partial chunks in buffer.
@@ -369,6 +390,7 @@ func chunkRef(seq, offset uint64) (chunkRef uint64) {
 // Size retention: because depending on the system architecture, there is a limit on how big of a file we can m-map.
 // Time retention: so that we can delete old chunks with some time guarantee in low load environments.
 func (cdm *ChunkDiskMapper) shouldCutNewFile(chunkSize int) bool {
+	// MaxHeadChunkFileSize = 128 * 1024 * 1024 // 128 MiB.
 	return cdm.curFileSize() == 0 || // First head chunk file.
 		cdm.curFileSize()+int64(chunkSize+MaxHeadChunkMetaSize) > MaxHeadChunkFileSize // Exceeds the max head chunk file size.
 }

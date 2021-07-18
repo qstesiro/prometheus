@@ -43,13 +43,21 @@ const (
 	ChunksFormatVersionSize  = 1
 	segmentHeaderPaddingSize = 3
 	// SegmentHeaderSize defines the total size of the header part.
+	// MagicChunksSize + ChunksFormatVersionSize + segmentHeaderPaddingSize = 8B
+	// ┌──────────────────────────────┐
+	// │  magic(0x85BD40DD) <4 byte>  │
+	// ├──────────────────────────────┤
+	// │    version(1) <1 byte>       │
+	// ├──────────────────────────────┤
+	// │    padding(0) <3 byte>       │
+	// ├──────────────────────────────┤
 	SegmentHeaderSize = MagicChunksSize + ChunksFormatVersionSize + segmentHeaderPaddingSize // 8B
 )
 
 // Chunk fields constants.
 const (
 	// MaxChunkLengthFieldSize defines the maximum size of the data length part.
-	MaxChunkLengthFieldSize = binary.MaxVarintLen32
+	MaxChunkLengthFieldSize = binary.MaxVarintLen32 // 5
 	// ChunkEncodingSize defines the size of the chunk encoding part.
 	ChunkEncodingSize = 1
 )
@@ -585,7 +593,7 @@ func nextSequenceFile(dir string) (string, int, error) {
 	if err != nil {
 		return "", 0, err
 	}
-
+	// 以下获取seq方式还不如在ChunkDiskMapper中记录 ???
 	i := uint64(0)
 	for _, f := range files {
 		j, err := strconv.ParseUint(f.Name(), 10, 64)
