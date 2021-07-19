@@ -360,7 +360,7 @@ func (cdm *ChunkDiskMapper) WriteChunk(seriesRef uint64, mint, maxt int64, chk c
 	if err := cdm.writeCRC32(); err != nil {
 		return 0, err
 	}
-
+	// 更新最大时间
 	if maxt > cdm.curFileMaxt {
 		cdm.curFileMaxt = maxt
 	}
@@ -771,6 +771,7 @@ func (cdm *ChunkDiskMapper) Truncate(mint int64) error {
 	if cdm.curFileSize() > HeadChunkFileHeaderSize {
 		errs.Add(cdm.CutNewFile())
 	}
+	// 删除mmap-chunk数据
 	errs.Add(cdm.deleteFiles(removedFiles))
 	return errs.Err()
 }

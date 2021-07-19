@@ -868,10 +868,11 @@ func (h *Head) truncateMemory(mint int64) (err error) {
 
 	h.metrics.headTruncateTotal.Inc()
 	start := time.Now()
-	// 实际清理内存序列与采样
+	// 实际清理内存序列与采样(内存部分)
 	actualMint := h.gc()
 	level.Info(h.logger).Log("msg", "Head GC completed", "duration", time.Since(start))
 	h.metrics.gcDuration.Observe(time.Since(start).Seconds())
+	// 注意: actualMint <= h.minTime 情况下h.minTime不会修改(压缩线时刻不变)
 	if actualMint > h.minTime.Load() {
 		// The actual mint of the Head is higher than the one asked to truncate.
 		appendableMinValidTime := h.appendableMinValidTime()
@@ -887,7 +888,7 @@ func (h *Head) truncateMemory(mint int64) (err error) {
 	}
 
 	// Truncate the chunk m-mapper.
-	// 截断mmap记录
+	// 清除mmap-chunk数据(磁盘部分)
 	if err := h.chunkDiskMapper.Truncate(mint); err != nil {
 		return errors.Wrap(err, "truncate chunks.HeadReadWriter")
 	}
@@ -1144,7 +1145,7 @@ func (h *Head) appendableMinValidTime() int64 {
 	return max(h.minValidTime.Load(), h.MaxTime()-h.chunkRange.Load()/2)
 }
 
-// 21/03/16 23:22:18 Mark 哈哈
+// 哈哈
 func max(a, b int64) int64 {
 	if a > b {
 		return a
@@ -1428,8 +1429,7 @@ func (h *Head) gc() int64 {
 
 	// Drop old chunks and remember series IDs and hashes if they can be
 	// deleted entirely.
-	// 所有chunks(包括headChunk)都小于minTime的serie应该被删除
-	// 对于headChunk的处理感觉多余处理了mint本身不会大于headChunk.min
+	// 截断所有chunks包括headChunk(压缩也会处理headChunk)都小于minTime的serie应该被删除
 	deleted, chunksRemoved, actualMint := h.series.gc(mint)
 	seriesRemoved := len(deleted)
 
@@ -1991,8 +1991,11 @@ func (s *stripeSeries) gc(mint int64) (map[uint64]struct{}, int, int64) {
 				// series alike.
 				// If we don't hold them all, there's a very small chance that a series receives
 				// samples again while we are half-way into deleting it.
+				// 怎么搞成int,不是uint64吗 ???
 				j := int(series.ref) & (s.size - 1)
-
+				// 此处需要设计index因为两个列表使用不同的使用不同算法不同
+				// - hash & uint64(s.size-1)
+				// - series.ref & uint64(s.size-1)
 				if i != j {
 					s.locks[j].Lock()
 				}
@@ -2246,7 +2249,8 @@ func (s *memSeries) chunkID(pos int) int {
 // Chunk IDs remain unchanged.
 func (s *memSeries) truncateChunksBefore(mint int64) (removed int) {
 	// 在压缩处理时如果headChunk有重叠会对headChunk进行压缩
-	// 所以有可能出现headChunk与压缩区间完全重叠且被压缩的情况 ???
+	// 有可能出现headChunk与压缩区间完全重叠且被压缩的情况
+	// 如: 某series数据抓取到某时刻后没有数据了(网络不通/程序崩溃)
 	if s.headChunk != nil && s.headChunk.maxTime < mint {
 		// If head chunk is truncated, we can truncate all mmapped chunks.
 		removed = 1 + len(s.mmappedChunks)
@@ -2257,8 +2261,8 @@ func (s *memSeries) truncateChunksBefore(mint int64) (removed int) {
 	}
 	if len(s.mmappedChunks) > 0 {
 		for i, c := range s.mmappedChunks {
-			// chunk.maxt > head.mint
-			// 保证重叠情况下会保留这个chunk(在压缩时只处理重叠部分)
+			// chunk.maxt >= head.mint
+			// 保证重叠情况会保留这个chunk(在压缩时只处理重叠部分)
 			// 未重叠部分会在下次压缩被处理
 			if c.maxTime >= mint {
 				break
