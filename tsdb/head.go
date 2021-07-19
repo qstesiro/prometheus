@@ -774,6 +774,7 @@ func (h *Head) Init(minValidTime int64) error {
 }
 
 // SetMinValidTime sets the minimum timestamp the head can ingest.
+// 没有被调用过 ???
 func (h *Head) SetMinValidTime(minValidTime int64) {
 	h.minValidTime.Store(minValidTime)
 }
