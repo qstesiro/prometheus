@@ -875,7 +875,14 @@ func (h *Head) truncateMemory(mint int64) (err error) {
 	h.metrics.gcDuration.Observe(time.Since(start).Seconds())
 	// 注意: actualMint <= h.minTime 情况下h.minTime不会修改(压缩线时刻不变)
 	if actualMint > h.minTime.Load() {
-		// The actual mint of the Head is higher than the one asked to truncate.
+		// The actual mint of the Head is higher than the one asked to truncate. ???
+		// 在此种情况下最终的h.minValidTime必定落入(mint, h.MaxTime()-h.chunkRange.Load()/2]
+		// |_____|_________________________________________________________|
+		// mint  h.MaxTime()-h.chunkRange.Load()/2                         h.maxTime
+		// 此段代码的功能两种解释:
+		// - 对于下次启始时间点的优化(跳过部分空白)
+		//   不直接使用actualMint可能是因为actualMint紧靠h.maxTime
+		// - 历史遗留没有相应处理因为此部分代码没有任何的副作用
 		appendableMinValidTime := h.appendableMinValidTime()
 		if actualMint < appendableMinValidTime {
 			h.minTime.Store(actualMint)
