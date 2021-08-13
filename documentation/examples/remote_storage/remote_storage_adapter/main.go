@@ -38,6 +38,7 @@ import (
 	"github.com/prometheus/common/promlog/flag"
 	"gopkg.in/alecthomas/kingpin.v2"
 
+	"github.com/prometheus/prometheus/documentation/examples/remote_storage/remote_storage_adapter/elastic"
 	"github.com/prometheus/prometheus/documentation/examples/remote_storage/remote_storage_adapter/graphite"
 	"github.com/prometheus/prometheus/documentation/examples/remote_storage/remote_storage_adapter/influxdb"
 	"github.com/prometheus/prometheus/documentation/examples/remote_storage/remote_storage_adapter/opentsdb"
@@ -55,6 +56,7 @@ type config struct {
 	influxdbUsername        string
 	influxdbDatabase        string
 	influxdbPassword        string
+	elasticURL              string
 	remoteTimeout           time.Duration
 	listenAddr              string
 	telemetryPath           string
@@ -137,6 +139,8 @@ func parseFlags() *config {
 		Default("").StringVar(&cfg.influxdbUsername)
 	a.Flag("influxdb.database", "The name of the database to use for storing samples in InfluxDB.").
 		Default("prometheus").StringVar(&cfg.influxdbDatabase)
+	a.Flag("elastic-url", "The name of the database to use for storing samples in elasticsearch.").
+		Default("").StringVar(&cfg.elasticURL)
 	a.Flag("send-timeout", "The timeout to use when sending samples to the remote storage.").
 		Default("30s").DurationVar(&cfg.remoteTimeout)
 	a.Flag("web.listen-address", "Address to listen on for web endpoints.").
@@ -204,6 +208,17 @@ func buildClients(logger log.Logger, cfg *config) ([]writer, []reader) {
 		)
 		prometheus.MustRegister(c)
 		writers = append(writers, c)
+		readers = append(readers, c)
+	}
+	if cfg.elasticURL != "" {
+		_, err := url.Parse(cfg.elasticURL)
+		if err != nil {
+			level.Error(logger).Log("msg", "Failed to parse elasticsearch URL", "url", cfg.elasticURL, "err", err)
+			os.Exit(1)
+		}
+		c := elastic.NewClient(
+			log.With(logger, "storage", "Elasticsearch"),
+		)
 		readers = append(readers, c)
 	}
 	level.Info(logger).Log("msg", "Starting up...")

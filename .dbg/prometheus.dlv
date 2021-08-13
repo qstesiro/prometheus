@@ -6,7 +6,6 @@
 # b prometheus/main.go:458
 # b prometheus/main.go:565
 # b web.New
-# b (*API).Register
 # b web.go:331
 # b web.go:339
 # b web.go:347
@@ -32,6 +31,15 @@
 # b web.go:175
 # b web.(*metrics).instrumentHandler
 
+# v1.API
+# b v1.NewAPI
+# b v1.(*API).Register
+# b v1.(*API).query
+# b remote.(*Storage).ApplyConfig
+# b promql.(*Engine).execEvalStmt
+b promql/engine.go:559
+b promql.(*evaluator).eval
+
 # remote storage
 # b remote.NewStorage
 # b remote.NewWriteStorage
@@ -46,6 +54,10 @@
 # b remote.(*WriteStorage).ApplyConfig
 # b remote.(*QueueManager).Append
 # b remote.(*Client).Store
+# 作为远程读对象
+# b remote.NewReadHandler
+# b remote.remoteReadSamples
+# b remote.remoteReadStreamedXORChunks
 
 # wal
 # b wal.NewWatcher
@@ -57,7 +69,8 @@
 # b wal.(*LiveReader).buildRecord
 # b wal.(*LiveReader).readRecord
 # b wal.(*LiveReader).fillBuffer
- 
+
+# db
 # b storage.(*fanout).Querier
 # b tsdb.Open
 # b tsdb.open
@@ -73,7 +86,8 @@
 # b tsdb.(*noopSeriesLifecycleCallback).PreCreation
 # b tsdb.(*noopSeriesLifecycleCallback).PostCreation
 # b tsdb.(*noopSeriesLifecycleCallback).PostDeletion
- 
+
+# head
 # b tsdb.NewHead
 # b tsdb.(*Head).Appender
 # b tsdb.(*Head).initTime

@@ -1120,8 +1120,7 @@ func (sl *scrapeLoop) scrapeAndReport(interval, timeout time.Duration, last, app
 	scrapeCtx, cancel := context.WithTimeout(sl.parentCtx, timeout)
 	contentType, scrapeErr = sl.scraper.scrape(scrapeCtx, buf)
 	cancel()
-	// 21/03/15 22:45:31 Mark
-	// 测试使用
+	// for debug ???
 	_v := buf.String()
 	_ = _v
 	if scrapeErr == nil {
