@@ -784,6 +784,106 @@ promhttp_metric_handler_requests_total{code="503"} 0
 11  0x000000000047cf81 in runtime.goexit
     at /home/qstesiro/ext/go/src/runtime/asm_amd64.s:1371
 
+# 远程读调用栈(启动协程并等待结果所有协程完成)
+ 0  0x00000000029b01b7 in github.com/prometheus/prometheus/storage.(*mergeGenericQuerier).Select
+    at ./storage/merge.go:108
+ 1  0x00000000029ae243 in github.com/prometheus/prometheus/storage.(*querierAdapter).Select
+    at ./storage/generic.go:89
+ 2  0x0000000002b20829 in github.com/prometheus/prometheus/promql.(*Engine).populateSeries.func1
+    at ./promql/engine.go:749
+ 3  0x00000000029c2a78 in github.com/prometheus/prometheus/promql/parser.inspector.Visit
+    at ./promql/parser/ast.go:322
+ 4  0x00000000029c2635 in github.com/prometheus/prometheus/promql/parser.Walk
+    at ./promql/parser/ast.go:304
+ 5  0x00000000029c2b85 in github.com/prometheus/prometheus/promql/parser.Inspect
+    at ./promql/parser/ast.go:334
+ 6  0x0000000002af32c5 in github.com/prometheus/prometheus/promql.(*Engine).populateSeries
+    at ./promql/engine.go:736
+ 7  0x0000000002af0885 in github.com/prometheus/prometheus/promql.(*Engine).execEvalStmt
+    at ./promql/engine.go:538
+ 8  0x0000000002af0128 in github.com/prometheus/prometheus/promql.(*Engine).exec
+    at ./promql/engine.go:511
+ 9  0x0000000002aecb1d in github.com/prometheus/prometheus/promql.(*query).Exec
+    at ./promql/engine.go:173
+10  0x0000000002c2ef3a in github.com/prometheus/prometheus/web/api/v1.(*API).queryRange
+    at ./web/api/v1/api.go:450
+11  0x0000000002c42465 in github.com/prometheus/prometheus/web/api/v1.(*API).queryRange-fm
+    at ./web/api/v1/api.go:391
+12  0x0000000002c4104c in github.com/prometheus/prometheus/web/api/v1.(*API).Register.func1.1
+    at ./web/api/v1/api.go:259
+13  0x00000000008382e4 in net/http.HandlerFunc.ServeHTTP
+    at /home/qstesiro/go/src/net/http/server.go:2069
+14  0x0000000002c2a285 in github.com/prometheus/prometheus/util/httputil.CompressionHandler.ServeHTTP
+    at ./util/httputil/compression.go:90
+15  0x0000000002c4216f in github.com/prometheus/prometheus/util/httputil.CompressionHandler.ServeHTTP-fm
+    at ./util/httputil/compression.go:88
+16  0x0000000002c59784 in github.com/prometheus/prometheus/web.(*Handler).testReady.func1
+    at ./web/web.go:518
+17  0x00000000008382e4 in net/http.HandlerFunc.ServeHTTP
+    at /home/qstesiro/go/src/net/http/server.go:2069
+18  0x0000000002c07a36 in github.com/prometheus/client_golang/prometheus/promhttp.InstrumentHandlerResponseSize.func1
+    at /home/qstesiro/program/go/pkg/mod/github.com/prometheus/client_golang@v1.9.0/prometheus/promhttp/instrument_server.go:198
+19  0x00000000008382e4 in net/http.HandlerFunc.ServeHTTP
+    at /home/qstesiro/go/src/net/http/server.go:2069
+20  0x0000000002c074eb in github.com/prometheus/client_golang/prometheus/promhttp.InstrumentHandlerDuration.func2
+    at /home/qstesiro/program/go/pkg/mod/github.com/prometheus/client_golang@v1.9.0/prometheus/promhttp/instrument_server.go:76
+21  0x00000000008382e4 in net/http.HandlerFunc.ServeHTTP
+    at /home/qstesiro/go/src/net/http/server.go:2069
+22  0x0000000002c0770e in github.com/prometheus/client_golang/prometheus/promhttp.InstrumentHandlerCounter.func1
+    at /home/qstesiro/program/go/pkg/mod/github.com/prometheus/client_golang@v1.9.0/prometheus/promhttp/instrument_server.go:101
+23  0x0000000002c5b4c9 in github.com/prometheus/prometheus/web.setPathWithPrefix.func1.1
+    at ./web/web.go:1140
+24  0x0000000002c2580a in github.com/prometheus/common/route.(*Router).handle.func1
+    at /home/qstesiro/program/go/pkg/mod/github.com/prometheus/common@v0.18.0/route/route.go:83
+25  0x0000000002c1dbf2 in github.com/julienschmidt/httprouter.(*Router).ServeHTTP
+    at /home/qstesiro/program/go/pkg/mod/github.com/julienschmidt/httprouter@v1.3.0/router.go:387
+26  0x0000000002c25313 in github.com/prometheus/common/route.(*Router).ServeHTTP
+    at /home/qstesiro/program/go/pkg/mod/github.com/prometheus/common@v0.18.0/route/route.go:121
+27  0x000000000086b1be in net/http.StripPrefix.func1
+    at /home/qstesiro/go/src/net/http/server.go:2112
+28  0x00000000008382e4 in net/http.HandlerFunc.ServeHTTP
+    at /home/qstesiro/go/src/net/http/server.go:2069
+29  0x000000000083b1cb in net/http.(*ServeMux).ServeHTTP
+    at /home/qstesiro/go/src/net/http/server.go:2448
+30  0x0000000000871d82 in net/http.Handler.ServeHTTP-fm
+    at /home/qstesiro/go/src/net/http/server.go:87
+31  0x0000000002b7e4e5 in github.com/opentracing-contrib/go-stdlib/nethttp.MiddlewareFunc.func5
+    at /home/qstesiro/program/go/pkg/mod/github.com/opentracing-contrib/go-stdlib@v1.0.0/nethttp/server.go:154
+32  0x00000000008382e4 in net/http.HandlerFunc.ServeHTTP
+    at /home/qstesiro/go/src/net/http/server.go:2069
+33  0x0000000002c579b1 in github.com/prometheus/prometheus/web.withStackTracer.func1
+    at ./web/web.go:99
+34  0x00000000008382e4 in net/http.HandlerFunc.ServeHTTP
+    at /home/qstesiro/go/src/net/http/server.go:2069
+35  0x000000000083cfab in net/http.serverHandler.ServeHTTP
+    at /home/qstesiro/go/src/net/http/server.go:2887
+36  0x0000000000837205 in net/http.(*conn).serve
+    at /home/qstesiro/go/src/net/http/server.go:1952
+37  0x000000000047cf81 in runtime.goexit
+    at /home/qstesiro/go/src/runtime/asm_amd64.s:1371
+    
+# 远程读并发栈
+0  0x0000000002bd8ce9 in github.com/prometheus/prometheus/storage/remote.(*Client).Read
+   at ./storage/remote/client.go:268
+1  0x0000000002befe3a in github.com/prometheus/prometheus/storage/remote.(*querier).Select
+   at ./storage/remote/read.go:170
+2  0x00000000029adcee in github.com/prometheus/prometheus/storage.(*genericQuerierAdapter).Select
+   at ./storage/generic.go:63
+3  0x00000000029b928d in github.com/prometheus/prometheus/storage.(*secondaryQuerier).Select
+   at ./storage/secondary.go:71
+4  0x00000000029b017d in github.com/prometheus/prometheus/storage.(*mergeGenericQuerier).Select
+   at ./storage/merge.go:105
+5  0x00000000029ae243 in github.com/prometheus/prometheus/storage.(*querierAdapter).Select
+   at ./storage/generic.go:89
+6  0x00000000029adcee in github.com/prometheus/prometheus/storage.(*genericQuerierAdapter).Select
+   at ./storage/generic.go:63
+7  0x00000000029b928d in github.com/prometheus/prometheus/storage.(*secondaryQuerier).Select
+   at ./storage/secondary.go:71
+8  0x00000000029ba310 in github.com/prometheus/prometheus/storage.(*mergeGenericQuerier).Select.func2
+   at ./storage/merge.go:131
+9  0x000000000047cf81 in runtime.goexit
+   at /home/qstesiro/go/src/runtime/asm_amd64.s:1371
+   
 memChunk/mmappedChunk区别 !!!
 if numSamples == samplesPerChunk/4 {
 memSeries.head.maxTime !!!

@@ -36,13 +36,19 @@
 # b v1.(*API).Register
 # b v1.(*API).query
 # b remote.(*Storage).ApplyConfig
-b promql.(*Engine).execEvalStmt
+# b promql.(*Engine).execEvalStmt
 # b promql/engine.go:559
-b promql.(*evaluator).eval
-b promql.(*evaluator).vectorSelectorSingle
+# b promql.(*evaluator).eval
+# b promql.(*evaluator).vectorSelectorSingle
 # b promql.checkAndExpandSeriesSet
 # b promql.expandSeriesSet
-b storage.(BufferedSeriesIterator).Seek
+# b storage.(BufferedSeriesIterator).Seek
+b promql.(*Engine).populateSeries
+b storage.(*querierAdapter).Select
+b storage.(*mergeGenericQuerier).Select
+b storage.(*secondaryQuerier).Select
+b storage/remote/read.go:165
+b remote.(*Client).Read
 
 # remote storage
 # b remote.NewStorage
