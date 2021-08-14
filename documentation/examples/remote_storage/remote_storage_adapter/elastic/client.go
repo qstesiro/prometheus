@@ -48,9 +48,18 @@ func (c *Client) Read(req *prompb.ReadRequest) (*prompb.ReadResponse, error) {
 						},
 						Samples: []prompb.Sample{
 							// 注: 毫秒为单位
-							prompb.Sample{Value: 0.1, Timestamp: 1628848080000},
-							prompb.Sample{Value: 0.2, Timestamp: 1628848090000},
-							prompb.Sample{Value: 0.3, Timestamp: 1628848100000},
+							// 查询时间对齐
+							// prompb.Sample{Value: 0.1, Timestamp: 1628848080000}, // 2021-08-13T17:48:00.000
+							// prompb.Sample{Value: 0.2, Timestamp: 1628848090000}, // 2021-08-13T17:48:10.000
+							// prompb.Sample{Value: 0.3, Timestamp: 1628848100000}, // 2021-08-13T17:48:20.000
+							// 查询时间非对齐
+							// prompb.Sample{Value: 0.1, Timestamp: 1628848081000}, // 2021-08-13T17:48:01.000
+							// prompb.Sample{Value: 0.2, Timestamp: 1628848091000}, // 2021-08-13T17:48:11.000
+							// prompb.Sample{Value: 0.3, Timestamp: 1628848101000}, // 2021-08-13T17:48:21.000
+							// 查询数据离散
+							prompb.Sample{Value: 0.1, Timestamp: 1628848081000}, // 2021-08-13T17:48:01.000
+							prompb.Sample{Value: 0.2, Timestamp: 1628848091000}, // 2021-08-13T17:48:11.000
+							prompb.Sample{Value: 0.3, Timestamp: 1628848451000}, // 2021-08-13T17:54:11.000
 						},
 					},
 				},

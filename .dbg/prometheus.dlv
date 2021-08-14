@@ -36,9 +36,13 @@
 # b v1.(*API).Register
 # b v1.(*API).query
 # b remote.(*Storage).ApplyConfig
-# b promql.(*Engine).execEvalStmt
-b promql/engine.go:559
+b promql.(*Engine).execEvalStmt
+# b promql/engine.go:559
 b promql.(*evaluator).eval
+b promql.(*evaluator).vectorSelectorSingle
+# b promql.checkAndExpandSeriesSet
+# b promql.expandSeriesSet
+b storage.(BufferedSeriesIterator).Seek
 
 # remote storage
 # b remote.NewStorage

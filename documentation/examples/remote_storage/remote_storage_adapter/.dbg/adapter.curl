@@ -5,3 +5,11 @@ curl localhost:9090/api/v1/query_range \
      --data-urlencode 'step=10s' \
      --globoff \
      --request POST | python -m json.tool
+
+curl localhost:9090/api/v1/query_range \
+     --data-urlencode 'query={__name__="go_gc_duration_seconds_count"}' \
+     --data-urlencode 'start=2021-08-13T17:47:50.000+08:00' \
+     --data-urlencode 'end=2021-08-13T17:55:50.000+08:00' \
+     --data-urlencode 'step=10s' \
+     --globoff \
+     --request POST | python -m json.tool
