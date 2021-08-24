@@ -43,12 +43,12 @@
 # b promql.checkAndExpandSeriesSet
 # b promql.expandSeriesSet
 # b storage.(BufferedSeriesIterator).Seek
-b promql.(*Engine).populateSeries
-b storage.(*querierAdapter).Select
-b storage.(*mergeGenericQuerier).Select
-b storage.(*secondaryQuerier).Select
-b storage/remote/read.go:165
-b remote.(*Client).Read
+# b promql.(*Engine).populateSeries
+# b storage.(*querierAdapter).Select
+# b storage.(*mergeGenericQuerier).Select
+# b storage.(*secondaryQuerier).Select
+# b storage/remote/read.go:165
+# b remote.(*Client).Read
 
 # remote storage
 # b remote.NewStorage
