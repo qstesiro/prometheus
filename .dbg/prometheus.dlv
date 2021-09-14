@@ -34,7 +34,13 @@
 # v1.API
 # b v1.NewAPI
 # b v1.(*API).Register
-# b v1.(*API).query
+
+b v1.(*API).query
+b v1.(*API).queryRange
+b v1.(*API).series
+b v1.(*API).labelNames
+b v1.(*API).labelValues
+
 # b remote.(*Storage).ApplyConfig
 # b promql.(*Engine).execEvalStmt
 # b promql/engine.go:559
@@ -188,7 +194,7 @@
 # b tsdb.(*blockBaseSeriesSet).Next
 # b tsdb.(*blockChunkSeriesSet).At
 
-b chunks.(*ChunkDiskMapper).WriteChunk
-b chunks.(*ChunkDiskMapper).flushBuffer
+# b chunks.(*ChunkDiskMapper).WriteChunk
+# b chunks.(*ChunkDiskMapper).flushBuffer
 
 g
