@@ -74,6 +74,7 @@ func newGenericQuerierFromChunk(cq ChunkQuerier) genericQuerier {
 }
 
 type querierAdapter struct {
+	// 结构组合接口(新用法) ???
 	genericQuerier
 }
 

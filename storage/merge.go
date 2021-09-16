@@ -29,8 +29,9 @@ import (
 	tsdb_errors "github.com/prometheus/prometheus/tsdb/errors"
 )
 
+// 实现了genericQuerier接口
 type mergeGenericQuerier struct {
-	queriers []genericQuerier
+	queriers []genericQuerier // 内部保存genericQuerier接口列表
 
 	// mergeFn is used when we see series from different queriers Selects with the same labels.
 	mergeFn genericSeriesMergeFunc
