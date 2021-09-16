@@ -63,6 +63,7 @@ const (
 
 type errorType string
 
+// 感觉不如直接使用类型系统 ???
 const (
 	errorNone        errorType = ""
 	errorTimeout     errorType = "timeout"

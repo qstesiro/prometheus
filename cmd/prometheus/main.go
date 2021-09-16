@@ -1116,6 +1116,7 @@ func (n notReadyAppender) Commit() error { return tsdb.ErrNotReady }
 func (n notReadyAppender) Rollback() error { return tsdb.ErrNotReady }
 
 // Close implements the Storage interface.
+// 定义在这儿,晃我一下
 func (s *readyStorage) Close() error {
 	if x := s.get(); x != nil {
 		return x.Close()

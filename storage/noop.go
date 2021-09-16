@@ -17,6 +17,8 @@ import (
 	"github.com/prometheus/prometheus/pkg/labels"
 )
 
+// 不明白这些noop有什么具体作用 ???
+
 type noopQuerier struct{}
 
 // NoopQuerier is a Querier that does nothing.
