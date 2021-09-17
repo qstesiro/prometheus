@@ -74,7 +74,10 @@ func newGenericQuerierFromChunk(cq ChunkQuerier) genericQuerier {
 }
 
 type querierAdapter struct {
-	// 结构组合接口(新用法) ???
+	// 结构继承接口(新用法) ???
+	// 细想一下这种用法会产生复杂的问题,值得深入研究
+	// - 继承多个接口,接口函数有重叠(如: genericQuerierAdapter)
+	// - 创建对象实例时是(如果中需要部分功能)是否可以只实现部分(个别)接口的方法
 	genericQuerier
 }
 
