@@ -84,6 +84,7 @@ func newBlockBaseQuerier(b BlockReader, mint, maxt int64) (*blockBaseQuerier, er
 	}, nil
 }
 
+// 以下三个函数实现LabelQuerie接口
 func (q *blockBaseQuerier) LabelValues(name string, matchers ...*labels.Matcher) ([]string, storage.Warnings, error) {
 	res, err := q.index.SortedLabelValues(name, matchers...)
 	return res, nil, err
@@ -116,6 +117,7 @@ type blockQuerier struct {
 }
 
 // NewBlockQuerier returns a querier against the block reader and requested min and max time range.
+// tsdb.BlockReader 转换 storage.Querier
 func NewBlockQuerier(b BlockReader, mint, maxt int64) (storage.Querier, error) {
 	q, err := newBlockBaseQuerier(b, mint, maxt)
 	if err != nil {

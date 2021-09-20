@@ -44,6 +44,7 @@ type mergeGenericQuerier struct {
 // See NewFanout commentary to learn more about primary vs secondary differences.
 //
 // In case of overlaps between the data given by primaries' and secondaries' Selects, merge function will be used.
+// 多Querier封装为一个Querier
 func NewMergeQuerier(primaries []Querier, secondaries []Querier, mergeFn VerticalSeriesMergeFunc) Querier {
 	queriers := make([]genericQuerier, 0, len(primaries)+len(secondaries))
 	for _, q := range primaries {
