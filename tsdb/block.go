@@ -224,7 +224,7 @@ func writeMetaFile(logger log.Logger, dir string, meta *BlockMeta) (int64, error
 	}()
 
 	f, err := os.Create(tmp)
-	if err != nil {2021-09-20T11:59:54.825
+	if err != nil {
 		return 0, err
 	}
 
