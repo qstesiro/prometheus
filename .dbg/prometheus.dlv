@@ -39,6 +39,8 @@ b v1.(*API).query
 b v1.(*API).queryRange
 b v1.(*API).series
 b v1.(*API).labelNames
+b v1.parseMatchersParam
+b parser.ParseMetricSelector
 b v1.(*API).labelValues
 
 # b remote.(*Storage).ApplyConfig
