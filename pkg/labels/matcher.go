@@ -29,6 +29,7 @@ const (
 )
 
 func (m MatchType) String() string {
+	// 会优化吗? 如果不优化是否作为全局只定义一次更合理 ???
 	typeToStr := map[MatchType]string{
 		MatchEqual:     "=",
 		MatchNotEqual:  "!=",
@@ -92,7 +93,7 @@ func (m *Matcher) Matches(s string) bool {
 	case MatchNotRegexp:
 		return !m.re.MatchString(s)
 	}
-	panic("labels.Matcher.Matches: invalid match type")
+	panic("labels.Matcher.Matches: invalid match type") // 直接panic ???
 }
 
 // Inverse returns a matcher that matches the opposite.

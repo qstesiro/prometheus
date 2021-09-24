@@ -31,7 +31,7 @@ func NewFastRegexMatcher(v string) (*FastRegexMatcher, error) {
 	if err != nil {
 		return nil, err
 	}
-
+	// 后续再研究 ???
 	parsed, err := syntax.Parse(v, syntax.Perl)
 	if err != nil {
 		return nil, err
