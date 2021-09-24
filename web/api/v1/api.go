@@ -521,6 +521,10 @@ func (api *API) labelNames(r *http.Request) apiFuncResult {
 			s := q.Select(false, hints, mset...)
 			for s.Next() {
 				series := s.At()
+				// for debug ???
+				{
+					fmt.Printf("%s\n", series.Labels().String())
+				}
 				for _, lb := range series.Labels() {
 					labelNamesSet[lb.Name] = struct{}{}
 				}
