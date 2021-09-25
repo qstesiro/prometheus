@@ -37,6 +37,8 @@ var parserPool = sync.Pool{
 	},
 }
 
+// 后续再分析 ???
+// https://zhuanlan.zhihu.com/p/143867739
 type parser struct {
 	lex Lexer
 
