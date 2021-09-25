@@ -25,9 +25,10 @@ type genericQuerier interface {
 	Select(bool, *SelectHints, ...*labels.Matcher) genericSeriesSet
 }
 
+// 与SeriesSet只有At() Series不同
 type genericSeriesSet interface {
 	Next() bool
-	At() Labels
+	At() Labels // SeriesSet.At() Series
 	Err() error
 	Warnings() Warnings
 }

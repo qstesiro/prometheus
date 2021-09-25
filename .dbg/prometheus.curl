@@ -95,13 +95,13 @@ curl localhost:9090/api/v1/labels \
      -X GET | python -m json.tool
 curl localhost:9090/api/v1/labels \
      --data-urlencode 'match[]={__name__="go_gc_duration_seconds"}' \
-     --data-urlencode 'start=2021-09-14T21:30:16.666+08:00' \
-     --data-urlencode 'end=2021-09-14T21:35:51.900+08:00' \
+     --data-urlencode 'start=2021-09-25T11:45:14.000+08:00' \
+     --data-urlencode 'end=2021-09-25T12:20:00.000+08:00' \
      -g -G | python -m json.tool
 curl localhost:9090/api/v1/labels \
      --data-urlencode 'match[]={quantile="0.5"}' \
-     --data-urlencode 'start=2021-09-24T22:59:14.000+08:00' \
-     --data-urlencode 'end=2021-09-24T23:00:00.000+08:00' \
+     --data-urlencode 'start=2021-09-25T11:45:14.000+08:00' \
+     --data-urlencode 'end=2021-09-25T12:20:00.000+08:00' \
      -g -G | python -m json.tool
 curl localhost:9090/api/v1/labels \
      --data-urlencode 'match[]={__name__="go_gc_duration_seconds"}' \
