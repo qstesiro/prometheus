@@ -61,7 +61,7 @@ type genericQuerierAdapter struct {
 
 func (q *genericQuerierAdapter) Select(sortSeries bool, hints *SelectHints, matchers ...*labels.Matcher) genericSeriesSet {
 	if q.q != nil {
-		return &genericSeriesSetAdapter{q.q.Select(sortSeries, hints, matchers...)
+		return &genericSeriesSetAdapter{q.q.Select(sortSeries, hints, matchers...)}
 	}
 	return &genericChunkSeriesSetAdapter{q.cq.Select(sortSeries, hints, matchers...)}
 }
