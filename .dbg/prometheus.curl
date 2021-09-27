@@ -77,18 +77,28 @@ curl localhost:9090/api/v1/query_range \
      --data-urlencode 'end=2021-09-14T21:35:51.900+08:00' \
      --data-urlencode 'step=10s' \
      -g -G | python -m json.tool
-     
+
 curl localhost:9090/api/v1/series \
-     --data-urlencode 'match[]={__name__="go_gc_duration_seconds",quantile="1"}' \
-     --data-urlencode 'match[]={__name__="go_gc_duration_seconds",quantile="0.5"}' \
-     --data-urlencode 'start=2021-09-14T21:30:16.666+08:00' \
-     --data-urlencode 'end=2021-09-14T21:35:51.900+08:00' \
+     --data-urlencode 'match[]={__name__="go_gc_duration_seconds"}' \
+     --data-urlencode 'start=2021-09-26T09:32:00.000+08:00' \
+     --data-urlencode 'end=2021-09-26T09:33:00.000+08:00' \
      -g -G | python -m json.tool
 curl localhost:9090/api/v1/series \
-     --data-urlencode 'match[]={__name__="go_gc_duration_seconds",quantile="1"}' \
-     --data-urlencode 'match[]={__name__="go_gc_duration_seconds",quantile="0.5"}' \
-     --data-urlencode 'start=2021-09-14T21:30:16.666+08:00' \
-     --data-urlencode 'end=2021-09-14T21:35:51.900+08:00' \
+     --data-urlencode 'match[]={__name__="go_gc_duration_seconds", quantile="0.5"}' \
+     --data-urlencode 'start=2021-09-26T09:32:00.000+08:00' \
+     --data-urlencode 'end=2021-09-26T09:33:00.000+08:00' \
+     -g -G | python -m json.tool
+curl localhost:9090/api/v1/series \
+     --data-urlencode 'match[]={__name__="go_gc_duration_seconds", quantile="1"}' \
+     --data-urlencode 'match[]={__name__="go_gc_duration_seconds", quantile="0.5"}' \
+     --data-urlencode 'start=2021-09-26T09:32:00.000+08:00' \
+     --data-urlencode 'end=2021-09-26T09:33:00.000+08:00' \
+     -g -G | python -m json.tool
+curl localhost:9090/api/v1/series \
+     --data-urlencode 'match[]={__name__="go_gc_duration_seconds", quantile="1"}' \
+     --data-urlencode 'match[]={__name__="go_gc_duration_seconds_count"}' \
+     --data-urlencode 'start=2021-09-26T09:32:00.000+08:00' \
+     --data-urlencode 'end=2021-09-26T09:33:00.000+08:00' \
      -g -G | python -m json.tool
      
 curl localhost:9090/api/v1/labels \
@@ -114,6 +124,12 @@ curl localhost:9090/api/v1/labels \
      --data-urlencode 'start=2021-09-26T09:32:00.000+08:00' \
      --data-urlencode 'end=2021-09-26T09:33:00.000+08:00' \
      -g -G | python -m json.tool
+curl localhost:9090/api/v1/labels \
+     --data-urlencode 'match[]={__name__="go_gc_duration_seconds", quantile="0.5"}' \
+     --data-urlencode 'match[]={__name__="go_gc_duration_seconds_count"}' \
+     --data-urlencode 'start=2021-09-26T09:32:00.000+08:00' \
+     --data-urlencode 'end=2021-09-26T09:33:00.000+08:00' \
+     -g -G | python -m json.tool     
 
 curl localhost:9090/api/v1/label/job/values \
      -X GET | python -m json.tool

@@ -35,15 +35,23 @@
 # b v1.NewAPI
 # b v1.(*API).Register
 
-b v1.(*API).query
-b v1.(*API).queryRange
-b v1.(*API).series
-b v1.(*API).labelNames
-b v1/api.go:520
+# b v1.(*API).query
+# b v1.(*API).queryRange
+# b v1.(*API).series
+# b v1/api.go:698
+# b v1.(*API).labelNames
+# b v1/api.go:520
 # b v1.parseMatchersParam
 # b parser.ParseMetricSelector
-b v1.(*API).labelValues
-b v1/api.go:602
+# b v1.(*API).labelValues
+# b v1/api.go:602
+# b v1.(*API).respond
+# 编译器会自己生成github.com/prometheus/prometheus/pkg/labels.(*Labels).MarshalJSON使用全路径设置断点
+# b github.com/prometheus/prometheus/pkg/labels.(*Labels).MarshalJSON
+b github.com/prometheus/prometheus/pkg/labels.Labels.MarshalJSON
+# 编译器会自己生成github.com/prometheus/prometheus/pkg/labels.(*Labels).Map使用全路径设置断点
+# b github.com/prometheus/prometheus/pkg/labels.(*Labels).Map
+b github.com/prometheus/prometheus/pkg/labels.Labels.Map
 
 # b remote.(*Storage).ApplyConfig
 # b promql.(*Engine).execEvalStmt
@@ -201,4 +209,4 @@ b v1/api.go:602
 # b chunks.(*ChunkDiskMapper).WriteChunk
 # b chunks.(*ChunkDiskMapper).flushBuffer
 
-g
+# g

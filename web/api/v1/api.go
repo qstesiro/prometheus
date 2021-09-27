@@ -1408,6 +1408,8 @@ func (api *API) respond(w http.ResponseWriter, data interface{}, warnings storag
 	for _, warning := range warnings {
 		warningStrings = append(warningStrings, warning.Error())
 	}
+	// 此处注意进入的data是二维数组但是转换后的json是一维数据元素为map
+	// 实现些效果是通过Labels实现了MarshalJSON函数达到 ???
 	json := jsoniter.ConfigCompatibleWithStandardLibrary
 	b, err := json.Marshal(&response{
 		Status:   statusMessage,
@@ -1477,6 +1479,7 @@ func parseTimeParam(r *http.Request, paramName string, defaultValue time.Time) (
 	return result, nil
 }
 
+// 还支持RFC3339Nano = "2006-01-02T15:04:05.999999999Z07:00"格式
 func parseTime(s string) (time.Time, error) {
 	if t, err := strconv.ParseFloat(s, 64); err == nil {
 		s, ns := math.Modf(t)
