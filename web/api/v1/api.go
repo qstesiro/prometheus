@@ -349,11 +349,12 @@ func (api *API) query(r *http.Request) (result apiFuncResult) {
 		}
 
 		ctx, cancel = context.WithTimeout(ctx, timeout)
-		defer cancel()
+		defer cancel() // 注意defer返回时机
 	}
 
 	qry, err := api.QueryEngine.NewInstantQuery(api.Queryable, r.FormValue("query"), ts)
 	if err == promql.ErrValidationAtModifierDisabled {
+		// https://prometheus.io/docs/prometheus/latest/disabled_features/
 		err = errors.New("@ modifier is disabled, use --enable-feature=promql-at-modifier to enable it")
 	}
 	if err != nil {
@@ -1409,7 +1410,7 @@ func (api *API) respond(w http.ResponseWriter, data interface{}, warnings storag
 		warningStrings = append(warningStrings, warning.Error())
 	}
 	// 此处注意进入的data是二维数组但是转换后的json是一维数据元素为map
-	// 实现些效果是通过Labels实现了MarshalJSON函数达到 ???
+	// 实现此效果是通过Labels实现了MarshalJSON函数达到 ???
 	json := jsoniter.ConfigCompatibleWithStandardLibrary
 	b, err := json.Marshal(&response{
 		Status:   statusMessage,

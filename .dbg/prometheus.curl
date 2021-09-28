@@ -33,7 +33,7 @@ curl 192.168.56.104:9090/classic/static/*filepath -X GET
 curl 192.168.56.104:9090/static/{filepath} -X GET
 # main.(*Handler).version
 curl 192.168.56.104:9090/version -X GET
-# 
+
 curl 192.168.56.104:9090/metrics -X GET
 # web.go:378
 curl 192.168.56.104:9090/federate -X GET
@@ -69,12 +69,14 @@ curl 192.168.56.104:9090/tsdb-status -X GET
 # query
 curl localhost:9090/api/v1/query \
      --data-urlencode 'query={__name__="go_gc_duration_seconds_count"}' \
-     --data-urlencode 'time=2021-09-14T21:35:16.666+08:00' \
+     --data-urlencode 'time=2021-09-26T09:32:00.000+08:00' \
      -g -G | python -m json.tool
+
+# query_range
 curl localhost:9090/api/v1/query_range \
      --data-urlencode 'query={__name__="go_gc_duration_seconds_count"}' \
-     --data-urlencode 'start=2021-09-14T21:30:16.666+08:00' \
-     --data-urlencode 'end=2021-09-14T21:35:51.900+08:00' \
+     --data-urlencode 'start=2021-09-26T09:32:00.000+08:00' \
+     --data-urlencode 'end=2021-09-26T09:33:00.000+08:00' \
      --data-urlencode 'step=10s' \
      -g -G | python -m json.tool
 
