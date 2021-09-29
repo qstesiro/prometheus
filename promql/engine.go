@@ -1093,6 +1093,7 @@ func (ev *evaluator) evalSubquery(subq *parser.SubqueryExpr) (*parser.MatrixSele
 }
 
 // eval evaluates the given expression as the given AST expression node requires.
+// 函数复杂度太高了吧(你大爷) ???
 func (ev *evaluator) eval(expr parser.Expr) (parser.Value, storage.Warnings) {
 	// This is the top-level evaluation method.
 	// Thus, we check for timeout/cancellation here.
