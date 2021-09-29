@@ -35,7 +35,9 @@
 # b v1.NewAPI
 # b v1.(*API).Register
 
-# b v1.(*API).query
+b v1.(*API).query
+b promql.(*Engine).NewInstantQuery
+b parser.ParseExpr
 # b v1.(*API).queryRange
 # b v1.(*API).series
 # b v1/api.go:698
