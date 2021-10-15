@@ -167,6 +167,7 @@ func ParseMetricSelector(input string) (m []*labels.Matcher, err error) {
 }
 
 // newParser returns a new parser.
+// 这类型定义与类型实例创建函数相隔也太远了吧 :(
 func newParser(input string) *parser {
 	p := parserPool.Get().(*parser)
 
