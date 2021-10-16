@@ -86,6 +86,7 @@ func (i ItemType) IsSetOperator() bool {
 	return false
 }
 
+// 牛逼,定义在绑定函数后
 type ItemType int
 
 // This is a list of all keywords in PromQL.

@@ -26,14 +26,14 @@ import (
 %}
 
 %union {
-    node      Node
-    item      Item
+    node      Node // interface ast.go:39
+    item      Item // struct lex.go:24
     matchers  []*labels.Matcher
     matcher   *labels.Matcher
     label     labels.Label
     labels    labels.Labels
     strings   []string
-    series    []SequenceValue
+    series    []SequenceValue // struct parse.go:187
     uint      uint64
     float     float64
     duration  time.Duration
