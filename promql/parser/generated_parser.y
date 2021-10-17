@@ -11,6 +11,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// 安装命令 go get -u -v golang.org/x/tools/cmd/goyacc
+// 生成命令 goyacc -o generated_parser.y.go generated_parser.y 
+
 %{
 package parser
 
@@ -33,7 +36,7 @@ import (
     label     labels.Label
     labels    labels.Labels
     strings   []string
-    series    []SequenceValue // struct parse.go:187
+    series    []SequenceValue // struct parse.go:193
     uint      uint64
     float     float64
     duration  time.Duration

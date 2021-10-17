@@ -388,7 +388,7 @@ func Children(node Node) []Node {
 
 // PositionRange describes a position in the input string of the parser.
 type PositionRange struct {
-	Start Pos
+	Start Pos // lex.go:200 int
 	End   Pos
 }
 
