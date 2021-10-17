@@ -39,6 +39,12 @@ var parserPool = sync.Pool{
 
 // 后续再分析 ???
 // https://zhuanlan.zhihu.com/p/143867739
+// https://zhuanlan.zhihu.com/p/264367718
+// http://dinosaur.compilertools.net/yacc/
+// https://pubs.opengroup.org/onlinepubs/9699919799/utilities/yacc.html
+// https://archive.org/details/lexyacc00levi/mode/2up
+// https://github.com/chai2010/go-ast-book
+// https://pingcap.com/zh/blog/tidb-source-code-reading-5
 type parser struct {
 	lex Lexer
 
