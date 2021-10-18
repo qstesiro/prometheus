@@ -45,6 +45,7 @@ var parserPool = sync.Pool{
 // https://archive.org/details/lexyacc00levi/mode/2up
 // https://github.com/chai2010/go-ast-book
 // https://pingcap.com/zh/blog/tidb-source-code-reading-5
+// 实现yyLexer接口
 type parser struct {
 	lex Lexer
 
