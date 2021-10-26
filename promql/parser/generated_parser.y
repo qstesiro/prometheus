@@ -484,9 +484,15 @@ unary_expr      :
 /*
  * Vector selectors.
  */
-
 vector_selector: metric_identifier label_matchers
-                        {
+                 // 允许以下情况出现 ???
+                 // avg{name~='value'}
+                 // topk{name~='value'}
+                 // bottomk{name~='value'}
+                 // by{name~='value'}
+                 // group{name~='value'}
+                 // offset{name~='value'}
+                        {                           
                         vs := $2.(*VectorSelector)
                         vs.PosRange = mergeRanges(&$1, vs)
                         vs.Name = $1.Val
