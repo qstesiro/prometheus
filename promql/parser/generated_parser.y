@@ -12,12 +12,13 @@
 // limitations under the License.
 
 // 安装命令 go get -u -v golang.org/x/tools/cmd/goyacc
-// 生成命令 goyacc -o generated_parser.y.go generated_parser.y 
+// 生成命令 goyacc -o generated_parser.y.go generated_parser.y
 
 %{
 package parser
 
 import (
+        "fmt"
         "math"
         "sort"
         "strconv"
@@ -356,7 +357,10 @@ function_call   : IDENTIFIER function_call_body
                 ;
 
 function_call_body: LEFT_PAREN function_call_args RIGHT_PAREN
-                        { $$ = $2 }
+                        {
+                            fmt.Printf("++++++++++++\n%+v\n+++++++++\n", $2);
+                            $$ = $2;
+                        }
                 | LEFT_PAREN RIGHT_PAREN
                         {$$ = Expressions{}}
                 ;
@@ -569,9 +573,16 @@ label_matcher   : IDENTIFIER match_op STRING
  */
 
 metric          : metric_identifier label_set
-                        { $$ = append($2, labels.Label{Name: labels.MetricName, Value: $1.Val}); sort.Sort($$) }
+                  // 允许以下情况 ???
+                  // avg{name='value'}
+                  // topk{name='value'}
+                  // bottomk{name='value'}
+                  // by{name='value'}
+                  // group{name='value'}
+                  // offset{name='value'}
+                        { fmt.Printf("+++++++++\n%+v\n+++++++\n", labels.Label{Name: labels.MetricName, Value: $1.Val}); $$ = append($2, labels.Label{Name: labels.MetricName, Value: $1.Val}); sort.Sort($$) }
                 | label_set
-                        {$$ = $1}
+                        { fmt.Printf("+++++++++\n%+v\n+++++++\n", $1); $$ = $1}
                 ;
 
 

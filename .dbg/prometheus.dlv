@@ -35,8 +35,8 @@
 # b v1.NewAPI
 # b v1.(*API).Register
 
-b v1.(*API).query
-b promql.(*Engine).NewInstantQuery
+# b v1.(*API).query
+# b promql.(*Engine).NewInstantQuery
 b parser.ParseExpr
 # b v1.(*API).queryRange
 # b v1.(*API).series
@@ -50,10 +50,12 @@ b parser.ParseExpr
 # b v1.(*API).respond
 # 编译器会自己生成github.com/prometheus/prometheus/pkg/labels.(*Labels).MarshalJSON使用全路径设置断点
 # b github.com/prometheus/prometheus/pkg/labels.(*Labels).MarshalJSON
-b github.com/prometheus/prometheus/pkg/labels.Labels.MarshalJSON
+# b github.com/prometheus/prometheus/pkg/labels.Labels.MarshalJSON
 # 编译器会自己生成github.com/prometheus/prometheus/pkg/labels.(*Labels).Map使用全路径设置断点
 # b github.com/prometheus/prometheus/pkg/labels.(*Labels).Map
-b github.com/prometheus/prometheus/pkg/labels.Labels.Map
+# b github.com/prometheus/prometheus/pkg/labels.Labels.Map
+# b generated_parser.y.go:1465
+b parser.(*yyParserImpl).Parse
 
 # b remote.(*Storage).ApplyConfig
 # b promql.(*Engine).execEvalStmt
