@@ -45,7 +45,7 @@ var parserPool = sync.Pool{
 // https://archive.org/details/lexyacc00levi/mode/2up
 // https://github.com/chai2010/go-ast-book
 // https://pingcap.com/zh/blog/tidb-source-code-reading-5
-// 实现yyLexer接口
+// 实现yyLexer接口(generated_parser.y.go:595)
 type parser struct {
 	lex Lexer
 
@@ -137,6 +137,7 @@ func ParseExpr(input string) (expr Expr, err error) {
 }
 
 // ParseMetric parses the input into a metric
+// 唯一调用./cmd/promtool/unittest.go ???
 func ParseMetric(input string) (m labels.Labels, err error) {
 	p := newParser(input)
 	defer parserPool.Put(p)
@@ -156,6 +157,7 @@ func ParseMetric(input string) (m labels.Labels, err error) {
 
 // ParseMetricSelector parses the provided textual metric selector into a list of
 // label matchers.
+// 用于分析match[] ???
 func ParseMetricSelector(input string) (m []*labels.Matcher, err error) {
 	p := newParser(input)
 	defer parserPool.Put(p)

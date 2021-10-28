@@ -1205,7 +1205,7 @@ yydefault:
 		yyDollar = yyS[yypt-3 : yypt+1]
 //line generated_parser.y:360
 		{
-			fmt.Printf("++++++++++++\n%+v\n+++++++++\n", yyDollar[2].node)
+			fmt.Printf("++++++++++++\n%+v\n++++++++++++\n", yyDollar[2].node)
 			yyVAL.node = yyDollar[2].node
 		}
 	case 61:

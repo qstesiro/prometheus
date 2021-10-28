@@ -173,7 +173,7 @@ START_METRIC_SELECTOR
 %%
 
 start           :
-                START_METRIC metric
+                START_METRIC metric // 唯一调用./cmd/promtool/unittest.go ???
                         { yylex.(*parser).generatedParserResult = $2 }
                 | START_SERIES_DESCRIPTION series_description
                 | START_EXPRESSION /* empty */ EOF
@@ -358,7 +358,7 @@ function_call   : IDENTIFIER function_call_body
 
 function_call_body: LEFT_PAREN function_call_args RIGHT_PAREN
                         {
-                            fmt.Printf("++++++++++++\n%+v\n+++++++++\n", $2);
+                            fmt.Printf("++++++++++++\n%+v\n++++++++++++\n", $2);
                             $$ = $2;
                         }
                 | LEFT_PAREN RIGHT_PAREN
@@ -580,9 +580,17 @@ metric          : metric_identifier label_set
                   // by{name='value'}
                   // group{name='value'}
                   // offset{name='value'}
-                        { fmt.Printf("+++++++++\n%+v\n+++++++\n", labels.Label{Name: labels.MetricName, Value: $1.Val}); $$ = append($2, labels.Label{Name: labels.MetricName, Value: $1.Val}); sort.Sort($$) }
+                        {
+                            fmt.Printf("+++++++++\n%+v\n+++++++\n",
+                                       labels.Label{Name: labels.MetricName, Value: $1.Val});
+                            $$ = append($2, labels.Label{Name: labels.MetricName, Value: $1.Val});
+                            sort.Sort($$);
+                        }
                 | label_set
-                        { fmt.Printf("+++++++++\n%+v\n+++++++\n", $1); $$ = $1}
+                        {
+                            fmt.Printf("+++++++++\n%+v\n+++++++\n", $1);
+                            $$ = $1;
+                        }
                 ;
 
 

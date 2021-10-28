@@ -37,7 +37,7 @@
 
 # b v1.(*API).query
 # b promql.(*Engine).NewInstantQuery
-b parser.ParseExpr
+# b parser.ParseExpr
 # b v1.(*API).queryRange
 # b v1.(*API).series
 # b v1/api.go:698
@@ -54,7 +54,7 @@ b parser.ParseExpr
 # 编译器会自己生成github.com/prometheus/prometheus/pkg/labels.(*Labels).Map使用全路径设置断点
 # b github.com/prometheus/prometheus/pkg/labels.(*Labels).Map
 # b github.com/prometheus/prometheus/pkg/labels.Labels.Map
-# b generated_parser.y.go:1465
+b generated_parser.y.go:1208
 b parser.(*yyParserImpl).Parse
 
 # b remote.(*Storage).ApplyConfig
