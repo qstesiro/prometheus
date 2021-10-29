@@ -489,68 +489,79 @@ unary_expr      :
  * Vector selectors.
  */
 vector_selector: metric_identifier label_matchers
-                 // 允许以下情况出现 ???
-                 // avg{name~='value'}
-                 // topk{name~='value'}
-                 // bottomk{name~='value'}
-                 // by{name~='value'}
-                 // group{name~='value'}
-                 // offset{name~='value'}
+                         // 竟然允许以下情况出现 ???
+                         // avg{name~='value'}
+                         // topk{name~='value'}
+                         // bottomk{name~='value'}
+                         // by{name~='value'}
+                         // group{name~='value'}
+                         // offset{name~='value'}
                         {                           
-                        vs := $2.(*VectorSelector)
-                        vs.PosRange = mergeRanges(&$1, vs)
-                        vs.Name = $1.Val
-                        yylex.(*parser).assembleVectorSelector(vs)
-                        $$ = vs
+                            vs := $2.(*VectorSelector)
+                            vs.PosRange = mergeRanges(&$1, vs)
+                            vs.Name = $1.Val
+                            yylex.(*parser).assembleVectorSelector(vs)
+                            $$ = vs
+                            fmt.Printf("metric_identifier label_matchers -> %v\n", $$)
                         }
                 | metric_identifier
+                        // 这也可以,有什么作用 ???
+                        // avg
+                        // topk
+                        // bottomk
+                        // by
+                        // group
+                        // offset
                         {
-                        vs := &VectorSelector{
-                                Name: $1.Val,
-                                LabelMatchers: []*labels.Matcher{},
-                                PosRange: $1.PositionRange(),
-                        }
-                        yylex.(*parser).assembleVectorSelector(vs)
-                        $$ = vs
+                            vs := &VectorSelector{
+                                    Name: $1.Val,
+                                    LabelMatchers: []*labels.Matcher{},
+                                    PosRange: $1.PositionRange(),
+                            }
+                            yylex.(*parser).assembleVectorSelector(vs)
+                            $$ = vs
+                            fmt.Printf("metric_identifier -> %v\n", $$)
                         }
                 | label_matchers
                         {
-                        vs := $1.(*VectorSelector)
-                        yylex.(*parser).assembleVectorSelector(vs)
-                        $$ = vs
+                            vs := $1.(*VectorSelector)
+                            yylex.(*parser).assembleVectorSelector(vs)
+                            $$ = vs
+                            fmt.Printf("label_matchers -> %v\n", $$)
                         }
                 ;
 
 label_matchers  : LEFT_BRACE label_match_list RIGHT_BRACE
                         {
-                        $$ = &VectorSelector{
-                                LabelMatchers: $2,
-                                PosRange: mergeRanges(&$1, &$3),
-                        }
+                            $$ = &VectorSelector{
+                                    LabelMatchers: $2,
+                                    PosRange: mergeRanges(&$1, &$3),
+                            }
                         }
                 | LEFT_BRACE label_match_list COMMA RIGHT_BRACE
+                  // 允许{label='value',label='value',}
                         {
-                        $$ = &VectorSelector{
-                                LabelMatchers: $2,
-                                PosRange: mergeRanges(&$1, &$4),
-                        }
+                            $$ = &VectorSelector{
+                                    LabelMatchers: $2,
+                                    PosRange: mergeRanges(&$1, &$4),
+                            }
                         }
                 | LEFT_BRACE RIGHT_BRACE
                         {
-                        $$ = &VectorSelector{
-                                LabelMatchers: []*labels.Matcher{},
-                                PosRange: mergeRanges(&$1, &$2),
-                        }
+                            $$ = &VectorSelector{
+                                    LabelMatchers: []*labels.Matcher{},
+                                    PosRange: mergeRanges(&$1, &$2),
+                            }
                         }
                 ;
 
 label_match_list: label_match_list COMMA label_matcher
                         {
-                        if $1 != nil{
+                            if $1 != nil{
                                 $$ = append($1, $3)
-                        } else {
+                            } else {
                                 $$ = $1
-                        }
+                            }
                         }
                 | label_matcher
                         { $$ = []*labels.Matcher{$1}}
