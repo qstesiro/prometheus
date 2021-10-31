@@ -514,9 +514,9 @@ vector_selector: metric_identifier label_matchers
                         // offset
                         {
                             vs := &VectorSelector{
-                                    Name: $1.Val,
-                                    LabelMatchers: []*labels.Matcher{},
-                                    PosRange: $1.PositionRange(),
+                                Name: $1.Val,
+                                LabelMatchers: []*labels.Matcher{},
+                                PosRange: $1.PositionRange(),
                             }
                             yylex.(*parser).assembleVectorSelector(vs)
                             $$ = vs
@@ -534,24 +534,25 @@ vector_selector: metric_identifier label_matchers
 label_matchers  : LEFT_BRACE label_match_list RIGHT_BRACE
                         {
                             $$ = &VectorSelector{
-                                    LabelMatchers: $2,
-                                    PosRange: mergeRanges(&$1, &$3),
+                                LabelMatchers: $2,
+                                PosRange: mergeRanges(&$1, &$3),
                             }
                         }
                 | LEFT_BRACE label_match_list COMMA RIGHT_BRACE
                   // 允许{label='value',label='value',}
                         {
                             $$ = &VectorSelector{
-                                    LabelMatchers: $2,
-                                    PosRange: mergeRanges(&$1, &$4),
+                                LabelMatchers: $2,
+                                PosRange: mergeRanges(&$1, &$4),
                             }
                         }
                 | LEFT_BRACE RIGHT_BRACE
                         {
                             $$ = &VectorSelector{
-                                    LabelMatchers: []*labels.Matcher{},
-                                    PosRange: mergeRanges(&$1, &$2),
+                                LabelMatchers: []*labels.Matcher{},
+                                PosRange: mergeRanges(&$1, &$2),
                             }
+                            fmt.Printf("{} -> %v\n", $$)
                         }
                 ;
 
