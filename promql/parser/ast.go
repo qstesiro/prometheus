@@ -39,6 +39,7 @@ import (
 type Node interface {
 	// String representation of the node that returns the given node when parsed
 	// as part of a valid query.
+	// 实现定义在printer.go ???
 	String() string
 
 	// PositionRange returns the position of the AST Node in the query string.
@@ -51,6 +52,7 @@ type Statement interface {
 
 	// PromQLStmt ensures that no other type accidentally implements the interface
 	// nolint:unused
+	// 这个用法可以有 ???
 	PromQLStmt()
 }
 
