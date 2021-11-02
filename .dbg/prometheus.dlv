@@ -56,6 +56,7 @@
 # b github.com/prometheus/prometheus/pkg/labels.Labels.Map
 # b generated_parser.y.go:1208
 # b parser.(*yyParserImpl).Parse
+b parser.(*parser).assembleVectorSelector
 
 # b remote.(*Storage).ApplyConfig
 # b promql.(*Engine).execEvalStmt

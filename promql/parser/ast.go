@@ -188,6 +188,7 @@ type VectorSelector struct {
 	Name string
 	// OriginalOffset is the actual offset that was set in the query.
 	// This never changes.
+	// 参考https://prometheus.io/docs/prometheus/latest/querying/basics/#offset-modifier
 	OriginalOffset time.Duration
 	// Offset is the offset used during the query execution
 	// which is calculated using the original offset, at modifier time,

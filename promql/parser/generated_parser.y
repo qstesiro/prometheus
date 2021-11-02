@@ -489,13 +489,13 @@ unary_expr      :
  * Vector selectors.
  */
 vector_selector: metric_identifier label_matchers
-                         // 竟然允许以下情况出现 ???
-                         // avg{name~='value'}
-                         // topk{name~='value'}
-                         // bottomk{name~='value'}
-                         // by{name~='value'}
-                         // group{name~='value'}
-                         // offset{name~='value'}
+                 // 竟然允许以下情况出现 ???
+                 // avg{name~='value'}
+                 // topk{name~='value'}
+                 // bottomk{name~='value'}
+                 // by{name~='value'}
+                 // group{name~='value'}
+                 // offset{name~='value'}
                         {                           
                             vs := $2.(*VectorSelector)
                             vs.PosRange = mergeRanges(&$1, vs)
@@ -505,13 +505,14 @@ vector_selector: metric_identifier label_matchers
                             fmt.Printf("metric_identifier label_matchers -> %v\n", $$)
                         }
                 | metric_identifier
-                        // 这也可以,有什么作用 ???
-                        // avg
-                        // topk
-                        // bottomk
-                        // by
-                        // group
-                        // offset
+                  // metric_name(省略{}也是可以的)
+                  // 这也可以,有什么作用 ???
+                  // avg
+                  // topk
+                  // bottomk
+                  // by
+                  // group
+                  // offset
                         {
                             vs := &VectorSelector{
                                 Name: $1.Val,
