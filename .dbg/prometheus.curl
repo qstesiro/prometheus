@@ -227,3 +227,23 @@ curl localhost:9090/api/v1/labels \
      --data-urlencode 'start=2021-11-02T12:35:19.000Z' \
      --data-urlencode 'end=2021-11-02T12:36:19.000Z' \
      -g -G | python -m json.tool
+# offset @modifier     
+curl localhost:9090/api/v1/query \
+     --data-urlencode 'query={__name__="go_gc_duration_seconds_count"}[20s] offset 1m' \
+     --data-urlencode 'time=2021-11-03T01:56:00.000Z' \
+     -g -G | python -m json.tool
+curl localhost:9090/api/v1/query \
+     --data-urlencode 'query={__name__="go_gc_duration_seconds_count"}[20s] @1635909308' \
+     --data-urlencode 'time=2021-11-03T01:56:00.000Z' \
+     -g -G | python -m json.tool
+curl localhost:9090/api/v1/query \
+     --data-urlencode 'query={__name__="go_gc_duration_seconds_count"}[20s] offset 1m @1635909308' \
+     --data-urlencode 'time=2021-11-03T01:56:00.000Z' \
+     -g -G | python -m json.tool
+curl localhost:9090/api/v1/query \
+     --data-urlencode 'query={__name__="go_gc_duration_seconds_count"}[20s] @end()' \
+     --data-urlencode 'time=2021-11-03T01:56:00.000Z' \
+     -g -G | python -m json.tool
+curl localhost:9090/api/v1/query \
+     --data-urlencode 'query={__name__="go_gc_duration_seconds_count"}[20s] @end()' \
+     -g -G | python -m json.tool
