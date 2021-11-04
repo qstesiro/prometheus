@@ -40,6 +40,8 @@ b promql.(*Engine).NewInstantQuery
 b parser.ParseExpr
 b parser.(*parser).parseGenerated
 b promql.setOffsetForAtModifier
+b engine.go:2435
+b engine.go:2450
 # b v1.(*API).queryRange
 # b v1.(*API).series
 # b v1/api.go:698

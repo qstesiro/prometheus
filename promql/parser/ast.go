@@ -193,9 +193,9 @@ type VectorSelector struct {
 	// Offset is the offset used during the query execution
 	// which is calculated using the original offset, at modifier time,
 	// eval time, and subquery offsets in the AST tree.
-	Offset        time.Duration
-	Timestamp     *int64
-	StartOrEnd    ItemType // Set when @ is used with start() or end()
+	Offset        time.Duration // 没有完全搞明白,过后再细看 ???
+	Timestamp     *int64        // 存储 @modifier
+	StartOrEnd    ItemType      // Set when @ is used with start() or end()
 	LabelMatchers []*labels.Matcher
 
 	// The unexpanded seriesSet populated at query preparation time.
