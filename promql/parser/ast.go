@@ -78,6 +78,7 @@ type Expr interface {
 	// in-depth checks as this is done at parsing-time.
 	Type() ValueType
 	// PromQLExpr ensures that no other types accidentally implement the interface.
+	// 这个用法可以有 ???
 	PromQLExpr()
 }
 

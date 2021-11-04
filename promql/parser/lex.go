@@ -21,6 +21,7 @@ import (
 )
 
 // Item represents a token or text string returned from the scanner.
+// 实现了Node
 type Item struct {
 	Typ ItemType // The type of this Item.
 	Pos Pos      // The starting position, in bytes, of this Item in the input string.

@@ -222,16 +222,16 @@ aggregate_expr  : aggregate_op aggregate_modifier function_call_body
 aggregate_modifier:
                 BY grouping_labels
                         {
-                        $$ = &AggregateExpr{
+                            $$ = &AggregateExpr{
                                 Grouping: $2,
-                        }
+                            }
                         }
                 | WITHOUT grouping_labels
                         {
-                        $$ = &AggregateExpr{
+                            $$ = &AggregateExpr{
                                 Grouping: $2,
                                 Without:  true,
-                        }
+                            }
                         }
                 ;
 
@@ -341,18 +341,22 @@ grouping_label  : maybe_label
 
 function_call   : IDENTIFIER function_call_body
                         {
-                        fn, exist := getFunction($1.Val)
-                        if !exist{
-                                yylex.(*parser).addParseErrf($1.PositionRange(),"unknown function with name %q", $1.Val)
-                        }
-                        $$ = &Call{
+                            fn, exist := getFunction($1.Val)
+                            if !exist{
+                                yylex.(*parser).addParseErrf(
+                                    $1.PositionRange(),
+                                    "unknown function with name %q",
+                                    $1.Val
+                                    )
+                            }
+                            $$ = &Call{
                                 Func: fn,
                                 Args: $2.(Expressions),
                                 PosRange: PositionRange{
-                                        Start: $1.Pos,
-                                        End:   yylex.(*parser).lastClosing,
-                                },
-                        }
+                                    Start: $1.Pos,
+                                    End:   yylex.(*parser).lastClosing,
+                                    },
+                            }
                         }
                 ;
 
@@ -361,20 +365,23 @@ function_call_body: LEFT_PAREN function_call_args RIGHT_PAREN
                             fmt.Printf("++++++++++++\n%+v\n++++++++++++\n", $2);
                             $$ = $2;
                         }
-                | LEFT_PAREN RIGHT_PAREN
+                    | LEFT_PAREN RIGHT_PAREN
                         {$$ = Expressions{}}
-                ;
+                    ;
 
 function_call_args: function_call_args COMMA expr
                         { $$ = append($1.(Expressions), $3.(Expr)) }
-                | expr
+                    | expr
                         { $$ = Expressions{$1.(Expr)} }
-                | function_call_args COMMA
+                    | function_call_args COMMA
                         {
-                        yylex.(*parser).addParseErrf($2.PositionRange(), "trailing commas not allowed in function call args")
-                        $$ = $1
+                            yylex.(*parser).addParseErrf(
+                                $2.PositionRange(),
+                                "trailing commas not allowed in function call args"
+                                )
+                            $$ = $1
                         }
-                ;
+                    ;
 
 /*
  * Expressions inside parentheses.
@@ -739,31 +746,35 @@ signed_or_unsigned_number: number | signed_number ;
 
 uint            : NUMBER
                         {
-                        var err error
-                        $$, err = strconv.ParseUint($1.Val, 10, 64)
-                        if err != nil {
-                                yylex.(*parser).addParseErrf($1.PositionRange(), "invalid repetition in series values: %s", err)
-                        }
+                            var err error
+                            $$, err = strconv.ParseUint($1.Val, 10, 64)
+                            if err != nil {
+                                    yylex.(*parser).addParseErrf(
+                                        $1.PositionRange(),
+                                        "invalid repetition in series values: %s",
+                                        err
+                                     )
+                            }
                         }
                 ;
 
 duration        : DURATION
                         {
-                        var err error
-                        $$, err = parseDuration($1.Val)
-                        if err != nil {
-                                yylex.(*parser).addParseErr($1.PositionRange(), err)
-                        }
+                            var err error
+                            $$, err = parseDuration($1.Val)
+                            if err != nil {
+                                    yylex.(*parser).addParseErr($1.PositionRange(), err)
+                            }
                         }
                 ;
 
 
 string_literal  : STRING
                         {
-                        $$ = &StringLiteral{
+                            $$ = &StringLiteral{
                                 Val: yylex.(*parser).unquoteString($1.Val),
                                 PosRange: $1.PositionRange(),
-                        }
+                            }
                         }
                         ;
 
