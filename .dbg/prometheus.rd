@@ -906,3 +906,5 @@ prometheus_target_interval_length_seconds{} / prometheus_target_interval_length_
 prometheus_target_interval_length_seconds{quantile="0.5"} / prometheus_target_interval_length_seconds{}
 prometheus_target_interval_length_seconds{quantile="0.5"} / ignoring(intervals)  prometheus_target_interval_length_seconds{}
 prometheus_target_interval_length_seconds{quantile="0.5"} / ignoring(intervals) group_right prometheus_target_interval_length_seconds{}
+
+go_gc_duration_seconds{quantile=0.5} < go_gc_duration_seconds{quantile=0.75}
