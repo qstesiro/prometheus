@@ -895,3 +895,14 @@ emacs curor !!!
 fileutil ???
 
 hash: 6870465778796250587,
+
+prometheus_target_interval_length_seconds{interval="15s",quantile="0.01"} 11.260815277
+prometheus_target_interval_length_seconds{interval="15s",quantile="0.05"} 14.999539874
+prometheus_target_interval_length_seconds{interval="15s",quantile="0.5"} 14.999984526
+prometheus_target_interval_length_seconds{interval="15s",quantile="0.9"} 15.000614365
+prometheus_target_interval_length_seconds{interval="15s",quantile="0.99"} 16.882491995
+
+prometheus_target_interval_length_seconds{} / prometheus_target_interval_length_seconds{}
+prometheus_target_interval_length_seconds{quantile="0.5"} / prometheus_target_interval_length_seconds{}
+prometheus_target_interval_length_seconds{quantile="0.5"} / ignoring(intervals)  prometheus_target_interval_length_seconds{}
+prometheus_target_interval_length_seconds{quantile="0.5"} / ignoring(intervals) group_right prometheus_target_interval_length_seconds{}
