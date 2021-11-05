@@ -251,7 +251,7 @@ curl localhost:9090/api/v1/query \
 # Binary operators
 # Arithmetic
 curl localhost:9090/api/v1/query \
-     --data-urlencode 'query=10*10' \
+     --data-urlencode 'query=10 * 10' \
      -g -G | python -m json.tool
 curl localhost:9090/api/v1/query \
      --data-urlencode 'query=go_goroutines{} * 10' \
@@ -273,9 +273,21 @@ curl localhost:9090/api/v1/query \
      --data-urlencode 'query=go_gc_duration_seconds{quantile="0.5"}' \
      -g -G | python -m json.tool
 curl localhost:9090/api/v1/query \
-     --data-urlencode 'query=go_gc_duration_seconds{quantile="0.5"} < go_gc_duration_seconds{quantile="0.5"}' \
+     --data-urlencode 'query=go_gc_duration_seconds{} == go_gc_duration_seconds{}' \
+     -g -G | python -m json.tool
+curl localhost:9090/api/v1/query \
+     --data-urlencode 'query=go_gc_duration_seconds{} ==bool go_gc_duration_seconds{}' \
      -g -G | python -m json.tool
 # Logical/set
+curl localhost:9090/api/v1/query \
+     --data-urlencode 'query=go_gc_duration_seconds{quantile='0.5'}  and go_gc_duration_seconds{}' \
+     -g -G | python -m json.tool
+curl localhost:9090/api/v1/query \
+     --data-urlencode 'query=go_gc_duration_seconds{quantile='0.5'}  or go_gc_duration_seconds{}' \
+     -g -G | python -m json.tool
+curl localhost:9090/api/v1/query \
+     --data-urlencode 'query=go_gc_duration_seconds{quantile='0.5'}  unless on(quantile) go_gc_duration_seconds{}' \
+     -g -G | python -m json.tool     
 # Matching
 curl localhost:9090/api/v1/query \
      --data-urlencode 'query=prometheus_target_interval_length_seconds{} / prometheus_target_interval_length_seconds{}' \
