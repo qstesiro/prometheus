@@ -305,4 +305,45 @@ curl localhost:9090/api/v1/query \
      --data-urlencode 'query=prometheus_target_interval_length_seconds{quantile="0.5"} / ignoring(intervals) group_right prometheus_target_interval_length_seconds{}' \
      -g -G | python -m json.tool
 # Aggregation
-
+curl localhost:9090/api/v1/query \
+     --data-urlencode 'query=sum(prometheus_target_interval_length_seconds{}) without(quantile)' \
+     -g -G | python -m json.tool
+curl localhost:9090/api/v1/query \
+     --data-urlencode 'query=max(prometheus_target_interval_length_seconds{}) without(quantile)' \
+     -g -G | python -m json.tool
+curl localhost:9090/api/v1/query \
+     --data-urlencode 'query=min(prometheus_target_interval_length_seconds{}) without(quantile)' \
+     -g -G | python -m json.tool
+curl localhost:9090/api/v1/query \
+     --data-urlencode 'query=avg(prometheus_target_interval_length_seconds{}) without(quantile)' \
+     -g -G | python -m json.tool
+curl localhost:9090/api/v1/query \
+     --data-urlencode 'query=group(prometheus_target_interval_length_seconds{})' \
+     -g -G | python -m json.tool
+curl localhost:9090/api/v1/query \
+     --data-urlencode 'query=group(prometheus_target_interval_length_seconds{instance="localhost:9090", interval="5s", job="prometheus", quantile="0.5"}) without (quantile)' \
+     -g -G | python -m json.tool
+curl localhost:9090/api/v1/query \
+     --data-urlencode 'query=stddev(prometheus_target_interval_length_seconds{}) without(quantile)' \
+     -g -G | python -m json.tool
+curl localhost:9090/api/v1/query \
+     --data-urlencode 'query=stdvar(prometheus_target_interval_length_seconds{}) without(quantile)' \
+     -g -G | python -m json.tool
+curl localhost:9090/api/v1/query \
+     --data-urlencode 'query=count(prometheus_target_interval_length_seconds{}) without(quantile)' \
+     -g -G | python -m json.tool
+curl localhost:9090/api/v1/query \
+     --data-urlencode 'query=count_values("quantile", prometheus_target_interval_length_seconds{})' \
+     -g -G | python -m json.tool
+curl localhost:9090/api/v1/query \
+     --data-urlencode 'query=count_values("quantile", prometheus_target_interval_length_seconds{})' \
+     -g -G | python -m json.tool
+curl localhost:9090/api/v1/query \
+     --data-urlencode 'query=topk(2, prometheus_target_interval_length_seconds{})' \
+     -g -G | python -m json.tool
+curl localhost:9090/api/v1/query \
+     --data-urlencode 'query=bottomk(2, prometheus_target_interval_length_seconds{})' \
+     -g -G | python -m json.tool
+curl localhost:9090/api/v1/query \
+     --data-urlencode 'query=quantile(0.2, prometheus_target_interval_length_seconds{})' \
+     -g -G | python -m json.tool
