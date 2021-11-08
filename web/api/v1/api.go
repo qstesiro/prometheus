@@ -335,6 +335,8 @@ func (api *API) options(r *http.Request) apiFuncResult {
 	return apiFuncResult{nil, nil, nil, nil}
 }
 
+// 使用query可以完全替代queryRange
+// query可以使用范围查询语句
 func (api *API) query(r *http.Request) (result apiFuncResult) {
 	ts, err := parseTimeParam(r, "time", api.now())
 	if err != nil {

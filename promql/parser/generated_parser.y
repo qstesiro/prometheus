@@ -188,18 +188,18 @@ start           :
                 ;
 
 expr            :
-                aggregate_expr
-                | binary_expr
+                  aggregate_expr      // 完成
+                | binary_expr         // 完成
                 | function_call
                 | matrix_selector
-                | number_literal
+                | number_literal      // 完成
                 | offset_expr
                 | paren_expr
-                | string_literal
+                | string_literal      // 完成
                 | subquery_expr
                 | unary_expr
-                | vector_selector
-                | step_invariant_expr
+                | vector_selector     // 完成
+                | step_invariant_expr //
                 ;
 
 /*
@@ -257,72 +257,73 @@ binary_expr     : expr ADD     bin_modifier expr { $$ = yylex.(*parser).newBinar
                 | expr SUB     bin_modifier expr { $$ = yylex.(*parser).newBinaryExpression($1, $2, $3, $4) }
                 ;
 
+// 不太明白(等过后再研究yacc) ???
 // Using left recursion for the modifier rules, helps to keep the parser stack small and
 // reduces allocations
 bin_modifier    : group_modifiers;
-
-bool_modifier   : /* empty */
-                        { $$ = &BinaryExpr{
-                        VectorMatching: &VectorMatching{Card: CardOneToOne},
-                        }
-                        }
-                | BOOL
-                        { $$ = &BinaryExpr{
-                        VectorMatching: &VectorMatching{Card: CardOneToOne},
-                        ReturnBool:     true,
-                        }
-                        }
-                ;
-
-on_or_ignoring  : bool_modifier IGNORING grouping_labels
-                        {
-                        $$ = $1
-                        $$.(*BinaryExpr).VectorMatching.MatchingLabels = $3
-                        }
-                | bool_modifier ON grouping_labels
-                        {
-                        $$ = $1
-                        $$.(*BinaryExpr).VectorMatching.MatchingLabels = $3
-                        $$.(*BinaryExpr).VectorMatching.On = true
-                        }
-                ;
 
 group_modifiers: bool_modifier /* empty */
                 | on_or_ignoring /* empty */
                 | on_or_ignoring GROUP_LEFT maybe_grouping_labels
                         {
-                        $$ = $1
-                        $$.(*BinaryExpr).VectorMatching.Card = CardManyToOne
-                        $$.(*BinaryExpr).VectorMatching.Include = $3
+                            $$ = $1
+                            $$.(*BinaryExpr).VectorMatching.Card = CardManyToOne
+                            $$.(*BinaryExpr).VectorMatching.Include = $3
                         }
                 | on_or_ignoring GROUP_RIGHT maybe_grouping_labels
                         {
-                        $$ = $1
-                        $$.(*BinaryExpr).VectorMatching.Card = CardOneToMany
-                        $$.(*BinaryExpr).VectorMatching.Include = $3
+                            $$ = $1
+                            $$.(*BinaryExpr).VectorMatching.Card = CardOneToMany
+                            $$.(*BinaryExpr).VectorMatching.Include = $3
                         }
                 ;
 
+on_or_ignoring  : bool_modifier IGNORING grouping_labels
+                        {
+                            $$ = $1
+                            $$.(*BinaryExpr).VectorMatching.MatchingLabels = $3
+                        }
+                | bool_modifier ON grouping_labels
+                        {
+                            $$ = $1
+                            $$.(*BinaryExpr).VectorMatching.MatchingLabels = $3
+                            $$.(*BinaryExpr).VectorMatching.On = true
+                        }
+                ;
+
+bool_modifier   : /* empty */
+                        {
+                            $$ = &BinaryExpr{
+                                VectorMatching: &VectorMatching{Card: CardOneToOne},
+                            }
+                        }
+                | BOOL
+                        {
+                            $$ = &BinaryExpr{
+                                VectorMatching: &VectorMatching{Card: CardOneToOne},
+                                ReturnBool:     true,
+                            }
+                        }
+                ;
 
 grouping_labels : LEFT_PAREN grouping_label_list RIGHT_PAREN
                         { $$ = $2 }
                 | LEFT_PAREN grouping_label_list COMMA RIGHT_PAREN
                         { $$ = $2 }
                 | LEFT_PAREN RIGHT_PAREN
-                        { $$ = []string{} }
+                    { $$ = []string{} } // 允许为空 ???
                 | error
                         { yylex.(*parser).unexpected("grouping opts", "\"(\""); $$ = nil }
                 ;
 
 
-grouping_label_list:
-                grouping_label_list COMMA grouping_label
+grouping_label_list : grouping_label_list COMMA grouping_label
                         { $$ = append($1, $3.Val) }
-                | grouping_label
+                    | grouping_label
                         { $$ = []string{$1.Val} }
-                | grouping_label_list error
+                    | grouping_label_list error
                         { yylex.(*parser).unexpected("grouping opts", "\",\" or \")\""); $$ = $1 }
-                ;
+                    ;
 
 grouping_label  : maybe_label
                         {
@@ -331,9 +332,9 @@ grouping_label  : maybe_label
                         }
                         $$ = $1
                         }
-                | error
+                  | error
                         { yylex.(*parser).unexpected("grouping opts", "label"); $$ = Item{} }
-                ;
+                  ;
 
 /*
  * Function calls.
@@ -346,7 +347,7 @@ function_call   : IDENTIFIER function_call_body
                                 yylex.(*parser).addParseErrf(
                                     $1.PositionRange(),
                                     "unknown function with name %q",
-                                    $1.Val
+                                    $1.Val,
                                     )
                             }
                             $$ = &Call{
@@ -377,7 +378,7 @@ function_call_args: function_call_args COMMA expr
                         {
                             yylex.(*parser).addParseErrf(
                                 $2.PositionRange(),
-                                "trailing commas not allowed in function call args"
+                                "trailing commas not allowed in function call args",
                                 )
                             $$ = $1
                         }
@@ -409,13 +410,13 @@ offset_expr: expr OFFSET duration
 
 step_invariant_expr: expr AT signed_or_unsigned_number
                         {
-                        yylex.(*parser).setTimestamp($1, $3)
-                        $$ = $1
+                            yylex.(*parser).setTimestamp($1, $3)
+                            $$ = $1
                         }
                 | expr AT at_modifier_preprocessors LEFT_PAREN RIGHT_PAREN
                         {
-                        yylex.(*parser).setAtModifierPreprocessor($1, $3)
-                        $$ = $1
+                            yylex.(*parser).setAtModifierPreprocessor($1, $3)
+                            $$ = $1
                         }
                 | expr AT error
                         { yylex.(*parser).unexpected("@", "timestamp"); $$ = $1 }
@@ -752,7 +753,7 @@ uint            : NUMBER
                                     yylex.(*parser).addParseErrf(
                                         $1.PositionRange(),
                                         "invalid repetition in series values: %s",
-                                        err
+                                        err,
                                      )
                             }
                         }
