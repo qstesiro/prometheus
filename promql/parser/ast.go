@@ -83,6 +83,7 @@ type Expr interface {
 }
 
 // Expressions is a list of expression nodes that implements Node.
+// 实现了Node
 type Expressions []Expr
 
 // AggregateExpr represents an aggregation operation on a Vector.
