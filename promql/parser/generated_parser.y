@@ -197,9 +197,9 @@ expr            :
                 | paren_expr
                 | string_literal      // 完成
                 | subquery_expr
-                | unary_expr
+                | unary_expr          // 完成
                 | vector_selector     // 完成
-                | step_invariant_expr //
+                | step_invariant_expr // 完成
                 ;
 
 /*
@@ -397,13 +397,10 @@ paren_expr      : LEFT_PAREN expr RIGHT_PAREN
  */
 
 offset_expr: expr OFFSET duration
-                        {
-                        yylex.(*parser).addOffset($1, $3)
-                        $$ = $1
-                        }
-                | expr OFFSET error
-                        { yylex.(*parser).unexpected("offset", "duration"); $$ = $1 }
-                ;
+             {yylex.(*parser).addOffset($1, $3); $$ = $1}
+           | expr OFFSET error
+             { yylex.(*parser).unexpected("offset", "duration"); $$ = $1 }
+           ;
 /*
  * @ modifiers.
  */
@@ -481,15 +478,15 @@ unary_expr      :
                 /* gives the rule the same precedence as MUL. This aligns with mathematical conventions */
                 unary_op expr %prec MUL
                         {
-                        if nl, ok := $2.(*NumberLiteral); ok {
+                            if nl, ok := $2.(*NumberLiteral); ok {
                                 if $1.Typ == SUB {
-                                        nl.Val *= -1
+                                    nl.Val *= -1
                                 }
                                 nl.PosRange.Start = $1.Pos
                                 $$ = nl
-                        } else {
+                            } else {
                                 $$ = &UnaryExpr{Op: $1.Typ, Expr: $2.(Expr), StartPos: $1.Pos}
-                        }
+                            }
                         }
                 ;
 

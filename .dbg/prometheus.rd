@@ -908,3 +908,5 @@ prometheus_target_interval_length_seconds{quantile="0.5"} / ignoring(intervals) 
 prometheus_target_interval_length_seconds{quantile="0.5"} / ignoring(intervals) group_right prometheus_target_interval_length_seconds{}
 
 go_gc_duration_seconds{quantile=0.5} < go_gc_duration_seconds{quantile=0.75}
+
+(go_gc_duration_seconds_count{} + go_gc_duration_seconds_count{}) @ start()
