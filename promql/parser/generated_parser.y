@@ -190,13 +190,13 @@ start           :
 expr            :
                   aggregate_expr      // 完成
                 | binary_expr         // 完成
-                | function_call
-                | matrix_selector
+                | function_call       // 完成
+                | matrix_selector     // 完成
                 | number_literal      // 完成
-                | offset_expr
-                | paren_expr
+                | offset_expr         // 完成
+                | paren_expr          // 完成
                 | string_literal      // 完成
-                | subquery_expr
+                | subquery_expr       // 完成
                 | unary_expr          // 完成
                 | vector_selector     // 完成
                 | step_invariant_expr // 完成
@@ -427,26 +427,26 @@ at_modifier_preprocessors: START | END;
 
 matrix_selector : expr LEFT_BRACKET duration RIGHT_BRACKET
                         {
-                        var errMsg string
-                        vs, ok := $1.(*VectorSelector)
-                        if !ok{
+                            var errMsg string
+                            vs, ok := $1.(*VectorSelector)
+                            if !ok{
                                 errMsg = "ranges only allowed for vector selectors"
-                        } else if vs.OriginalOffset != 0{
+                            } else if vs.OriginalOffset != 0{
                                 errMsg = "no offset modifiers allowed before range"
-                        } else if vs.Timestamp != nil {
+                            } else if vs.Timestamp != nil {
                                 errMsg = "no @ modifiers allowed before range"
-                        }
+                            }
 
-                        if errMsg != ""{
+                            if errMsg != ""{
                                 errRange := mergeRanges(&$2, &$4)
                                 yylex.(*parser).addParseErrf(errRange, errMsg)
-                        }
+                            }
 
-                        $$ = &MatrixSelector{
+                            $$ = &MatrixSelector{
                                 VectorSelector: $1.(Expr),
                                 Range: $3,
                                 EndPos: yylex.(*parser).lastClosing,
-                        }
+                            }
                         }
                 ;
 
