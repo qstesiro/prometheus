@@ -1,4 +1,4 @@
-Todo:
+# Todo:
 - head.Chunk 数据写入与db.Compact关系
 - head.Chunk 写mmap时间并不严格的是超过截断时间的第一个时间
 - metrics 在head中存储是使用memSeries,每个memSeries关联一个chunc(xor)存储采样数据
