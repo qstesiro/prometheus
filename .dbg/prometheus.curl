@@ -70,19 +70,19 @@ curl 192.168.56.104:9090/tsdb-status -X GET
 curl localhost:9090/api/v1/query \
      --data-urlencode 'query={__name__="go_gc_duration_seconds_count"}[1m]' \
      --data-urlencode 'time=2021-11-03T01:56:00.000Z' \
-     -g -G | python -m json.tool
+     -g -G | jq
 curl localhost:9090/api/v1/query \
      --data-urlencode 'query={__name__="go_gc_duration_seconds_count"}' \
      --data-urlencode 'time=2021-09-26T09:32:00.000+08:00' \
-     -g -G | python -m json.tool
+     -g -G | jq
 curl localhost:9090/api/v1/query \
      --data-urlencode 'query=absent(log_consume_timestamp{topic = "qd-aliyun", group =~ "^storage.*"})' \
      --data-urlencode 'time=2021-09-26T09:32:00.000+08:00' \
-     -g -G | python -m json.tool
+     -g -G | jq
 curl localhost:9090/api/v1/query \
      --data-urlencode 'query=sum(rate(log_save_discard{cluster = "qd-aliyun", group =~ "^storage.*"}[1m])) by (cluster) or (absent(log_save_discard{cluster = "qd-aliyun", group =~ "^storage.*"}) - 1)' \
      --data-urlencode 'time=2021-09-26T09:32:00.000+08:00' \
-     -g -G | python -m json.tool
+     -g -G | jq
      
 # query_range
 curl localhost:9090/api/v1/query_range \
@@ -90,89 +90,89 @@ curl localhost:9090/api/v1/query_range \
      --data-urlencode 'start=2021-11-03T01:56:00.000Z' \
      --data-urlencode 'end=2021-11-03T01:56:10.000Z' \
      --data-urlencode 'step=10s' \
-     -g -G | python -m json.tool
+     -g -G | jq
 curl localhost:9090/api/v1/query_range \
      --data-urlencode 'query=avg({__name__="go_gc_duration_seconds_count"})' \
      --data-urlencode 'start=2021-10-27T21:13:00.000+08:00' \
      --data-urlencode 'end=2021-10-27T21:14:00.000+08:00' \
      --data-urlencode 'step=10s' \
-     -g -G | python -m json.tool
+     -g -G | jq
 curl localhost:9090/api/v1/series \
      --data-urlencode 'match[]={__name__="go_gc_duration_seconds"}' \
      --data-urlencode 'start=2021-09-26T09:32:00.000+08:00' \
      --data-urlencode 'end=2021-09-26T09:33:00.000+08:00' \
-     -g -G | python -m json.tool
+     -g -G | jq
 curl localhost:9090/api/v1/series \
      --data-urlencode 'match[]={__name__="go_gc_duration_seconds", quantile="0.5"}' \
      --data-urlencode 'start=2021-09-26T09:32:00.000+08:00' \
      --data-urlencode 'end=2021-09-26T09:33:00.000+08:00' \
-     -g -G | python -m json.tool
+     -g -G | jq
 curl localhost:9090/api/v1/series \
      --data-urlencode 'match[]={__name__="go_gc_duration_seconds", quantile="1"}' \
      --data-urlencode 'match[]={__name__="go_gc_duration_seconds", quantile="0.5"}' \
      --data-urlencode 'start=2021-09-26T09:32:00.000+08:00' \
      --data-urlencode 'end=2021-09-26T09:33:00.000+08:00' \
-     -g -G | python -m json.tool
+     -g -G | jq
 curl localhost:9090/api/v1/series \
      --data-urlencode 'match[]={__name__="go_gc_duration_seconds", quantile="1"}' \
      --data-urlencode 'match[]={__name__="go_gc_duration_seconds_count"}' \
      --data-urlencode 'start=2021-09-26T09:32:00.000+08:00' \
      --data-urlencode 'end=2021-09-26T09:33:00.000+08:00' \
-     -g -G | python -m json.tool
+     -g -G | jq
      
 curl localhost:9090/api/v1/labels \
-     -X GET | python -m json.tool
+     -X GET | jq
 curl localhost:9090/api/v1/labels \
      --data-urlencode 'match[]={__name__="go_gc_duration_seconds"}' \
      --data-urlencode 'start=2021-10-29T12:50:19.000Z' \
      --data-urlencode 'end=2021-10-29T12:57:19.000Z' \
-     -g -G | python -m json.tool
+     -g -G | jq
 curl localhost:9090/api/v1/labels \
      --data-urlencode 'match[]={quantile="0.5"}' \
      --data-urlencode 'start=2021-09-26T09:32:00.000+08:00' \
      --data-urlencode 'end=2021-09-26T09:33:00.000+08:00' \
-     -g -G | python -m json.tool
+     -g -G | jq
 curl localhost:9090/api/v1/labels \
      --data-urlencode 'match[]={__name__="go_gc_duration_seconds", quantile="0.5"}' \
      --data-urlencode 'start=2021-09-26T09:32:00.000+08:00' \
      --data-urlencode 'end=2021-09-26T09:33:00.000+08:00' \
-     -g -G | python -m json.tool
+     -g -G | jq
 curl localhost:9090/api/v1/labels \
      --data-urlencode 'match[]={__name__="go_gc_duration_seconds"}' \
      --data-urlencode 'match[]={__name__="go_gc_duration_seconds_count"}' \
      --data-urlencode 'start=2021-09-26T09:32:00.000+08:00' \
      --data-urlencode 'end=2021-09-26T09:33:00.000+08:00' \
-     -g -G | python -m json.tool
+     -g -G | jq
 curl localhost:9090/api/v1/labels \
      --data-urlencode 'match[]={__name__="go_gc_duration_seconds", quantile="0.5"}' \
      --data-urlencode 'match[]={__name__="go_gc_duration_seconds_count"}' \
      --data-urlencode 'start=2021-09-26T09:32:00.000+08:00' \
      --data-urlencode 'end=2021-09-26T09:33:00.000+08:00' \
-     -g -G | python -m json.tool     
+     -g -G | jq     
 
 curl localhost:9090/api/v1/label/job/values \
-     -X GET | python -m json.tool
+     -X GET | jq
 curl localhost:9090/api/v1/label/quantile/values \
-     -X GET | python -m json.tool
+     -X GET | jq
 curl localhost:9090/api/v1/label/quantile/values \
      --data-urlencode 'match[]={__name__="go_gc_duration_seconds"}' \
      --data-urlencode 'start=2021-09-26T09:32:00.000+08:00' \
      --data-urlencode 'end=2021-09-26T09:33:00.000+08:00' \
-     -G | python -m json.tool
+     -G | jq
      
 # 查询值只支持GET方法     
 curl localhost:9090/api/v1/label/quantile/values \
-     -X GET | python -m json.tool
+     -X GET | jq
 curl localhost:9090/api/v1/label/quantile/values \
      --data-urlencode 'match[]={__name__="go_gc_duration_seconds"}' \
      --data-urlencode 'start=2021-06-03T15:01:16.666+08:00' \
      --data-urlencode 'end=2021-06-03T15:01:51.900+08:00' \
-     -g -G | python -m json.tool     
+     -g -G | jq     
 curl localhost:9090/api/v1/label/quantile/values
      --data-urlencode 'match[]={__name__="go_gc_duration_seconds",quantile="1"}' \
      --data-urlencode 'start=2021-06-03T15:01:16.666+08:00' \
      --data-urlencode 'end=2021-06-03T15:01:51.900+08:00' \
-     -g -G | python -m json.tool
+     -g -G | jq
 # 线上环境
 curl 10.138.16.190:9090/api/v1/query_range \
      --data-urlencode "query=max(floor((timestamp(log_consume_timestamp{cluster = 'qd-hongdao', group =~ '^storage.*'})) - floor((log_consume_timestamp{cluster = 'qd-hongdao', group =~ '^storage.*'} > 0) / 1000) < 86400 * 7)) by (topic)" \
@@ -180,20 +180,20 @@ curl 10.138.16.190:9090/api/v1/query_range \
      --data-urlencode 'end=2021-06-03T15:02:51.000+08:00' \
      --data-urlencode 'step=10s' \
      --globoff \
-     -X POST | python -m json.tool     
+     -X POST | jq     
 
 # Query vs RangeQuery
 # 以下两个查询结果等价(使用query可以完全替代query_range)
 curl localhost:9090/api/v1/query \
      --data-urlencode 'query={__name__="go_gc_duration_seconds_count"}[1m:10s]' \
      --data-urlencode 'time=2021-11-07T07:32:00.000Z' \
-     -g -G | python -m json.tool
+     -g -G | jq
 curl localhost:9090/api/v1/query_range \
      --data-urlencode 'query={__name__="go_gc_duration_seconds_count"}' \
      --data-urlencode 'start=2021-11-07T07:31:00.000Z' \
      --data-urlencode 'end=2021-11-07T07:32:00.000Z' \
      --data-urlencode 'step=10s' \
-     -g -G | python -m json.tool
+     -g -G | jq
      
 # START_METRIC_SELECTOR vector_selector
 # go_gc_duration_seconds
@@ -201,161 +201,161 @@ curl localhost:9090/api/v1/labels \
      --data-urlencode 'match[]=go_gc_duration_seconds' \
      --data-urlencode 'start=2021-11-02T12:35:19.000Z' \
      --data-urlencode 'end=2021-11-02T12:36:19.000Z' \
-     -g -G | python -m json.tool
+     -g -G | jq
 # go_gc_duration_seconds{}
 curl localhost:9090/api/v1/labels \
      --data-urlencode 'match[]=go_gc_duration_seconds{}' \
      --data-urlencode 'start=2021-11-02T12:35:19.000Z' \
      --data-urlencode 'end=2021-11-02T12:36:19.000Z' \
-     -g -G | python -m json.tool
+     -g -G | jq
 # {__name__="go_gc_duration_seconds"}
 curl localhost:9090/api/v1/labels \
      --data-urlencode 'match[]={__name__="go_gc_duration_seconds"}' \
      --data-urlencode 'start=2021-11-02T12:35:19.000Z' \
      --data-urlencode 'end=2021-11-02T12:36:19.000Z' \
-     -g -G | python -m json.tool
+     -g -G | jq
 # topk{__name__="go_gc_duration_seconds"} 这种有什么用 ???
 curl localhost:9090/api/v1/labels \
      --data-urlencode 'match[]=topk{__name__="go_gc_duration_seconds"}' \
      --data-urlencode 'start=2021-11-02T12:35:19.000Z' \
      --data-urlencode 'end=2021-11-02T12:36:19.000Z' \
-     -g -G | python -m json.tool
+     -g -G | jq
 # avg 这种有什么用 ???
 curl localhost:9090/api/v1/labels \
      --data-urlencode 'match[]=avg' \
      --data-urlencode 'start=2021-10-29T12:50:19.000Z' \
      --data-urlencode 'end=2021-10-29T12:57:19.000Z' \
-     -g -G | python -m json.tool
+     -g -G | jq
 # {label='value',label='value',}
 curl localhost:9090/api/v1/labels \
      --data-urlencode 'match[]={__name__="go_gc_duration_seconds",}' \
      --data-urlencode 'start=2021-11-02T12:35:19.000Z' \
      --data-urlencode 'end=2021-11-02T12:36:19.000Z' \
-     -g -G | python -m json.tool
+     -g -G | jq
 # {}
 curl localhost:9090/api/v1/labels \
      --data-urlencode 'match[]={}' \
      --data-urlencode 'start=2021-11-02T12:35:19.000Z' \
      --data-urlencode 'end=2021-11-02T12:36:19.000Z' \
-     -g -G | python -m json.tool
+     -g -G | jq
      
 # offset @modifier
 curl localhost:9090/api/v1/query \
      --data-urlencode 'query={__name__="go_gc_duration_seconds_count"}[10s] offset 10s' \
-     -g -G | python -m json.tool
+     -g -G | jq
 curl localhost:9090/api/v1/query \
      --data-urlencode 'query={__name__="go_gc_duration_seconds_count"}[10s] @1635909308' \
      --data-urlencode 'time=2021-11-03T01:56:00.000Z' \
-     -g -G | python -m json.tool
+     -g -G | jq
 curl localhost:9090/api/v1/query \
      --data-urlencode 'query={__name__="go_gc_duration_seconds_count"}[10s] offset 1m @1635909308' \
      --data-urlencode 'time=2021-11-03T01:56:00.000Z' \
-     -g -G | python -m json.tool
+     -g -G | jq
 curl localhost:9090/api/v1/query \
      --data-urlencode 'query={__name__="go_gc_duration_seconds_count"}[10s] @end()' \
      --data-urlencode 'time=2021-11-03T01:56:00.000Z' \
-     -g -G | python -m json.tool
+     -g -G | jq
 curl localhost:9090/api/v1/query \
      --data-urlencode 'query={__name__="go_gc_duration_seconds_count"}[10s] @end()' \
-     -g -G | python -m json.tool
+     -g -G | jq
 
 # Binary operators
 # Arithmetic
 curl localhost:9090/api/v1/query \
      --data-urlencode 'query=10 * 10' \
-     -g -G | python -m json.tool
+     -g -G | jq
 curl localhost:9090/api/v1/query \
      --data-urlencode 'query=go_goroutines{} * 10' \
-     -g -G | python -m json.tool
+     -g -G | jq
 curl localhost:9090/api/v1/query \
      --data-urlencode 'query=go_goroutines{} * go_goroutines{}' \
-     -g -G | python -m json.tool
+     -g -G | jq
 # Comparison
 curl localhost:9090/api/v1/query \
      --data-urlencode 'query=10 >bool 1' \
-     -g -G | python -m json.tool
+     -g -G | jq
 curl localhost:9090/api/v1/query \
      --data-urlencode 'query=go_gc_duration_seconds{} < 10' \
-     -g -G | python -m json.tool
+     -g -G | jq
 curl localhost:9090/api/v1/query \
      --data-urlencode 'query=go_gc_duration_seconds{} <bool 10' \
-     -g -G | python -m json.tool
+     -g -G | jq
 curl localhost:9090/api/v1/query \
      --data-urlencode 'query=go_gc_duration_seconds{quantile="0.5"}' \
-     -g -G | python -m json.tool
+     -g -G | jq
 curl localhost:9090/api/v1/query \
      --data-urlencode 'query=go_gc_duration_seconds{} == go_gc_duration_seconds{}' \
-     -g -G | python -m json.tool
+     -g -G | jq
 curl localhost:9090/api/v1/query \
      --data-urlencode 'query=go_gc_duration_seconds{} ==bool go_gc_duration_seconds{}' \
-     -g -G | python -m json.tool
+     -g -G | jq
 # Logical/set
 curl localhost:9090/api/v1/query \
      --data-urlencode 'query=go_gc_duration_seconds{quantile='0.5'}  and go_gc_duration_seconds{}' \
-     -g -G | python -m json.tool
+     -g -G | jq
 curl localhost:9090/api/v1/query \
      --data-urlencode 'query=go_gc_duration_seconds{quantile='0.5'}  or go_gc_duration_seconds{}' \
-     -g -G | python -m json.tool
+     -g -G | jq
 curl localhost:9090/api/v1/query \
      --data-urlencode 'query=go_gc_duration_seconds{quantile='0.5'}  unless on(quantile) go_gc_duration_seconds{}' \
-     -g -G | python -m json.tool     
+     -g -G | jq     
 # Matching
 curl localhost:9090/api/v1/query \
      --data-urlencode 'query=prometheus_target_interval_length_seconds{} / prometheus_target_interval_length_seconds{}' \
-     -g -G | python -m json.tool
+     -g -G | jq
 curl localhost:9090/api/v1/query \
      --data-urlencode 'query=prometheus_target_interval_length_seconds{} * prometheus_target_interval_length_seconds{}' \
-     -g -G | python -m json.tool
+     -g -G | jq
 curl localhost:9090/api/v1/query \
      --data-urlencode 'query=prometheus_target_interval_length_seconds{quantile="0.5"} / prometheus_target_interval_length_seconds{}' \
-     -g -G | python -m json.tool
+     -g -G | jq
 curl localhost:9090/api/v1/query \
      --data-urlencode 'query=prometheus_target_interval_length_seconds{quantile="0.5"} / ignoring(quantile)  prometheus_target_interval_length_seconds{}' \
-     -g -G | python -m json.tool
+     -g -G | jq
 curl localhost:9090/api/v1/query \
      --data-urlencode 'query=prometheus_target_interval_length_seconds{quantile="0.5"} / ignoring(intervals) group_right prometheus_target_interval_length_seconds{}' \
-     -g -G | python -m json.tool
+     -g -G | jq
 # Aggregation
 curl localhost:9090/api/v1/query \
      --data-urlencode 'query=sum(prometheus_target_interval_length_seconds{}) without(quantile)' \
-     -g -G | python -m json.tool
+     -g -G | jq
 curl localhost:9090/api/v1/query \
      --data-urlencode 'query=max(prometheus_target_interval_length_seconds{}) without(quantile)' \
-     -g -G | python -m json.tool
+     -g -G | jq
 curl localhost:9090/api/v1/query \
      --data-urlencode 'query=min(prometheus_target_interval_length_seconds{}) without(quantile)' \
-     -g -G | python -m json.tool
+     -g -G | jq
 curl localhost:9090/api/v1/query \
      --data-urlencode 'query=avg(prometheus_target_interval_length_seconds{}) without(quantile)' \
-     -g -G | python -m json.tool
+     -g -G | jq
 curl localhost:9090/api/v1/query \
      --data-urlencode 'query=group(prometheus_target_interval_length_seconds{})' \
-     -g -G | python -m json.tool
+     -g -G | jq
 curl localhost:9090/api/v1/query \
      --data-urlencode 'query=group(prometheus_target_interval_length_seconds{instance="localhost:9090", interval="5s", job="prometheus", quantile="0.5"}) without (quantile)' \
-     -g -G | python -m json.tool
+     -g -G | jq
 curl localhost:9090/api/v1/query \
      --data-urlencode 'query=stddev(prometheus_target_interval_length_seconds{}) without(quantile)' \
-     -g -G | python -m json.tool
+     -g -G | jq
 curl localhost:9090/api/v1/query \
      --data-urlencode 'query=stdvar(prometheus_target_interval_length_seconds{}) without(quantile)' \
-     -g -G | python -m json.tool
+     -g -G | jq
 curl localhost:9090/api/v1/query \
      --data-urlencode 'query=count(prometheus_target_interval_length_seconds{}) without(quantile)' \
-     -g -G | python -m json.tool
+     -g -G | jq
 curl localhost:9090/api/v1/query \
      --data-urlencode 'query=count_values("quantile", prometheus_target_interval_length_seconds{})' \
-     -g -G | python -m json.tool
+     -g -G | jq
 curl localhost:9090/api/v1/query \
      --data-urlencode 'query=count_values("quantile", prometheus_target_interval_length_seconds{})' \
-     -g -G | python -m json.tool
+     -g -G | jq
 curl localhost:9090/api/v1/query \
      --data-urlencode 'query=topk(2, prometheus_target_interval_length_seconds{})' \
-     -g -G | python -m json.tool
+     -g -G | jq
 curl localhost:9090/api/v1/query \
      --data-urlencode 'query=bottomk(2, prometheus_target_interval_length_seconds{})' \
-     -g -G | python -m json.tool
+     -g -G | jq
 curl localhost:9090/api/v1/query \
      --data-urlencode 'query=quantile(0.2, prometheus_target_interval_length_seconds{})' \
-     -g -G | python -m json.tool
+     -g -G | jq
 
