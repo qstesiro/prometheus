@@ -56,6 +56,7 @@ type parser struct {
 	// of certain expressions its end position is stored here.
 	lastClosing Pos
 
+	// 注意这不是一个指针所以不需要额外的设置 ???
 	yyParser yyParserImpl
 
 	generatedParserResult interface{}
