@@ -11,7 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// 安装命令 go get -u -v golang.org/x/tools/cmd/goyacc
+// 安装命令 go install -v golang.org/x/tools/cmd/goyacc
 // 生成命令 goyacc -o generated_parser.y.go generated_parser.y
 
 %{
@@ -173,13 +173,21 @@ START_METRIC_SELECTOR
 %%
 
 start           :
-                START_METRIC metric // 唯一调用./cmd/promtool/unittest.go ???
+                // 仅用于单元测试
+                START_METRIC metric
                         { yylex.(*parser).generatedParserResult = $2 }
+                // 仅用于单元测试
                 | START_SERIES_DESCRIPTION series_description
+                // 对应空表达式
                 | START_EXPRESSION /* empty */ EOF
                         { yylex.(*parser).addParseErrf(PositionRange{}, "no expression found in input")}
+                // 核心处理
                 | START_EXPRESSION expr
                         { yylex.(*parser).generatedParserResult = $2 }
+                // 专门用于分析[]matcher以下场景:
+                // - 查询target/metadata
+                // - 删除series
+                // - federate模式
                 | START_METRIC_SELECTOR vector_selector
                         { yylex.(*parser).generatedParserResult = $2 }
                 | start EOF
