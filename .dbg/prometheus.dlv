@@ -36,12 +36,12 @@
 # b v1.(*API).Register
 
 # b v1.(*API).query
-b promql.(*Engine).NewInstantQuery
-b parser.ParseExpr
-b parser.(*parser).parseGenerated
-b promql.setOffsetForAtModifier
-b engine.go:2435
-b engine.go:2450
+# b promql.(*Engine).NewInstantQuery
+# b parser.ParseExpr
+# b parser.(*parser).parseGenerated
+# b promql.setOffsetForAtModifier
+# b engine.go:2435
+# b engine.go:2450
 # b v1.(*API).queryRange
 # b v1.(*API).series
 # b v1/api.go:698
@@ -65,7 +65,8 @@ b engine.go:2450
 # b remote.(*Storage).ApplyConfig
 # b promql.(*Engine).execEvalStmt
 # b promql/engine.go:559
-# b promql.(*evaluator).eval
+b promql.(*evaluator).eval
+b promql.(*evaluator).rangeEval
 # b promql.(*evaluator).vectorSelectorSingle
 # b promql.checkAndExpandSeriesSet
 # b promql.expandSeriesSet

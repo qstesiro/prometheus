@@ -321,6 +321,7 @@ func Walk(v Visitor, node Node, path []Node) error {
 	return err
 }
 
+// 实现Visitor接口
 type inspector func(Node, []Node) error
 
 func (f inspector) Visit(node Node, path []Node) (Visitor, error) {

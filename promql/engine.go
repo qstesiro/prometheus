@@ -733,26 +733,29 @@ func (ng *Engine) populateSeries(querier storage.Querier, s *parser.EvalStmt) {
 	// the variable.
 	var evalRange time.Duration
 
-	parser.Inspect(s.Expr, func(node parser.Node, path []parser.Node) error {
-		switch n := node.(type) {
-		case *parser.VectorSelector:
-			start, end := ng.getTimeRangesForSelector(s, n, path, evalRange)
-			hints := &storage.SelectHints{
-				Start: start,
-				End:   end,
-				Step:  durationMilliseconds(s.Interval),
-				Range: durationMilliseconds(evalRange),
-				Func:  extractFuncFromPath(path),
-			}
-			evalRange = 0
-			hints.By, hints.Grouping = extractGroupsFromPath(path)
-			n.UnexpandedSeriesSet = querier.Select(false, hints, n.LabelMatchers...)
+	parser.Inspect(
+		s.Expr,
+		func(node parser.Node, path []parser.Node) error {
+			switch n := node.(type) {
+			case *parser.VectorSelector:
+				start, end := ng.getTimeRangesForSelector(s, n, path, evalRange)
+				hints := &storage.SelectHints{
+					Start: start,
+					End:   end,
+					Step:  durationMilliseconds(s.Interval),
+					Range: durationMilliseconds(evalRange),
+					Func:  extractFuncFromPath(path),
+				}
+				evalRange = 0
+				hints.By, hints.Grouping = extractGroupsFromPath(path)
+				n.UnexpandedSeriesSet = querier.Select(false, hints, n.LabelMatchers...)
 
-		case *parser.MatrixSelector:
-			evalRange = n.Range
-		}
-		return nil
-	})
+			case *parser.MatrixSelector:
+				evalRange = n.Range
+			}
+			return nil
+		},
+	)
 }
 
 // extractFuncFromPath walks up the path and searches for the first instance of
@@ -982,6 +985,7 @@ func (ev *evaluator) rangeEval(funcCall func([]parser.Value, *EvalNodeHelper) (V
 		}
 		// Reset number of samples in memory after each timestamp.
 		ev.currentSamples = tempNumSamples
+		// 以下四重循环是否可以优化 ???
 		// Gather input vectors for this timestamp.
 		for i := range exprs {
 			vectors[i] = vectors[i][:0]
@@ -1351,9 +1355,13 @@ func (ev *evaluator) eval(expr parser.Expr) (parser.Value, storage.Warnings) {
 			case lt == parser.ValueTypeVector && rt == parser.ValueTypeVector:
 				switch e.Op {
 				case parser.LAND:
-					return ev.rangeEval(func(v []parser.Value, enh *EvalNodeHelper) (Vector, storage.Warnings) {
-						return ev.VectorAnd(v[0].(Vector), v[1].(Vector), e.VectorMatching, enh), nil
-					}, e.LHS, e.RHS)
+					return ev.rangeEval(
+						func(v []parser.Value, enh *EvalNodeHelper) (Vector, storage.Warnings) {
+							return ev.VectorAnd(v[0].(Vector), v[1].(Vector), e.VectorMatching, enh), nil
+						},
+						e.LHS,
+						e.RHS,
+					)
 				case parser.LOR:
 					return ev.rangeEval(func(v []parser.Value, enh *EvalNodeHelper) (Vector, storage.Warnings) {
 						return ev.VectorOr(v[0].(Vector), v[1].(Vector), e.VectorMatching, enh), nil

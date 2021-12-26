@@ -182,6 +182,11 @@ curl 10.138.16.190:9090/api/v1/query_range \
      --globoff \
      -X POST | jq     
 
+# scalar查询
+curl localhost:9090/api/v1/query \
+     --data-urlencode 'query=10' \
+     -g -G | jq
+
 # Query vs RangeQuery
 # 以下两个查询结果等价(使用query可以完全替代query_range)
 curl localhost:9090/api/v1/query \
