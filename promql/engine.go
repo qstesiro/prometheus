@@ -827,6 +827,7 @@ func (e errWithWarnings) Error() string { return e.err.Error() }
 // is attached to an engine through which it connects to a querier and reports
 // errors. On timeout or cancellation of its context it terminates.
 type evaluator struct {
+	// 在结构中使用ctx不符合使用约定 ???
 	ctx context.Context
 
 	startTimestamp int64 // Start time in milliseconds.
@@ -1399,6 +1400,8 @@ func (ev *evaluator) eval(expr parser.Expr) (parser.Value, storage.Warnings) {
 		}
 	case *parser.VectorSelector:
 		{
+			// 完成
+			// 获取iterator
 			ws, err := checkAndExpandSeriesSet(ev.ctx, e)
 			if err != nil {
 				ev.error(errWithWarnings{errors.Wrap(err, "expanding series"), ws})
@@ -1413,6 +1416,8 @@ func (ev *evaluator) eval(expr parser.Expr) (parser.Value, storage.Warnings) {
 				}
 
 				for ts := ev.startTimestamp; ts <= ev.endTimestamp; ts += ev.interval {
+					// 从iterator查询sample
+					// 未使用数据的实际ts使用请求的时间所以实际数据不准确 ???
 					_, v, ok := ev.vectorSelectorSingle(it, e, ts)
 					if ok {
 						if ev.currentSamples < ev.maxSamples {

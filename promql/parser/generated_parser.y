@@ -566,7 +566,7 @@ label_matchers  : LEFT_BRACE label_match_list RIGHT_BRACE
                                 LabelMatchers: []*labels.Matcher{},
                                 PosRange: mergeRanges(&$1, &$2),
                             }
-                            fmt.Printf("{} -> %v\n", $$)
+                            fmt.Printf("{} -> %v\n", $$) // 存在问题不明白 ???
                         }
                 ;
 

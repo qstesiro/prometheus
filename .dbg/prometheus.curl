@@ -180,12 +180,7 @@ curl 10.138.16.190:9090/api/v1/query_range \
      --data-urlencode 'end=2021-06-03T15:02:51.000+08:00' \
      --data-urlencode 'step=10s' \
      --globoff \
-     -X POST | jq     
-
-# scalar查询
-curl localhost:9090/api/v1/query \
-     --data-urlencode 'query=10' \
-     -g -G | jq
+     -X POST | jq
 
 # Query vs RangeQuery
 # 以下两个查询结果等价(使用query可以完全替代query_range)
@@ -267,7 +262,13 @@ curl localhost:9090/api/v1/query \
 # Binary operators
 # Arithmetic
 curl localhost:9090/api/v1/query \
+     --data-urlencode 'query=10' \
+     -g -G | jq
+curl localhost:9090/api/v1/query \
      --data-urlencode 'query=10 * 10' \
+     -g -G | jq
+curl localhost:9090/api/v1/query \
+     --data-urlencode 'query=go_goroutines{}' \
      -g -G | jq
 curl localhost:9090/api/v1/query \
      --data-urlencode 'query=go_goroutines{} * 10' \
