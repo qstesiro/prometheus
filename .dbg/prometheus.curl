@@ -265,10 +265,22 @@ curl localhost:9090/api/v1/query \
      --data-urlencode 'query=10' \
      -g -G | jq
 curl localhost:9090/api/v1/query \
-     --data-urlencode 'query=10 * 10' \
+     --data-urlencode 'query=test' \
+     -g -G | jq
+curl localhost:9090/api/v1/query \
+     --data-urlencode 'query=-10' \
+     -g -G | jq
+curl localhost:9090/api/v1/query \
+     --data-urlencode 'query=10 * 20' \
+     -g -G | jq
+curl localhost:9090/api/v1/query \
+     --data-urlencode 'query=10 * (20 * 30)' \
      -g -G | jq
 curl localhost:9090/api/v1/query \
      --data-urlencode 'query=go_goroutines{}' \
+     -g -G | jq
+curl localhost:9090/api/v1/query \
+     --data-urlencode 'query=(go_goroutines{})' \
      -g -G | jq
 curl localhost:9090/api/v1/query \
      --data-urlencode 'query=go_goroutines{} * 10' \

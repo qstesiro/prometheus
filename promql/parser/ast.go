@@ -165,6 +165,7 @@ type StringLiteral struct {
 	PosRange PositionRange
 }
 
+// parser.SUB单目运算metric结果会(且只会)去掉__name__标签
 // UnaryExpr represents a unary operation on another expression.
 // Currently unary operations are only supported for Scalars.
 type UnaryExpr struct {

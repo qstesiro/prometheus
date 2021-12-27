@@ -27,11 +27,13 @@ import (
 	"github.com/prometheus/prometheus/tsdb/chunkenc"
 )
 
+// 以下四种类型实现parser.Value接口
 func (Matrix) Type() parser.ValueType { return parser.ValueTypeMatrix }
 func (Vector) Type() parser.ValueType { return parser.ValueTypeVector }
 func (Scalar) Type() parser.ValueType { return parser.ValueTypeScalar }
 func (String) Type() parser.ValueType { return parser.ValueTypeString }
 
+// 实现parser.Value接口
 // String represents a string value.
 type String struct {
 	T int64
@@ -46,6 +48,7 @@ func (s String) MarshalJSON() ([]byte, error) {
 	return json.Marshal([...]interface{}{float64(s.T) / 1000, s.V})
 }
 
+// 实现parser.Value接口
 // Scalar is a data point that's explicitly not associated with a metric.
 type Scalar struct {
 	T int64
@@ -115,6 +118,7 @@ func (s Sample) MarshalJSON() ([]byte, error) {
 	return json.Marshal(v)
 }
 
+// 实现parser.Value接口/
 // Vector is basically only an alias for model.Samples, but the
 // contract is that in a Vector, all Samples have the same timestamp.
 type Vector []Sample
@@ -142,6 +146,7 @@ func (vec Vector) ContainsSameLabelset() bool {
 	return false
 }
 
+// 实现parser.Value接口
 // Matrix is a slice of Series that implements sort.Interface and
 // has a String method.
 type Matrix []Series

@@ -1326,10 +1326,12 @@ func (ev *evaluator) eval(expr parser.Expr) (parser.Value, storage.Warnings) {
 		}
 	case *parser.ParenExpr:
 		{
+			// 完成
 			return ev.eval(e.Expr)
 		}
 	case *parser.UnaryExpr:
 		{
+			// 完成
 			val, ws := ev.eval(e.Expr)
 			mat := val.(Matrix)
 			if e.Op == parser.SUB {
@@ -1396,6 +1398,7 @@ func (ev *evaluator) eval(expr parser.Expr) (parser.Value, storage.Warnings) {
 		}
 	case *parser.StringLiteral:
 		{
+			// 完成(不知道有什么用???)
 			return String{V: e.Val, T: ev.startTimestamp}, nil
 		}
 	case *parser.VectorSelector:
