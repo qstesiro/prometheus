@@ -118,7 +118,7 @@ func (s Sample) MarshalJSON() ([]byte, error) {
 	return json.Marshal(v)
 }
 
-// 实现parser.Value接口/
+// 实现parser.Value接口
 // Vector is basically only an alias for model.Samples, but the
 // contract is that in a Vector, all Samples have the same timestamp.
 type Vector []Sample

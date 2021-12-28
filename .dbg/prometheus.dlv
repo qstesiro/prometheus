@@ -66,8 +66,8 @@
 # b promql.(*Engine).execEvalStmt
 # b promql/engine.go:559
 b promql.(*evaluator).eval
-b engine.go:1401
-# b promql.(*evaluator).rangeEval
+# b engine.go:1401
+b promql.(*evaluator).rangeEval
 # b promql.(*evaluator).vectorSelectorSingle
 # b promql.checkAndExpandSeriesSet
 # b promql.expandSeriesSet

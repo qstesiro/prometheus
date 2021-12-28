@@ -277,7 +277,16 @@ curl localhost:9090/api/v1/query \
      --data-urlencode 'query=10 * (20 * 30)' \
      -g -G | jq
 curl localhost:9090/api/v1/query \
+     --data-urlencode 'query=go_goroutines{}[1m:10s]' \
+     -g -G | jq
+curl localhost:9090/api/v1/query_range \
      --data-urlencode 'query=go_goroutines{}' \
+     --data-urlencode 'start=2021-12-28T10:10:00.000Z' \
+     --data-urlencode 'end=2021-12-28T10:11:00.000Z' \
+     --data-urlencode 'step=10s' \
+     -g -G | jq
+curl localhost:9090/api/v1/query \
+     --data-urlencode 'query=go_goroutines{}[10s]' \
      -g -G | jq
 curl localhost:9090/api/v1/query \
      --data-urlencode 'query=(go_goroutines{})' \
@@ -287,6 +296,9 @@ curl localhost:9090/api/v1/query \
      -g -G | jq
 curl localhost:9090/api/v1/query \
      --data-urlencode 'query=go_goroutines{} * go_goroutines{}' \
+     -g -G | jq
+curl localhost:9090/api/v1/query \
+     --data-urlencode 'query=prometheus_engine_query_duration_seconds * prometheus_engine_query_duration_seconds' \
      -g -G | jq
 # Comparison
 curl localhost:9090/api/v1/query \

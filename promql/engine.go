@@ -980,13 +980,13 @@ func (ev *evaluator) rangeEval(funcCall func([]parser.Value, *EvalNodeHelper) (V
 	enh := &EvalNodeHelper{Out: make(Vector, 0, biggestLen)}
 	seriess := make(map[uint64]Series, biggestLen) // Output series by series hash.
 	tempNumSamples := ev.currentSamples
+	// 以下四重循环是否可以优化 ???
 	for ts := ev.startTimestamp; ts <= ev.endTimestamp; ts += ev.interval {
 		if err := contextDone(ev.ctx, "expression evaluation"); err != nil {
 			ev.error(err)
 		}
 		// Reset number of samples in memory after each timestamp.
 		ev.currentSamples = tempNumSamples
-		// 以下四重循环是否可以优化 ???
 		// Gather input vectors for this timestamp.
 		for i := range exprs {
 			vectors[i] = vectors[i][:0]
@@ -1003,9 +1003,11 @@ func (ev *evaluator) rangeEval(funcCall func([]parser.Value, *EvalNodeHelper) (V
 							ev.error(ErrTooManySamples(env))
 						}
 					}
+					// 只获取每个series采样点的第一个元素
 					break
 				}
 			}
+			// 可能存在不对齐的情况但是后续funcCall上下文中有相应的处理
 			args[i] = vectors[i]
 		}
 		// Make the function call.
@@ -1360,11 +1362,9 @@ func (ev *evaluator) eval(expr parser.Expr) (parser.Value, storage.Warnings) {
 				case parser.LAND:
 					return ev.rangeEval(
 						func(v []parser.Value, enh *EvalNodeHelper) (Vector, storage.Warnings) {
+							// 可以直接类型转换,v中的元素个数一定是对齐的,只是元素可能是空列表
 							return ev.VectorAnd(v[0].(Vector), v[1].(Vector), e.VectorMatching, enh), nil
-						},
-						e.LHS,
-						e.RHS,
-					)
+						}, e.LHS, e.RHS)
 				case parser.LOR:
 					return ev.rangeEval(func(v []parser.Value, enh *EvalNodeHelper) (Vector, storage.Warnings) {
 						return ev.VectorOr(v[0].(Vector), v[1].(Vector), e.VectorMatching, enh), nil
@@ -1890,6 +1890,7 @@ func (ev *evaluator) VectorBinop(op parser.ItemType, lhs, rhs Vector, matching *
 }
 
 func signatureFunc(on bool, b []byte, names ...string) func(labels.Labels) string {
+	// 注意排序处理
 	sort.Strings(names)
 	if on {
 		return func(lset labels.Labels) string {
