@@ -36,7 +36,7 @@
 # b v1.(*API).Register
 
 # b v1.(*API).query
-# b promql.(*Engine).NewInstantQuery
+b promql.(*Engine).NewInstantQuery
 # b parser.ParseExpr
 # b parser.(*parser).parseGenerated
 # b promql.setOffsetForAtModifier
@@ -78,6 +78,8 @@ b promql.(*evaluator).rangeEval
 # b storage.(*secondaryQuerier).Select
 # b storage/remote/read.go:165
 # b remote.(*Client).Read
+b promql.PreprocessExpr
+b promql.newStepInvariantExpr
 
 # remote storage
 # b remote.NewStorage

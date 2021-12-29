@@ -117,6 +117,7 @@ type Call struct {
 	PosRange PositionRange
 }
 
+// 叶节点
 // MatrixSelector represents a Matrix selection.
 type MatrixSelector struct {
 	// It is safe to assume that this is an VectorSelector
@@ -145,6 +146,7 @@ type SubqueryExpr struct {
 	EndPos Pos
 }
 
+// 叶节点
 // NumberLiteral represents a number.
 type NumberLiteral struct {
 	Val float64
@@ -159,6 +161,7 @@ type ParenExpr struct {
 	PosRange PositionRange
 }
 
+// 叶节点
 // StringLiteral represents a string.
 type StringLiteral struct {
 	Val      string
@@ -186,6 +189,7 @@ func (e *StepInvariantExpr) String() string { return e.Expr.String() }
 
 func (e *StepInvariantExpr) PositionRange() PositionRange { return e.Expr.PositionRange() }
 
+// 叶节点
 // VectorSelector represents a Vector selection.
 type VectorSelector struct {
 	Name string

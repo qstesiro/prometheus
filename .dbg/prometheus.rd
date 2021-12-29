@@ -3,6 +3,10 @@
 - head.Chunk 写mmap时间并不严格的是超过截断时间的第一个时间
 - metrics 在head中存储是使用memSeries,每个memSeries关联一个chunc(xor)存储采样数据
 
+- VectorSelector字段含义
+- PreprocessExpr
+- 逐个分析Expr
+
 git config --local http.proxy http://192.168.56.1:4780
 git config --local https.proxy https://192.168.56.1:4780
 git config --local https.proxy socks5://192.168.56.1:4781
