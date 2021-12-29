@@ -940,6 +940,79 @@ func (enh *EvalNodeHelper) signatureFunc(on bool, names ...string) func(labels.L
 	}
 }
 
+// 按列纵向处理,每次funcCall处理一列数据,funcCall控制了具体的进行何种运算
+// matrixes
+// -----
+//      |0| {l1=v1,l2=v2,...,ln=vn} [{t1,v1},{t2,v2},...,{tn,vn}]
+//      |1| {l1=v1,l2=v2,...,ln=vn} [{t1,v1},{t2,v2},...,{tn,vn}]
+// mrx0 |2| {l1=v1,l2=v2,...,ln=vn} [{t1,v1},{t2,v2},...,{tn,vn}]
+//      |.| {l1=v1,l2=v2,...,ln=vn} [{t1,v1},{t2,v2},...,{tn,vn}]
+//      |n| {l1=v1,l2=v2,...,ln=vn} [{t1,v1},{t2,v2},...,{tn,vn}]
+// -----
+//      |0| {l1=v1,l2=v2,...,ln=vn} [{t1,v1},{t2,v2},...,{tn,vn}]
+//      |1| {l1=v1,l2=v2,...,ln=vn} [{t1,v1},{t2,v2},...,{tn,vn}]
+// mrx1 |2| {l1=v1,l2=v2,...,ln=vn} [{t1,v1},{t2,v2},...,{tn,vn}]
+//      |.| {l1=v1,l2=v2,...,ln=vn} [{t1,v1},{t2,v2},...,{tn,vn}]
+//      |n| {l1=v1,l2=v2,...,ln=vn} [{t1,v1},{t2,v2},...,{tn,vn}]
+// -----
+//      |0| {l1=v1,l2=v2,...,ln=vn} [{t1,v1},{t2,v2},...,{tn,vn}]
+//      |1| {l1=v1,l2=v2,...,ln=vn} [{t1,v1},{t2,v2},...,{tn,vn}]
+// mrx2 |2| {l1=v1,l2=v2,...,ln=vn} [{t1,v1},{t2,v2},...,{tn,vn}]
+//      |.| {l1=v1,l2=v2,...,ln=vn} [{t1,v1},{t2,v2},...,{tn,vn}]
+//      |n| {l1=v1,l2=v2,...,ln=vn} [{t1,v1},{t2,v2},...,{tn,vn}]
+// -----
+//      |0| {l1=v1,l2=v2,...,ln=vn} [{t1,v1},{t2,v2},...,{tn,vn}]
+//      |1| {l1=v1,l2=v2,...,ln=vn} [{t1,v1},{t2,v2},...,{tn,vn}]
+// mrx. |2| {l1=v1,l2=v2,...,ln=vn} [{t1,v1},{t2,v2},...,{tn,vn}]
+//      |.| {l1=v1,l2=v2,...,ln=vn} [{t1,v1},{t2,v2},...,{tn,vn}]
+//      |n| {l1=v1,l2=v2,...,ln=vn} [{t1,v1},{t2,v2},...,{tn,vn}]
+// -----
+//      |0| {l1=v1,l2=v2,...,ln=vn} [{t1,v1},{t2,v2},...,{tn,vn}]
+//      |1| {l1=v1,l2=v2,...,ln=vn} [{t1,v1},{t2,v2},...,{tn,vn}]
+// mrxn |2| {l1=v1,l2=v2,...,ln=vn} [{t1,v1},{t2,v2},...,{tn,vn}]
+//      |.| {l1=v1,l2=v2,...,ln=vn} [{t1,v1},{t2,v2},...,{tn,vn}]
+//      |n| {l1=v1,l2=v2,...,ln=vn} [{t1,v1},{t2,v2},...,{tn,vn}]
+// -----
+// vectors
+// -----
+//      |0| {l1=v1,l2=v2,...,ln=vn} {t,v} = mrx[0][0].Metric mrx[0][0].Points[0]
+//      |1| {l1=v1,l2=v2,...,ln=vn} {t,v} = mrx[0][1].Metric mrx[0][1].Points[0]
+// vec0 |2| {l1=v1,l2=v2,...,ln=vn} {t,v} = mrx[0][2].Metric mrx[0][2].Points[0]
+//      |.| {l1=v1,l2=v2,...,ln=vn} {t,v} = mrx[0][2].Metric mrx[0][.].Points[0]
+//      |n| {l1=v1,l2=v2,...,ln=vn} {t,v} = mrx[0][2].Metric mrx[0][n].Points[0]
+// -----
+//      |0| {l1=v1,l2=v2,...,ln=vn} {t,v} = mrx[1][0].Metric mrx[1][0].Points[0]
+//      |1| {l1=v1,l2=v2,...,ln=vn} {t,v} = mrx[1][1].Metric mrx[1][1].Points[0]
+// vec1 |2| {l1=v1,l2=v2,...,ln=vn} {t,v} = mrx[1][2].Metric mrx[1][2].Points[0]
+//      |.| {l1=v1,l2=v2,...,ln=vn} {t,v} = mrx[1][.].Metric mrx[1][.].Points[0]
+//      |n| {l1=v1,l2=v2,...,ln=vn} {t,v} = mrx[1][n].Metric mrx[1][n].Points[0]
+// -----
+//      |0| {l1=v1,l2=v2,...,ln=vn} {t,v} = mrx[2][0].Metric mrx[2][0].Points[0]
+//      |1| {l1=v1,l2=v2,...,ln=vn} {t,v} = mrx[2][1].Metric mrx[2][1].Points[0]
+// vec2 |2| {l1=v1,l2=v2,...,ln=vn} {t,v} = mrx[2][2].Metric mrx[2][2].Points[0]
+//      |.| {l1=v1,l2=v2,...,ln=vn} {t,v} = mrx[2][.].Metric mrx[2][.].Points[0]
+//      |n| {l1=v1,l2=v2,...,ln=vn} {t,v} = mrx[2][n].Metric mrx[2][n].Points[0]
+// -----
+//      |0| {l1=v1,l2=v2,...,ln=vn} {t,v} = mrx[.][0].Metric mrx[.][0].Points[0]
+//      |1| {l1=v1,l2=v2,...,ln=vn} {t,v} = mrx[.][1].Metric mrx[.][1].Points[0]
+// vec. |2| {l1=v1,l2=v2,...,ln=vn} {t,v} = mrx[.][2].Metric mrx[.][2].Points[0]
+//      |.| {l1=v1,l2=v2,...,ln=vn} {t,v} = mrx[.][.].Metric mrx[.][.].Points[0]
+//      |n| {l1=v1,l2=v2,...,ln=vn} {t,v} = mrx[.][n].Metric mrx[.][n].Points[0]
+// -----
+//      |0| {l1=v1,l2=v2,...,ln=vn} {t,v} = mrx[n][0].Metric mrx[n][0].Points[0]
+//      |1| {l1=v1,l2=v2,...,ln=vn} {t,v} = mrx[n][1].Metric mrx[n][1].Points[0]
+// vecn |2| {l1=v1,l2=v2,...,ln=vn} {t,v} = mrx[n][2].Metric mrx[n][2].Points[0]
+//      |.| {l1=v1,l2=v2,...,ln=vn} {t,v} = mrx[n][.].Metric mrx[n][.].Points[0]
+//      |n| {l1=v1,l2=v2,...,ln=vn} {t,v} = mrx[n][n].Metric mrx[n][n].Points[0]
+// -----
+// op 每次处理一列,funcCall每次运算得到一个结果列
+// -----
+// vec[0][0] op vec[1][0] op vec[2][0] op vec[.][0] op vec[n][0] = res[0]
+// vec[0][1] op vec[1][1] op vec[2][1] op vec[.][1] op vec[n][1] = res[1]
+// vec[0][2] op vec[1][1] op vec[2][2] op vec[.][2] op vec[n][2] = res[2]
+// vec[0][.] op vec[1][.] op vec[2][.] op vec[.][.] op vec[n][.] = res[3]
+// vec[0][n] op vec[1][n] op vec[2][n] op vec[.][n] op vec[n][n] = res[4]
+// -----
 // rangeEval evaluates the given expressions, and then for each step calls
 // the given function with the values computed for each expression at that
 // step.  The return value is the combination into time series of all the

@@ -119,6 +119,11 @@ func (s Sample) MarshalJSON() ([]byte, error) {
 }
 
 // 实现parser.Value接口
+// |0| {l1=v1,l2=v2,...,ln=vn} {t,v}
+// |1| {l1=v1,l2=v2,...,ln=vn} {t,v}
+// |2| {l1=v1,l2=v2,...,ln=vn} {t,v}
+// |.| {l1=v1,l2=v2,...,ln=vn} {t,v}
+// |n| {l1=v1,l2=v2,...,ln=vn} {t,v}
 // Vector is basically only an alias for model.Samples, but the
 // contract is that in a Vector, all Samples have the same timestamp.
 type Vector []Sample
@@ -147,6 +152,11 @@ func (vec Vector) ContainsSameLabelset() bool {
 }
 
 // 实现parser.Value接口
+// |0| {l1=v1,l2=v2,...,ln=vn} [{t1,v1},{t2,v2},...,{tn,vn}]
+// |1| {l1=v1,l2=v2,...,ln=vn} [{t1,v1},{t2,v2},...,{tn,vn}]
+// |2| {l1=v1,l2=v2,...,ln=vn} [{t1,v1},{t2,v2},...,{tn,vn}]
+// |.| {l1=v1,l2=v2,...,ln=vn} [{t1,v1},{t2,v2},...,{tn,vn}]
+// |n| {l1=v1,l2=v2,...,ln=vn} [{t1,v1},{t2,v2},...,{tn,vn}]
 // Matrix is a slice of Series that implements sort.Interface and
 // has a String method.
 type Matrix []Series
