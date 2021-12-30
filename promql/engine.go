@@ -1572,12 +1572,14 @@ func (ev *evaluator) eval(expr parser.Expr) (parser.Value, storage.Warnings) {
 			return res, ws
 		}
 	case *parser.StepInvariantExpr:
+		// 整体没有搞明白(你大爷的) ???
 		{
 			switch ce := e.Expr.(type) {
 			case *parser.StringLiteral, *parser.NumberLiteral:
+				// 既然字面量直接递归为什么还要包装StepInvariantExpr ???
 				return ev.eval(ce)
 			}
-
+			// 完全复制没有任何的变化 ???
 			newEv := &evaluator{
 				startTimestamp:           ev.startTimestamp,
 				endTimestamp:             ev.startTimestamp, // Always a single evaluation.
@@ -1597,7 +1599,11 @@ func (ev *evaluator) eval(expr parser.Expr) (parser.Value, storage.Warnings) {
 				// with their unique timestamps which does not depend on the step.
 				return res, ws
 			}
-
+			// 以下查询可以触发后续代码执行 ???
+			// curl localhost:9090/api/v1/query \
+			//      --data-urlencode 'query=prometheus_target_interval_length_seconds{} @1640848388.693' \
+			//      -g -G | jq
+			// 以上查询虽然已经指定的modifier但是返回的结果ts还是查询时间 ???
 			// For every evaluation while the value remains same, the timestamp for that
 			// value would change for different eval times. Hence we duplicate the result
 			// with changed timestamps.
@@ -1605,6 +1611,7 @@ func (ev *evaluator) eval(expr parser.Expr) (parser.Value, storage.Warnings) {
 			if !ok {
 				panic(errors.Errorf("unexpected result in StepInvariantExpr evaluation: %T", expr))
 			}
+			// 如果Points有多个元素,把每个元素调整为第一个元素的值 ???
 			for i := range mat {
 				if len(mat[i].Points) != 1 {
 					panic(errors.Errorf("unexpected number of samples"))

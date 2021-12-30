@@ -253,14 +253,20 @@ curl localhost:9090/api/v1/query \
      -g -G | jq
 curl localhost:9090/api/v1/query \
      --data-urlencode 'query={__name__="go_gc_duration_seconds_count"}[10s] @end()' \
-     --data-urlencode 'time=2021-11-03T01:56:00.000Z' \
+     --data-urlencode 'time=2021-12-30T03:04:00.000Z' \
      -g -G | jq
 curl localhost:9090/api/v1/query \
-     --data-urlencode 'query={__name__="go_gc_duration_seconds_count"}[10s] @end()' \
+     --data-urlencode 'query={__name__="go_gc_duration_seconds_count"}[10s] offset 1m @start()' \
+     -g -G | jq
+# 虽然已经指定的modifier但是返回的结果ts还是查询时间 ???
+curl localhost:9090/api/v1/query \
+     --data-urlencode 'query=prometheus_target_interval_length_seconds{} @1640848388.693' \
+     -g -G | jq
+curl localhost:9090/api/v1/query \
+     --data-urlencode 'query={__name__="prometheus_target_interval_length_seconds"} @1640848388.693 + {__name__="prometheus_target_interval_length_seconds"} @1640849388.693' \
      -g -G | jq
 
-# Binary operators
-# Arithmetic
+# Binary operators - Arithmetic
 curl localhost:9090/api/v1/query \
      --data-urlencode 'query=10' \
      -g -G | jq
@@ -300,7 +306,8 @@ curl localhost:9090/api/v1/query \
 curl localhost:9090/api/v1/query \
      --data-urlencode 'query=prometheus_engine_query_duration_seconds * prometheus_engine_query_duration_seconds' \
      -g -G | jq
-# Comparison
+
+# Binary operators - Comparison
 curl localhost:9090/api/v1/query \
      --data-urlencode 'query=10 >bool 1' \
      -g -G | jq
@@ -319,7 +326,8 @@ curl localhost:9090/api/v1/query \
 curl localhost:9090/api/v1/query \
      --data-urlencode 'query=go_gc_duration_seconds{} ==bool go_gc_duration_seconds{}' \
      -g -G | jq
-# Logical/set
+
+# Binary operators - Logical/set
 curl localhost:9090/api/v1/query \
      --data-urlencode 'query=go_gc_duration_seconds{quantile='0.5'}  and go_gc_duration_seconds{}' \
      -g -G | jq
@@ -328,8 +336,9 @@ curl localhost:9090/api/v1/query \
      -g -G | jq
 curl localhost:9090/api/v1/query \
      --data-urlencode 'query=go_gc_duration_seconds{quantile='0.5'}  unless on(quantile) go_gc_duration_seconds{}' \
-     -g -G | jq     
-# Matching
+     -g -G | jq
+
+# Binary operators - Matching
 curl localhost:9090/api/v1/query \
      --data-urlencode 'query=prometheus_target_interval_length_seconds{} / prometheus_target_interval_length_seconds{}' \
      -g -G | jq
@@ -345,6 +354,7 @@ curl localhost:9090/api/v1/query \
 curl localhost:9090/api/v1/query \
      --data-urlencode 'query=prometheus_target_interval_length_seconds{quantile="0.5"} / ignoring(intervals) group_right prometheus_target_interval_length_seconds{}' \
      -g -G | jq
+
 # Aggregation
 curl localhost:9090/api/v1/query \
      --data-urlencode 'query=sum(prometheus_target_interval_length_seconds{}) without(quantile)' \

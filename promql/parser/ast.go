@@ -195,14 +195,16 @@ type VectorSelector struct {
 	Name string
 	// OriginalOffset is the actual offset that was set in the query.
 	// This never changes.
-	// 参考https://prometheus.io/docs/prometheus/latest/querying/basics/#offset-modifier
-	OriginalOffset time.Duration
+	// 参考以下:
+	// https://prometheus.io/docs/prometheus/latest/querying/basics/#offset-modifier
+	// https://prometheus.io/blog/2021/02/18/introducing-the-@-modifier/
+	OriginalOffset time.Duration // 表达式中的offset
 	// Offset is the offset used during the query execution
 	// which is calculated using the original offset, at modifier time,
 	// eval time, and subquery offsets in the AST tree.
-	Offset        time.Duration // 没有完全搞明白,过后再细看 ???
-	Timestamp     *int64        // 存储 @modifier
-	StartOrEnd    ItemType      // Set when @ is used with start() or end()
+	Offset        time.Duration // 没有完全搞明白,过后再细看 setOffsetForAtModifier ???
+	Timestamp     *int64        // 表达式中的@modifier
+	StartOrEnd    ItemType      // Set when @ is used with start() or end() 对于instant查询 start()与end()效果一样
 	LabelMatchers []*labels.Matcher
 
 	// The unexpanded seriesSet populated at query preparation time.

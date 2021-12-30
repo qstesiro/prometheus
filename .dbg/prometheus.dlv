@@ -65,9 +65,10 @@ b promql.(*Engine).NewInstantQuery
 # b remote.(*Storage).ApplyConfig
 # b promql.(*Engine).execEvalStmt
 # b promql/engine.go:559
-b promql.(*evaluator).eval
-# b engine.go:1401
-b promql.(*evaluator).rangeEval
+# b promql.(*evaluator).eval
+b engine.go:1574
+b engine.go:1592
+# b promql.(*evaluator).rangeEval
 # b promql.(*evaluator).vectorSelectorSingle
 # b promql.checkAndExpandSeriesSet
 # b promql.expandSeriesSet
@@ -78,7 +79,8 @@ b promql.(*evaluator).rangeEval
 # b storage.(*secondaryQuerier).Select
 # b storage/remote/read.go:165
 # b remote.(*Client).Read
-b promql.PreprocessExpr
+# b promql.PreprocessExpr
+# b promql.preprocessExprHelper
 b promql.newStepInvariantExpr
 
 # remote storage

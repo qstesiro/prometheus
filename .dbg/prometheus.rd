@@ -4,6 +4,7 @@
 - metrics 在head中存储是使用memSeries,每个memSeries关联一个chunc(xor)存储采样数据
 
 - VectorSelector字段含义
+- VectorSelector.Offset如何计算
 - PreprocessExpr
 - 逐个分析Expr
 
