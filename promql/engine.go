@@ -1478,9 +1478,20 @@ func (ev *evaluator) eval(expr parser.Expr) (parser.Value, storage.Warnings) {
 		}
 	case *parser.NumberLiteral:
 		{
+			// 不明白为什么这样处理 ???
 			return ev.rangeEval(func(v []parser.Value, enh *EvalNodeHelper) (Vector, storage.Warnings) {
 				return append(enh.Out, Sample{Point: Point{V: e.Val}}), nil
 			})
+			// 测试???
+			// return Matrix{
+			// 	Series{
+			// 		Points: []Point{
+			// 			Point{
+			// 				T: ev.startTimestamp, V: e.Val,
+			// 			},
+			// 		},
+			// 	},
+			// }, nil
 		}
 	case *parser.StringLiteral:
 		{
