@@ -190,6 +190,8 @@ func (e *StepInvariantExpr) String() string { return e.Expr.String() }
 func (e *StepInvariantExpr) PositionRange() PositionRange { return e.Expr.PositionRange() }
 
 // 叶节点
+// +---------|----|------|------v--------|----|-------|------------>
+//            dura offset <- @modifier -> dura -offset
 // VectorSelector represents a Vector selection.
 type VectorSelector struct {
 	Name string

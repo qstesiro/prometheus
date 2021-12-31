@@ -1433,35 +1433,36 @@ func (ev *evaluator) eval(expr parser.Expr) (parser.Value, storage.Warnings) {
 					}, e.LHS, e.RHS)
 				}
 			case lt == parser.ValueTypeVector && rt == parser.ValueTypeVector:
-				switch e.Op {
-				case parser.LAND:
-					{
-						return ev.rangeEval(
-							func(v []parser.Value, enh *EvalNodeHelper) (Vector, storage.Warnings) {
-								// 可以直接类型转换,v中的元素个数一定是对齐的,只是元素可能是空列表
-								return ev.VectorAnd(v[0].(Vector), v[1].(Vector), e.VectorMatching, enh), nil
+				{
+					switch e.Op {
+					case parser.LAND:
+						{
+							return ev.rangeEval(
+								func(v []parser.Value, enh *EvalNodeHelper) (Vector, storage.Warnings) {
+									// 可以直接类型转换,v中的元素个数一定是对齐的,只是元素可能是空列表
+									return ev.VectorAnd(v[0].(Vector), v[1].(Vector), e.VectorMatching, enh), nil
+								}, e.LHS, e.RHS)
+						}
+					case parser.LOR:
+						{
+							return ev.rangeEval(func(v []parser.Value, enh *EvalNodeHelper) (Vector, storage.Warnings) {
+								return ev.VectorOr(v[0].(Vector), v[1].(Vector), e.VectorMatching, enh), nil
 							}, e.LHS, e.RHS)
-					}
-				case parser.LOR:
-					{
-						return ev.rangeEval(func(v []parser.Value, enh *EvalNodeHelper) (Vector, storage.Warnings) {
-							return ev.VectorOr(v[0].(Vector), v[1].(Vector), e.VectorMatching, enh), nil
-						}, e.LHS, e.RHS)
-					}
-				case parser.LUNLESS:
-					{
-						return ev.rangeEval(func(v []parser.Value, enh *EvalNodeHelper) (Vector, storage.Warnings) {
-							return ev.VectorUnless(v[0].(Vector), v[1].(Vector), e.VectorMatching, enh), nil
-						}, e.LHS, e.RHS)
-					}
-				default:
-					{
-						return ev.rangeEval(func(v []parser.Value, enh *EvalNodeHelper) (Vector, storage.Warnings) {
-							return ev.VectorBinop(e.Op, v[0].(Vector), v[1].(Vector), e.VectorMatching, e.ReturnBool, enh), nil
-						}, e.LHS, e.RHS)
+						}
+					case parser.LUNLESS:
+						{
+							return ev.rangeEval(func(v []parser.Value, enh *EvalNodeHelper) (Vector, storage.Warnings) {
+								return ev.VectorUnless(v[0].(Vector), v[1].(Vector), e.VectorMatching, enh), nil
+							}, e.LHS, e.RHS)
+						}
+					default:
+						{
+							return ev.rangeEval(func(v []parser.Value, enh *EvalNodeHelper) (Vector, storage.Warnings) {
+								return ev.VectorBinop(e.Op, v[0].(Vector), v[1].(Vector), e.VectorMatching, e.ReturnBool, enh), nil
+							}, e.LHS, e.RHS)
+						}
 					}
 				}
-
 			case lt == parser.ValueTypeVector && rt == parser.ValueTypeScalar:
 				{
 					return ev.rangeEval(func(v []parser.Value, enh *EvalNodeHelper) (Vector, storage.Warnings) {
@@ -1478,11 +1479,11 @@ func (ev *evaluator) eval(expr parser.Expr) (parser.Value, storage.Warnings) {
 		}
 	case *parser.NumberLiteral:
 		{
-			// 不明白为什么这样处理 ???
+			// 完成(不明白为什么这样处理 ???)
 			return ev.rangeEval(func(v []parser.Value, enh *EvalNodeHelper) (Vector, storage.Warnings) {
 				return append(enh.Out, Sample{Point: Point{V: e.Val}}), nil
 			})
-			// 测试???
+			// 测试 ???
 			// return Matrix{
 			// 	Series{
 			// 		Points: []Point{
@@ -1495,7 +1496,7 @@ func (ev *evaluator) eval(expr parser.Expr) (parser.Value, storage.Warnings) {
 		}
 	case *parser.StringLiteral:
 		{
-			// 完成(不知道有什么用???)
+			// 完成(不知道有什么用 ???)
 			return String{V: e.Val, T: ev.startTimestamp}, nil
 		}
 	case *parser.VectorSelector:

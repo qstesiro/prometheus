@@ -503,7 +503,7 @@ state 49
 state 50
 	number_literal:  NUMBER.    (181)
 
-	.  reduce 181 (src line 736)
+	.  reduce 181 (src line 737)
 
 
 state 51
@@ -558,7 +558,7 @@ state 51
 state 52
 	string_literal:  STRING.    (189)
 
-	.  reduce 189 (src line 778)
+	.  reduce 189 (src line 779)
 
 
 state 53
@@ -760,13 +760,13 @@ state 67
 state 68
 	unary_op:  ADD.    (175)
 
-	.  reduce 175 (src line 728)
+	.  reduce 175 (src line 729)
 
 
 state 69
 	unary_op:  SUB.    (176)
 
-	.  reduce 176 (src line 728)
+	.  reduce 176 (src line 729)
 
 
 state 70
@@ -2145,7 +2145,7 @@ state 139
 state 140
 	duration:  DURATION.    (188)
 
-	.  reduce 188 (src line 767)
+	.  reduce 188 (src line 768)
 
 
 state 141
@@ -2170,13 +2170,13 @@ state 143
 state 144
 	signed_or_unsigned_number:  number.    (185)
 
-	.  reduce 185 (src line 751)
+	.  reduce 185 (src line 752)
 
 
 state 145
 	signed_or_unsigned_number:  signed_number.    (186)
 
-	.  reduce 186 (src line 751)
+	.  reduce 186 (src line 752)
 
 
 state 146
@@ -2194,7 +2194,7 @@ state 147
 state 148
 	number:  NUMBER.    (182)
 
-	.  reduce 182 (src line 745)
+	.  reduce 182 (src line 746)
 
 
 state 149
@@ -2412,25 +2412,25 @@ state 167
 state 168
 	match_op:  EQL.    (177)
 
-	.  reduce 177 (src line 730)
+	.  reduce 177 (src line 731)
 
 
 state 169
 	match_op:  NEQ.    (178)
 
-	.  reduce 178 (src line 730)
+	.  reduce 178 (src line 731)
 
 
 state 170
 	match_op:  EQL_REGEX.    (179)
 
-	.  reduce 179 (src line 730)
+	.  reduce 179 (src line 731)
 
 
 state 171
 	match_op:  NEQ_REGEX.    (180)
 
-	.  reduce 180 (src line 730)
+	.  reduce 180 (src line 731)
 
 
 state 172
@@ -2565,32 +2565,32 @@ state 185
 	maybe_grouping_labels: .    (192)
 
 	error  shift 157
-	IDENTIFIER  reduce 192 (src line 796)
-	LEFT_BRACE  reduce 192 (src line 796)
+	IDENTIFIER  reduce 192 (src line 797)
+	LEFT_BRACE  reduce 192 (src line 797)
 	LEFT_PAREN  shift 156
-	METRIC_IDENTIFIER  reduce 192 (src line 796)
-	NUMBER  reduce 192 (src line 796)
-	STRING  reduce 192 (src line 796)
-	ADD  reduce 192 (src line 796)
-	LAND  reduce 192 (src line 796)
-	LOR  reduce 192 (src line 796)
-	LUNLESS  reduce 192 (src line 796)
-	SUB  reduce 192 (src line 796)
-	AVG  reduce 192 (src line 796)
-	BOTTOMK  reduce 192 (src line 796)
-	COUNT  reduce 192 (src line 796)
-	COUNT_VALUES  reduce 192 (src line 796)
-	GROUP  reduce 192 (src line 796)
-	MAX  reduce 192 (src line 796)
-	MIN  reduce 192 (src line 796)
-	QUANTILE  reduce 192 (src line 796)
-	STDDEV  reduce 192 (src line 796)
-	STDVAR  reduce 192 (src line 796)
-	SUM  reduce 192 (src line 796)
-	TOPK  reduce 192 (src line 796)
-	BY  reduce 192 (src line 796)
-	OFFSET  reduce 192 (src line 796)
-	WITHOUT  reduce 192 (src line 796)
+	METRIC_IDENTIFIER  reduce 192 (src line 797)
+	NUMBER  reduce 192 (src line 797)
+	STRING  reduce 192 (src line 797)
+	ADD  reduce 192 (src line 797)
+	LAND  reduce 192 (src line 797)
+	LOR  reduce 192 (src line 797)
+	LUNLESS  reduce 192 (src line 797)
+	SUB  reduce 192 (src line 797)
+	AVG  reduce 192 (src line 797)
+	BOTTOMK  reduce 192 (src line 797)
+	COUNT  reduce 192 (src line 797)
+	COUNT_VALUES  reduce 192 (src line 797)
+	GROUP  reduce 192 (src line 797)
+	MAX  reduce 192 (src line 797)
+	MIN  reduce 192 (src line 797)
+	QUANTILE  reduce 192 (src line 797)
+	STDDEV  reduce 192 (src line 797)
+	STDVAR  reduce 192 (src line 797)
+	SUM  reduce 192 (src line 797)
+	TOPK  reduce 192 (src line 797)
+	BY  reduce 192 (src line 797)
+	OFFSET  reduce 192 (src line 797)
+	WITHOUT  reduce 192 (src line 797)
 	.  error
 
 	grouping_labels  goto 248
@@ -2602,32 +2602,32 @@ state 186
 	maybe_grouping_labels: .    (192)
 
 	error  shift 157
-	IDENTIFIER  reduce 192 (src line 796)
-	LEFT_BRACE  reduce 192 (src line 796)
+	IDENTIFIER  reduce 192 (src line 797)
+	LEFT_BRACE  reduce 192 (src line 797)
 	LEFT_PAREN  shift 156
-	METRIC_IDENTIFIER  reduce 192 (src line 796)
-	NUMBER  reduce 192 (src line 796)
-	STRING  reduce 192 (src line 796)
-	ADD  reduce 192 (src line 796)
-	LAND  reduce 192 (src line 796)
-	LOR  reduce 192 (src line 796)
-	LUNLESS  reduce 192 (src line 796)
-	SUB  reduce 192 (src line 796)
-	AVG  reduce 192 (src line 796)
-	BOTTOMK  reduce 192 (src line 796)
-	COUNT  reduce 192 (src line 796)
-	COUNT_VALUES  reduce 192 (src line 796)
-	GROUP  reduce 192 (src line 796)
-	MAX  reduce 192 (src line 796)
-	MIN  reduce 192 (src line 796)
-	QUANTILE  reduce 192 (src line 796)
-	STDDEV  reduce 192 (src line 796)
-	STDVAR  reduce 192 (src line 796)
-	SUM  reduce 192 (src line 796)
-	TOPK  reduce 192 (src line 796)
-	BY  reduce 192 (src line 796)
-	OFFSET  reduce 192 (src line 796)
-	WITHOUT  reduce 192 (src line 796)
+	METRIC_IDENTIFIER  reduce 192 (src line 797)
+	NUMBER  reduce 192 (src line 797)
+	STRING  reduce 192 (src line 797)
+	ADD  reduce 192 (src line 797)
+	LAND  reduce 192 (src line 797)
+	LOR  reduce 192 (src line 797)
+	LUNLESS  reduce 192 (src line 797)
+	SUB  reduce 192 (src line 797)
+	AVG  reduce 192 (src line 797)
+	BOTTOMK  reduce 192 (src line 797)
+	COUNT  reduce 192 (src line 797)
+	COUNT_VALUES  reduce 192 (src line 797)
+	GROUP  reduce 192 (src line 797)
+	MAX  reduce 192 (src line 797)
+	MIN  reduce 192 (src line 797)
+	QUANTILE  reduce 192 (src line 797)
+	STDDEV  reduce 192 (src line 797)
+	STDVAR  reduce 192 (src line 797)
+	SUM  reduce 192 (src line 797)
+	TOPK  reduce 192 (src line 797)
+	BY  reduce 192 (src line 797)
+	OFFSET  reduce 192 (src line 797)
+	WITHOUT  reduce 192 (src line 797)
 	.  error
 
 	grouping_labels  goto 248
@@ -3229,13 +3229,13 @@ state 201
 state 202
 	signed_number:  ADD number.    (183)
 
-	.  reduce 183 (src line 747)
+	.  reduce 183 (src line 748)
 
 
 state 203
 	signed_number:  SUB number.    (184)
 
-	.  reduce 184 (src line 748)
+	.  reduce 184 (src line 749)
 
 
 state 204
@@ -3252,7 +3252,7 @@ state 205
 
 	error  shift 253
 	DURATION  shift 140
-	RIGHT_BRACKET  reduce 190 (src line 791)
+	RIGHT_BRACKET  reduce 190 (src line 792)
 	.  error
 
 	duration  goto 252
@@ -3303,145 +3303,145 @@ state 211
 state 212
 	maybe_label:  AVG.    (151)
 
-	.  reduce 151 (src line 726)
+	.  reduce 151 (src line 727)
 
 
 state 213
 	maybe_label:  BOOL.    (152)
 
-	.  reduce 152 (src line 726)
+	.  reduce 152 (src line 727)
 
 
 state 214
 	maybe_label:  BOTTOMK.    (153)
 
-	.  reduce 153 (src line 726)
+	.  reduce 153 (src line 727)
 
 
 state 215
 	maybe_label:  BY.    (154)
 
-	.  reduce 154 (src line 726)
+	.  reduce 154 (src line 727)
 
 
 state 216
 	maybe_label:  COUNT.    (155)
 
-	.  reduce 155 (src line 726)
+	.  reduce 155 (src line 727)
 
 
 state 217
 	maybe_label:  COUNT_VALUES.    (156)
 
-	.  reduce 156 (src line 726)
+	.  reduce 156 (src line 727)
 
 
 state 218
 	maybe_label:  GROUP.    (157)
 
-	.  reduce 157 (src line 726)
+	.  reduce 157 (src line 727)
 
 
 state 219
 	maybe_label:  GROUP_LEFT.    (158)
 
-	.  reduce 158 (src line 726)
+	.  reduce 158 (src line 727)
 
 
 state 220
 	maybe_label:  GROUP_RIGHT.    (159)
 
-	.  reduce 159 (src line 726)
+	.  reduce 159 (src line 727)
 
 
 state 221
 	maybe_label:  IDENTIFIER.    (160)
 
-	.  reduce 160 (src line 726)
+	.  reduce 160 (src line 727)
 
 
 state 222
 	maybe_label:  IGNORING.    (161)
 
-	.  reduce 161 (src line 726)
+	.  reduce 161 (src line 727)
 
 
 state 223
 	maybe_label:  LAND.    (162)
 
-	.  reduce 162 (src line 726)
+	.  reduce 162 (src line 727)
 
 
 state 224
 	maybe_label:  LOR.    (163)
 
-	.  reduce 163 (src line 726)
+	.  reduce 163 (src line 727)
 
 
 state 225
 	maybe_label:  LUNLESS.    (164)
 
-	.  reduce 164 (src line 726)
+	.  reduce 164 (src line 727)
 
 
 state 226
 	maybe_label:  MAX.    (165)
 
-	.  reduce 165 (src line 726)
+	.  reduce 165 (src line 727)
 
 
 state 227
 	maybe_label:  METRIC_IDENTIFIER.    (166)
 
-	.  reduce 166 (src line 726)
+	.  reduce 166 (src line 727)
 
 
 state 228
 	maybe_label:  MIN.    (167)
 
-	.  reduce 167 (src line 726)
+	.  reduce 167 (src line 727)
 
 
 state 229
 	maybe_label:  OFFSET.    (168)
 
-	.  reduce 168 (src line 726)
+	.  reduce 168 (src line 727)
 
 
 state 230
 	maybe_label:  ON.    (169)
 
-	.  reduce 169 (src line 726)
+	.  reduce 169 (src line 727)
 
 
 state 231
 	maybe_label:  QUANTILE.    (170)
 
-	.  reduce 170 (src line 726)
+	.  reduce 170 (src line 727)
 
 
 state 232
 	maybe_label:  STDDEV.    (171)
 
-	.  reduce 171 (src line 726)
+	.  reduce 171 (src line 727)
 
 
 state 233
 	maybe_label:  STDVAR.    (172)
 
-	.  reduce 172 (src line 726)
+	.  reduce 172 (src line 727)
 
 
 state 234
 	maybe_label:  SUM.    (173)
 
-	.  reduce 173 (src line 726)
+	.  reduce 173 (src line 727)
 
 
 state 235
 	maybe_label:  TOPK.    (174)
 
-	.  reduce 174 (src line 726)
+	.  reduce 174 (src line 727)
 
 
 state 236
@@ -3568,7 +3568,7 @@ state 247
 state 248
 	maybe_grouping_labels:  grouping_labels.    (193)
 
-	.  reduce 193 (src line 797)
+	.  reduce 193 (src line 798)
 
 
 state 249
@@ -3595,7 +3595,7 @@ state 252
 	maybe_duration:  duration.    (191)
 
 	error  shift 263
-	RIGHT_BRACKET  reduce 191 (src line 793)
+	RIGHT_BRACKET  reduce 191 (src line 794)
 	.  error
 
 
@@ -3711,7 +3711,7 @@ state 258
 state 259
 	uint:  NUMBER.    (187)
 
-	.  reduce 187 (src line 753)
+	.  reduce 187 (src line 754)
 
 
 state 260

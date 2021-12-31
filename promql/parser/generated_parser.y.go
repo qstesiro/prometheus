@@ -197,7 +197,7 @@ const yyEofCode = 1
 const yyErrCode = 2
 const yyInitialStackSize = 16
 
-//line generated_parser.y:800
+//line generated_parser.y:801
 
 //line yacctab:1
 var yyExca = [...]int{
@@ -1642,7 +1642,7 @@ yydefault:
 		}
 	case 181:
 		yyDollar = yyS[yypt-1 : yypt+1]
-//line generated_parser.y:737
+//line generated_parser.y:738
 		{
 			yyVAL.node = &NumberLiteral{
 				Val:      yylex.(*parser).number(yyDollar[1].item.Val),
@@ -1651,25 +1651,25 @@ yydefault:
 		}
 	case 182:
 		yyDollar = yyS[yypt-1 : yypt+1]
-//line generated_parser.y:745
+//line generated_parser.y:746
 		{
 			yyVAL.float = yylex.(*parser).number(yyDollar[1].item.Val)
 		}
 	case 183:
 		yyDollar = yyS[yypt-2 : yypt+1]
-//line generated_parser.y:747
+//line generated_parser.y:748
 		{
 			yyVAL.float = yyDollar[2].float
 		}
 	case 184:
 		yyDollar = yyS[yypt-2 : yypt+1]
-//line generated_parser.y:748
+//line generated_parser.y:749
 		{
 			yyVAL.float = -yyDollar[2].float
 		}
 	case 187:
 		yyDollar = yyS[yypt-1 : yypt+1]
-//line generated_parser.y:754
+//line generated_parser.y:755
 		{
 			var err error
 			yyVAL.uint, err = strconv.ParseUint(yyDollar[1].item.Val, 10, 64)
@@ -1683,7 +1683,7 @@ yydefault:
 		}
 	case 188:
 		yyDollar = yyS[yypt-1 : yypt+1]
-//line generated_parser.y:768
+//line generated_parser.y:769
 		{
 			var err error
 			yyVAL.duration, err = parseDuration(yyDollar[1].item.Val)
@@ -1693,7 +1693,7 @@ yydefault:
 		}
 	case 189:
 		yyDollar = yyS[yypt-1 : yypt+1]
-//line generated_parser.y:779
+//line generated_parser.y:780
 		{
 			yyVAL.node = &StringLiteral{
 				Val:      yylex.(*parser).unquoteString(yyDollar[1].item.Val),
@@ -1702,13 +1702,13 @@ yydefault:
 		}
 	case 190:
 		yyDollar = yyS[yypt-0 : yypt+1]
-//line generated_parser.y:792
+//line generated_parser.y:793
 		{
 			yyVAL.duration = 0
 		}
 	case 192:
 		yyDollar = yyS[yypt-0 : yypt+1]
-//line generated_parser.y:796
+//line generated_parser.y:797
 		{
 			yyVAL.strings = nil
 		}
