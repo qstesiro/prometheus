@@ -568,6 +568,9 @@ func (ng *Engine) execEvalStmt(ctx context.Context, query *query, s *parser.Eval
 		switch result := val.(type) {
 		case Matrix:
 			mat = result
+		case Scalar:
+			// 我增加的,感觉原先对于Scalar的处理有些混乱 ???
+			return result, warnings, nil
 		case String:
 			return result, warnings, nil
 		default:
@@ -1479,7 +1482,8 @@ func (ev *evaluator) eval(expr parser.Expr) (parser.Value, storage.Warnings) {
 		}
 	case *parser.NumberLiteral:
 		{
-			// 完成(不明白为什么这样处理 ???)
+			// 完成
+			// 此处使用Matrix方便其它的多元运算,也许这就是不直接使用Scalar的原因吧 ???
 			return ev.rangeEval(func(v []parser.Value, enh *EvalNodeHelper) (Vector, storage.Warnings) {
 				return append(enh.Out, Sample{Point: Point{V: e.Val}}), nil
 			})
@@ -1518,7 +1522,7 @@ func (ev *evaluator) eval(expr parser.Expr) (parser.Value, storage.Warnings) {
 
 				for ts := ev.startTimestamp; ts <= ev.endTimestamp; ts += ev.interval {
 					// 从iterator查询sample
-					// 未使用数据的实际ts使用请求的时间所以实际数据不准确 ???
+					// 未使用数据的实际ts,而是使用请求的时间,所以实际数据不准确 ???
 					_, v, ok := ev.vectorSelectorSingle(it, e, ts)
 					if ok {
 						if ev.currentSamples < ev.maxSamples {
@@ -1540,6 +1544,7 @@ func (ev *evaluator) eval(expr parser.Expr) (parser.Value, storage.Warnings) {
 		}
 	case *parser.MatrixSelector:
 		{
+			// 完成
 			if ev.startTimestamp != ev.endTimestamp {
 				panic(errors.New("cannot do range evaluation of matrix selector"))
 			}
