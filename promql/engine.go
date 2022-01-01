@@ -1570,13 +1570,15 @@ func (ev *evaluator) eval(expr parser.Expr) (parser.Value, storage.Warnings) {
 				newEv.interval = ev.noStepSubqueryIntervalFn(rangeMillis)
 			}
 
+			// startTimestamp对齐为interval的整数倍
 			// Start with the first timestamp after (ev.startTimestamp - offset - range)
 			// that is aligned with the step (multiple of 'newEv.interval').
 			newEv.startTimestamp = newEv.interval * ((ev.startTimestamp - offsetMillis - rangeMillis) / newEv.interval)
+			// 调整后的startTime必须要大(等)于指定的startTime
 			if newEv.startTimestamp < (ev.startTimestamp - offsetMillis - rangeMillis) {
 				newEv.startTimestamp += newEv.interval
 			}
-
+			// 根据新的起始时间重新调整offset时间
 			if newEv.startTimestamp != ev.startTimestamp {
 				// Adjust the offset of selectors based on the new
 				// start time of the evaluator since the calculation
