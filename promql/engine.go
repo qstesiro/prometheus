@@ -1552,6 +1552,7 @@ func (ev *evaluator) eval(expr parser.Expr) (parser.Value, storage.Warnings) {
 		}
 	case *parser.SubqueryExpr:
 		{
+			// 整体完成但是细节没有完全搞明白 ???
 			offsetMillis := durationMilliseconds(e.Offset)
 			rangeMillis := durationMilliseconds(e.Range)
 			newEv := &evaluator{
@@ -1580,6 +1581,7 @@ func (ev *evaluator) eval(expr parser.Expr) (parser.Value, storage.Warnings) {
 			}
 			// 根据新的起始时间重新调整offset时间
 			if newEv.startTimestamp != ev.startTimestamp {
+				// 具体的调整规则细节没有搞明白 ???
 				// Adjust the offset of selectors based on the new
 				// start time of the evaluator since the calculation
 				// of the offset with @ happens w.r.t. the start time.

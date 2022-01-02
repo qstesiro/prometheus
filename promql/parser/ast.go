@@ -331,6 +331,7 @@ func Walk(v Visitor, node Node, path []Node) error {
 }
 
 // 实现Visitor接口
+// 与net/http的HandlerFunc异曲同工 !!!
 type inspector func(Node, []Node) error
 
 func (f inspector) Visit(node Node, path []Node) (Visitor, error) {
@@ -346,6 +347,7 @@ func (f inspector) Visit(node Node, path []Node) (Visitor, error) {
 // for all the non-nil children of node, recursively.
 func Inspect(node Node, f inspector) {
 	//nolint: errcheck
+	// 不需要再转换类型inspector(f) ???
 	Walk(inspector(f), node, nil)
 }
 
