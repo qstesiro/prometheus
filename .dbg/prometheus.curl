@@ -360,6 +360,16 @@ curl localhost:9090/api/v1/query \
 curl localhost:9090/api/v1/query \
      --data-urlencode 'query=prometheus_target_interval_length_seconds{} / ignoring(quantile) group_left prometheus_target_interval_length_seconds{quantile="0.5"}' \
      -g -G | jq
+# and/or/unless
+curl localhost:9090/api/v1/query \
+     --data-urlencode 'query=prometheus_target_interval_length_seconds{quantile="0.5"} and prometheus_target_interval_length_seconds{}' \
+     -g -G | jq
+curl localhost:9090/api/v1/query \
+     --data-urlencode 'query=prometheus_target_interval_length_seconds{quantile="0.5"} or prometheus_target_interval_length_seconds{}' \
+     -g -G | jq
+curl localhost:9090/api/v1/query \
+     --data-urlencode 'query=prometheus_target_interval_length_seconds{quantile="0.5"} unless prometheus_target_interval_length_seconds{}' \
+     -g -G | jq
 
 # Aggregation
 curl localhost:9090/api/v1/query \
