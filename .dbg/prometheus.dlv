@@ -66,9 +66,9 @@ b promql.(*Engine).NewInstantQuery
 # b promql.(*Engine).execEvalStmt
 # b promql/engine.go:559
 # b promql.(*evaluator).eval
-b engine.go:1553
-b promql.setOffsetForAtModifier
-b engine.go:2577
+b engine.go:1469
+b promql.(*evaluator).VectorscalarBinop
+# b promql.setOffsetForAtModifier
 # b engine.go:1592
 # b promql.(*evaluator).rangeEval
 # b promql.(*evaluator).vectorSelectorSingle

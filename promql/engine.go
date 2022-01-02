@@ -1430,6 +1430,7 @@ func (ev *evaluator) eval(expr parser.Expr) (parser.Value, storage.Warnings) {
 			switch lt, rt := e.LHS.Type(), e.RHS.Type(); {
 			case lt == parser.ValueTypeScalar && rt == parser.ValueTypeScalar:
 				{
+					// 完成
 					return ev.rangeEval(func(v []parser.Value, enh *EvalNodeHelper) (Vector, storage.Warnings) {
 						val := scalarBinop(e.Op, v[0].(Vector)[0].Point.V, v[1].(Vector)[0].Point.V)
 						return append(enh.Out, Sample{Point: Point{V: val}}), nil
@@ -1448,32 +1449,43 @@ func (ev *evaluator) eval(expr parser.Expr) (parser.Value, storage.Warnings) {
 						}
 					case parser.LOR:
 						{
-							return ev.rangeEval(func(v []parser.Value, enh *EvalNodeHelper) (Vector, storage.Warnings) {
-								return ev.VectorOr(v[0].(Vector), v[1].(Vector), e.VectorMatching, enh), nil
-							}, e.LHS, e.RHS)
+							return ev.rangeEval(
+								func(v []parser.Value, enh *EvalNodeHelper) (Vector, storage.Warnings) {
+									return ev.VectorOr(v[0].(Vector), v[1].(Vector), e.VectorMatching, enh), nil
+								}, e.LHS, e.RHS)
 						}
 					case parser.LUNLESS:
 						{
-							return ev.rangeEval(func(v []parser.Value, enh *EvalNodeHelper) (Vector, storage.Warnings) {
-								return ev.VectorUnless(v[0].(Vector), v[1].(Vector), e.VectorMatching, enh), nil
-							}, e.LHS, e.RHS)
+							return ev.rangeEval(
+								func(v []parser.Value, enh *EvalNodeHelper) (Vector, storage.Warnings) {
+									return ev.VectorUnless(v[0].(Vector), v[1].(Vector), e.VectorMatching, enh), nil
+								}, e.LHS, e.RHS)
 						}
 					default:
 						{
-							return ev.rangeEval(func(v []parser.Value, enh *EvalNodeHelper) (Vector, storage.Warnings) {
-								return ev.VectorBinop(e.Op, v[0].(Vector), v[1].(Vector), e.VectorMatching, e.ReturnBool, enh), nil
-							}, e.LHS, e.RHS)
+							return ev.rangeEval(
+								func(v []parser.Value, enh *EvalNodeHelper) (Vector, storage.Warnings) {
+									return ev.VectorBinop(
+										e.Op,
+										v[0].(Vector),
+										v[1].(Vector), e.VectorMatching,
+										e.ReturnBool,
+										enh,
+									), nil
+								}, e.LHS, e.RHS)
 						}
 					}
 				}
 			case lt == parser.ValueTypeVector && rt == parser.ValueTypeScalar:
 				{
+					// 完成
 					return ev.rangeEval(func(v []parser.Value, enh *EvalNodeHelper) (Vector, storage.Warnings) {
 						return ev.VectorscalarBinop(e.Op, v[0].(Vector), Scalar{V: v[1].(Vector)[0].Point.V}, false, e.ReturnBool, enh), nil
 					}, e.LHS, e.RHS)
 				}
 			case lt == parser.ValueTypeScalar && rt == parser.ValueTypeVector:
 				{
+					// 完成
 					return ev.rangeEval(func(v []parser.Value, enh *EvalNodeHelper) (Vector, storage.Warnings) {
 						return ev.VectorscalarBinop(e.Op, v[1].(Vector), Scalar{V: v[0].(Vector)[0].Point.V}, true, e.ReturnBool, enh), nil
 					}, e.LHS, e.RHS)
@@ -2100,6 +2112,7 @@ func (ev *evaluator) VectorscalarBinop(op parser.ItemType, lhs Vector, rhs Scala
 		if keep {
 			lhsSample.V = value
 			if shouldDropMetricName(op) || returnBool {
+				// 删除__name__有什么用 ???
 				lhsSample.Metric = enh.DropMetricName(lhsSample.Metric)
 			}
 			enh.Out = append(enh.Out, lhsSample)

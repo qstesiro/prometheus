@@ -312,7 +312,7 @@ curl localhost:9090/api/v1/query \
      --data-urlencode 'query=10 >bool 1' \
      -g -G | jq
 curl localhost:9090/api/v1/query \
-     --data-urlencode 'query=go_gc_duration_seconds{} < 10' \
+     --data-urlencode 'query=go_gc_duration_seconds{} < 1' \
      -g -G | jq
 curl localhost:9090/api/v1/query \
      --data-urlencode 'query=go_gc_duration_seconds{} <bool 10' \
