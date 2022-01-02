@@ -339,6 +339,7 @@ curl localhost:9090/api/v1/query \
      -g -G | jq
 
 # Binary operators - Matching
+# one to one
 curl localhost:9090/api/v1/query \
      --data-urlencode 'query=prometheus_target_interval_length_seconds{} / prometheus_target_interval_length_seconds{}' \
      -g -G | jq
@@ -349,10 +350,15 @@ curl localhost:9090/api/v1/query \
      --data-urlencode 'query=prometheus_target_interval_length_seconds{quantile="0.5"} / prometheus_target_interval_length_seconds{}' \
      -g -G | jq
 curl localhost:9090/api/v1/query \
-     --data-urlencode 'query=prometheus_target_interval_length_seconds{quantile="0.5"} / ignoring(quantile)  prometheus_target_interval_length_seconds{}' \
+     --data-urlencode 'query=prometheus_target_interval_length_seconds{quantile="0.5"} * on(interval, quantile) prometheus_target_interval_length_seconds{}' \
      -g -G | jq
+# one-to-many
 curl localhost:9090/api/v1/query \
-     --data-urlencode 'query=prometheus_target_interval_length_seconds{quantile="0.5"} / ignoring(intervals) group_right prometheus_target_interval_length_seconds{}' \
+     --data-urlencode 'query=prometheus_target_interval_length_seconds{quantile="0.5"} / ignoring(quantile) group_right prometheus_target_interval_length_seconds{}' \
+     -g -G | jq
+# many-to-one
+curl localhost:9090/api/v1/query \
+     --data-urlencode 'query=prometheus_target_interval_length_seconds{} / ignoring(quantile) group_left prometheus_target_interval_length_seconds{quantile="0.5"}' \
      -g -G | jq
 
 # Aggregation
