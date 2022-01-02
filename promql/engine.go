@@ -1441,6 +1441,7 @@ func (ev *evaluator) eval(expr parser.Expr) (parser.Value, storage.Warnings) {
 					switch e.Op {
 					case parser.LAND:
 						{
+							// 完成
 							return ev.rangeEval(
 								func(v []parser.Value, enh *EvalNodeHelper) (Vector, storage.Warnings) {
 									// 可以直接类型转换,v中的元素个数一定是对齐的,只是元素可能是空列表
@@ -1449,6 +1450,7 @@ func (ev *evaluator) eval(expr parser.Expr) (parser.Value, storage.Warnings) {
 						}
 					case parser.LOR:
 						{
+							// 完成
 							return ev.rangeEval(
 								func(v []parser.Value, enh *EvalNodeHelper) (Vector, storage.Warnings) {
 									return ev.VectorOr(v[0].(Vector), v[1].(Vector), e.VectorMatching, enh), nil
@@ -1456,6 +1458,7 @@ func (ev *evaluator) eval(expr parser.Expr) (parser.Value, storage.Warnings) {
 						}
 					case parser.LUNLESS:
 						{
+							// 完成
 							return ev.rangeEval(
 								func(v []parser.Value, enh *EvalNodeHelper) (Vector, storage.Warnings) {
 									return ev.VectorUnless(v[0].(Vector), v[1].(Vector), e.VectorMatching, enh), nil
