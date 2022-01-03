@@ -29,10 +29,14 @@ const (
 	BucketLabel  = "le"
 	InstanceName = "instance"
 
-	labelSep = '\xfe'
+	// labelSep = '\xfe'
+	// 测试方便查看 ???
+	labelSep = '-'
 )
 
-var seps = []byte{'\xff'}
+// var seps = []byte{'\xff'}
+// 测试方便查看 ???
+var seps = []byte{'-'}
 
 // Label is a key/value pair of strings.
 type Label struct {

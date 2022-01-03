@@ -1911,6 +1911,7 @@ func (ev *evaluator) VectorBinop(op parser.ItemType, lhs, rhs Vector, matching *
 	if matching.Card == parser.CardManyToMany {
 		panic("many-to-many only allowed for set operators")
 	}
+	// 标签签名函数返回的值会剔除__name__
 	sigf := enh.signatureFunc(matching.On, matching.MatchingLabels...)
 
 	// The control flow below handles one-to-one or many-to-one matching.
@@ -2062,11 +2063,13 @@ func resultMetric(lhs, rhs labels.Labels, op parser.ItemType, matching *parser.V
 		return ret
 	}
 	str := string(enh.lblResultBuf)
-
+	// 算术运算会删除__name__
 	if shouldDropMetricName(op) {
 		enh.lb.Del(labels.MetricName)
 	}
-
+	// one-to-one返回的结果标签符合以下规则
+	// 如果on(...)则只包含列表所表标签
+	// 如果ignoring(...)则只包含除列表所有之外的标签
 	if matching.Card == parser.CardOneToOne {
 		if matching.On {
 		Outer:
@@ -2082,6 +2085,10 @@ func resultMetric(lhs, rhs labels.Labels, op parser.ItemType, matching *parser.V
 			enh.lb.Del(matching.MatchingLabels...)
 		}
 	}
+	// 因one-to-one不允许使用group_x所以只有many-to-one/one-to-many且group_x(...)才会执行
+	// one-to-many/many-to-one返回结果标签以many端的标签为基础结合以下规则:
+	// 如果在one端存在group_x所列的标签则将其添加到many标签列表中
+	// 如果在one端不存在group_x所列表的标签则试图从many端的标签列表中删除
 	for _, ln := range matching.Include {
 		// Included labels from the `group_x` modifier are taken from the "one"-side.
 		if v := rhs.Get(ln); v != "" {

@@ -36,7 +36,7 @@
 # b v1.(*API).Register
 
 # b v1.(*API).query
-b promql.(*Engine).NewInstantQuery
+# b promql.(*Engine).NewInstantQuery
 # b parser.ParseExpr
 # b parser.(*parser).parseGenerated
 # b promql.setOffsetForAtModifier
@@ -66,8 +66,10 @@ b promql.(*Engine).NewInstantQuery
 # b promql.(*Engine).execEvalStmt
 # b promql/engine.go:559
 # b promql.(*evaluator).eval
-b engine.go:1469
-b promql.(*evaluator).VectorscalarBinop
+# b engine.go:1469
+# b promql.(*evaluator).VectorscalarBinop
+b promql.(*evaluator).VectorBinop
+b engine.go:1936
 # b promql.setOffsetForAtModifier
 # b engine.go:1592
 # b promql.(*evaluator).rangeEval
