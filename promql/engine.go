@@ -2067,7 +2067,7 @@ func resultMetric(lhs, rhs labels.Labels, op parser.ItemType, matching *parser.V
 	if shouldDropMetricName(op) {
 		enh.lb.Del(labels.MetricName)
 	}
-	// one-to-one返回的结果标签符合以下规则
+	// one-to-one返回的结果标签以左部为基础,结合以下规则
 	// 如果on(...)则只包含列表所表标签
 	// 如果ignoring(...)则只包含除列表所有之外的标签
 	if matching.Card == parser.CardOneToOne {
@@ -2086,7 +2086,7 @@ func resultMetric(lhs, rhs labels.Labels, op parser.ItemType, matching *parser.V
 		}
 	}
 	// 因one-to-one不允许使用group_x所以只有many-to-one/one-to-many且group_x(...)才会执行
-	// one-to-many/many-to-one返回结果标签以many端的标签为基础结合以下规则:
+	// one-to-many/many-to-one返回结果标签以many端的标签为基础,结合以下规则:
 	// 如果在one端存在group_x所列的标签则将其添加到many标签列表中
 	// 如果在one端不存在group_x所列表的标签则试图从many端的标签列表中删除
 	for _, ln := range matching.Include {
