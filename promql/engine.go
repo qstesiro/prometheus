@@ -1921,6 +1921,7 @@ func (ev *evaluator) VectorBinop(op parser.ItemType, lhs, rhs Vector, matching *
 	}
 
 	// All samples from the rhs hashed by the matching label/values.
+	// 不论rightSigs是否已经分配直接重新分配就行了
 	if enh.rightSigs == nil {
 		enh.rightSigs = make(map[string]Sample, len(enh.Out))
 	} else {
@@ -1935,6 +1936,7 @@ func (ev *evaluator) VectorBinop(op parser.ItemType, lhs, rhs Vector, matching *
 		sig := sigf(rs.Metric)
 		// The rhs is guaranteed to be the 'one' side. Having multiple samples
 		// with the same signature means that the matching is many-to-many.
+		// one端不允许出现重复
 		if duplSample, found := rightSigs[sig]; found {
 			// oneSide represents which side of the vector represents the 'one' in the many-to-one relationship.
 			oneSide := "right"
@@ -1951,6 +1953,7 @@ func (ev *evaluator) VectorBinop(op parser.ItemType, lhs, rhs Vector, matching *
 
 	// Tracks the match-signature. For one-to-one operations the value is nil. For many-to-one
 	// the value is a set of signatures to detect duplicated result elements.
+	// 不论matchedSigs是否已经分配直接重新分配就行了
 	if enh.matchedSigs == nil {
 		enh.matchedSigs = make(map[string]map[uint64]struct{}, len(rightSigs))
 	} else {
@@ -1973,6 +1976,8 @@ func (ev *evaluator) VectorBinop(op parser.ItemType, lhs, rhs Vector, matching *
 		// Account for potentially swapped sidedness.
 		vl, vr := ls.V, rs.V
 		if matching.Card == parser.CardOneToMany {
+			// 必须进行交换,one-to-many的情况下之前进行过交换
+			// 但不是所有的运算都符合交换率(例如: +,*符合,-,/不符合)
 			vl, vr = vr, vl
 		}
 		value, keep := vectorElemBinop(op, vl, vr)
@@ -2000,7 +2005,9 @@ func (ev *evaluator) VectorBinop(op parser.ItemType, lhs, rhs Vector, matching *
 			// for the result Vector. Check whether those labels have already been added for
 			// the same matching labels.
 			insertSig := metric.Hash()
-
+			// 是否需要第二层 ???
+			// 测试用例:
+			// prometheus_target_interval_length_seconds{} / ignoring(quantile) group_left prometheus_target_interval_length_seconds{quantile="0.5"}
 			if !exists {
 				insertedSigs = map[uint64]struct{}{}
 				matchedSigs[sig] = insertedSigs
@@ -2050,7 +2057,7 @@ func resultMetric(lhs, rhs labels.Labels, op parser.ItemType, matching *parser.V
 	enh.lblBuf = rhs.Bytes(enh.lblBuf)
 	buf.Write(enh.lblBuf)
 	enh.lblResultBuf = buf.Bytes()
-
+	// 外部循环调用使用之前的缓存结果
 	if ret, ok := enh.resultMetric[string(enh.lblResultBuf)]; ok {
 		return ret
 	}
