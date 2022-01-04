@@ -66,9 +66,10 @@
 # b promql.(*Engine).execEvalStmt
 # b promql/engine.go:559
 # b promql.(*evaluator).eval
-# b engine.go:1469
+b engine.go:1611
+b engine.go:1650
 # b promql.(*evaluator).VectorscalarBinop
-b promql.(*evaluator).VectorBinop
+# b promql.(*evaluator).VectorBinop
 # b engine.go:1936
 # b promql.setOffsetForAtModifier
 # b engine.go:1592

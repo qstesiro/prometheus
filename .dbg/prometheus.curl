@@ -263,7 +263,7 @@ curl localhost:9090/api/v1/query \
      --data-urlencode 'query=prometheus_target_interval_length_seconds{} @1640848388.693' \
      -g -G | jq
 curl localhost:9090/api/v1/query \
-     --data-urlencode 'query={__name__="prometheus_target_interval_length_seconds"} @1640848388.693 + {__name__="prometheus_target_interval_length_seconds"} @1640849388.693' \
+     --data-urlencode 'query={__name__="prometheus_target_interval_length_seconds"} @1641305027.000 + {__name__="prometheus_target_interval_length_seconds"} @1641305027.000' \
      -g -G | jq
 
 # Binary operators - Arithmetic
@@ -354,7 +354,7 @@ curl localhost:9090/api/v1/query \
      -g -G | jq
 # one-to-many
 curl localhost:9090/api/v1/query \
-     --data-urlencode 'query=prometheus_target_interval_length_seconds{quantile="0.5"} / ignoring(quantile) group_right prometheus_target_interval_length_seconds{}' \
+     --data-urlencode 'query=prometheus_target_interval_length_seconds{quantile="0.5"} @1641305027.000 / ignoring(quantile) group_right prometheus_target_interval_length_seconds{} @1641305027.000' \
      -g -G | jq
 # many-to-one
 curl localhost:9090/api/v1/query \

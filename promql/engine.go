@@ -1636,10 +1636,13 @@ func (ev *evaluator) eval(expr parser.Expr) (parser.Value, storage.Warnings) {
 				// with their unique timestamps which does not depend on the step.
 				return res, ws
 			}
+			// 实际只有值类型为Vector才会执行后续代码
 			// 以下查询可以触发后续代码执行 ???
-			// curl localhost:9090/api/v1/query \
-			//      --data-urlencode 'query=prometheus_target_interval_length_seconds{} @1640848388.693' \
-			//      -g -G | jq
+			/*
+				curl localhost:9090/api/v1/query \
+				     --data-urlencode 'query=prometheus_target_interval_length_seconds{} @1640848388.693' \
+				     -g -G | jq
+			*/
 			// 以上查询虽然已经指定的modifier但是返回的结果ts还是查询时间 ???
 			// For every evaluation while the value remains same, the timestamp for that
 			// value would change for different eval times. Hence we duplicate the result
@@ -1653,6 +1656,7 @@ func (ev *evaluator) eval(expr parser.Expr) (parser.Value, storage.Warnings) {
 				if len(mat[i].Points) != 1 {
 					panic(errors.Errorf("unexpected number of samples"))
 				}
+				// 当值类型为Vector时startTime == endTime所以以下循环只执行一次结束
 				for ts := ev.startTimestamp + ev.interval; ts <= ev.endTimestamp; ts = ts + ev.interval {
 					mat[i].Points = append(mat[i].Points, Point{
 						T: ts,
@@ -2514,6 +2518,12 @@ func PreprocessExpr(expr parser.Expr, start, end time.Time) parser.Expr {
 // with a StepInvariantExpr wherever it's step invariant. The returned boolean is true if the
 // passed expression qualifies to be wrapped by StepInvariantExpr.
 // It also resolves the preprocessors.
+// 只有以下四种类型才可能被包装:
+// - VectorSelector
+// - SubqueryExpr
+// - NumberLiteral
+// - StringLiteral
+// 其它类型要进一步分析它的子表达式
 func preprocessExprHelper(expr parser.Expr, start, end time.Time) bool {
 	switch n := expr.(type) {
 	case *parser.VectorSelector:
