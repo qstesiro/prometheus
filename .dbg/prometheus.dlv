@@ -69,7 +69,7 @@
 # b engine.go:1469
 # b promql.(*evaluator).VectorscalarBinop
 b promql.(*evaluator).VectorBinop
-b engine.go:1936
+# b engine.go:1936
 # b promql.setOffsetForAtModifier
 # b engine.go:1592
 # b promql.(*evaluator).rangeEval

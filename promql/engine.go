@@ -1912,11 +1912,13 @@ func (ev *evaluator) VectorBinop(op parser.ItemType, lhs, rhs Vector, matching *
 		panic("many-to-many only allowed for set operators")
 	}
 	// 标签签名函数返回的值会剔除__name__
+	// 如果不删除__name__会导致所有标签签名无法匹配
 	sigf := enh.signatureFunc(matching.On, matching.MatchingLabels...)
 
 	// The control flow below handles one-to-one or many-to-one matching.
 	// For one-to-many, swap sidedness and account for the swap when calculating
 	// values.
+	// 保证one端恒定在右侧
 	if matching.Card == parser.CardOneToMany {
 		lhs, rhs = rhs, lhs
 	}
@@ -1991,6 +1993,7 @@ func (ev *evaluator) VectorBinop(op parser.ItemType, lhs, rhs Vector, matching *
 		} else if !keep {
 			continue
 		}
+		// one-to-one与many-to-one计算结果标签的规则不同具体细节参见函数内部
 		metric := resultMetric(ls.Metric, rs.Metric, op, matching, enh)
 		if returnBool {
 			metric = enh.DropMetricName(metric)
@@ -2006,9 +2009,11 @@ func (ev *evaluator) VectorBinop(op parser.ItemType, lhs, rhs Vector, matching *
 			// for the result Vector. Check whether those labels have already been added for
 			// the same matching labels.
 			insertSig := metric.Hash()
-			// 是否需要第二层 ???
-			// 测试用例:
-			// prometheus_target_interval_length_seconds{} / ignoring(quantile) group_left prometheus_target_interval_length_seconds{quantile="0.5"}
+			// ls{} ignoring(ln) rs{} (many-to-one)
+			// 可能出现以下情况,所以需要第二层map[uint64]struct{}
+			// ls1{la=va,lb=vb,ln=x} ---                      --- {la=va,lb=vb,ln=x}
+			//                         op rs{la=va, lb=vb} = |
+			// ls2{la=va,lb=vb,ln=y} ---                      --- {la=va,lb=vb,ln=y}
 			if !exists {
 				insertedSigs = map[uint64]struct{}{}
 				matchedSigs[sig] = insertedSigs
@@ -2051,7 +2056,7 @@ func resultMetric(lhs, rhs labels.Labels, op parser.ItemType, matching *parser.V
 	} else {
 		enh.lb.Reset(lhs)
 	}
-
+	// 左部标签+右部标签
 	buf := bytes.NewBuffer(enh.lblResultBuf[:0])
 	enh.lblBuf = lhs.Bytes(enh.lblBuf)
 	buf.Write(enh.lblBuf)
