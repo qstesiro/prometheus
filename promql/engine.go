@@ -1466,6 +1466,7 @@ func (ev *evaluator) eval(expr parser.Expr) (parser.Value, storage.Warnings) {
 						}
 					default:
 						{
+							// 完成
 							return ev.rangeEval(
 								func(v []parser.Value, enh *EvalNodeHelper) (Vector, storage.Warnings) {
 									return ev.VectorBinop(
