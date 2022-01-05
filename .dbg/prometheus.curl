@@ -354,7 +354,7 @@ curl localhost:9090/api/v1/query \
      -g -G | jq
 # one-to-many
 curl localhost:9090/api/v1/query \
-     --data-urlencode 'query=prometheus_target_interval_length_seconds{quantile="0.5"} @1641305027.000 / ignoring(quantile) group_right prometheus_target_interval_length_seconds{} @1641305027.000' \
+     --data-urlencode 'query=prometheus_target_interval_length_seconds{quantile="0.5"}[10s] @1641305027.000 / ignoring(quantile) group_right prometheus_target_interval_length_seconds{}[10s] @1641305027.000' \
      -g -G | jq
 # many-to-one
 curl localhost:9090/api/v1/query \
@@ -415,3 +415,11 @@ curl localhost:9090/api/v1/query \
      --data-urlencode 'query=quantile(0.2, prometheus_target_interval_length_seconds{})' \
      -g -G | jq
 
+# StepInvariantExpr
+# 无法使用Matrix类型触发StepInvariantExpr代码 ???
+curl localhost:9090/api/v1/query \
+     --data-urlencode 'query=absent(log_consume_timestamp{})' \
+     -g -G | jq
+curl localhost:9090/api/v1/query \
+     --data-urlencode 'query=sum(rate(go_gc_duration_seconds{}[1m]))' \
+     -g -G | jq
