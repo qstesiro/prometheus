@@ -1190,6 +1190,7 @@ func (ev *evaluator) eval(expr parser.Expr) (parser.Value, storage.Warnings) {
 		{
 			unwrapParenExpr(&e.Param)
 			if s, ok := unwrapStepInvariantExpr(e.Param).(*parser.StringLiteral); ok {
+				// 当前只有count_values会触发此部分代码
 				return ev.rangeEval(func(v []parser.Value, enh *EvalNodeHelper) (Vector, storage.Warnings) {
 					return ev.aggregation(e.Op, e.Grouping, e.Without, s.Val, v[0].(Vector), enh), nil
 				}, e.Expr)
@@ -2489,6 +2490,7 @@ func formatDate(t time.Time) string {
 // unwrapParenExpr does the AST equivalent of removing parentheses around a expression.
 func unwrapParenExpr(e *parser.Expr) {
 	for {
+		// 未判定e的值是否为nil,如果为空没有崩溃 ???
 		if p, ok := (*e).(*parser.ParenExpr); ok {
 			*e = p.Expr
 		} else {

@@ -88,9 +88,10 @@ type Expressions []Expr
 
 // AggregateExpr represents an aggregation operation on a Vector.
 type AggregateExpr struct {
-	Op       ItemType // The used aggregation operation.
-	Expr     Expr     // The Vector expression over which is aggregated.
-	Param    Expr     // Parameter used by some aggregators.
+	Op    ItemType // The used aggregation operation.
+	Expr  Expr     // The Vector expression over which is aggregated.
+	Param Expr     // Parameter used by some aggregators.
+	// 存储without/by的标签
 	Grouping []string // The labels by which to group the Vector.
 	Without  bool     // Whether to drop the given labels rather than keep them.
 	PosRange PositionRange
