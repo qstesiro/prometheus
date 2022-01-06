@@ -2228,6 +2228,7 @@ type groupedAggregation struct {
 func (ev *evaluator) aggregation(op parser.ItemType, grouping []string, without bool, param interface{}, vec Vector, enh *EvalNodeHelper) Vector {
 
 	result := map[uint64]*groupedAggregation{}
+	// topk/bottomk参数
 	var k int64
 	if op == parser.TOPK || op == parser.BOTTOMK {
 		f := param.(float64)
@@ -2239,10 +2240,12 @@ func (ev *evaluator) aggregation(op parser.ItemType, grouping []string, without 
 			return Vector{}
 		}
 	}
+	// quantile参数
 	var q float64
 	if op == parser.QUANTILE {
 		q = param.(float64)
 	}
+	// count_values参数
 	var valueLabel string
 	if op == parser.COUNT_VALUES {
 		valueLabel = param.(string)
@@ -2261,6 +2264,7 @@ func (ev *evaluator) aggregation(op parser.ItemType, grouping []string, without 
 		metric := s.Metric
 
 		if op == parser.COUNT_VALUES {
+			// count_values只保留参数标签
 			lb.Reset(metric)
 			lb.Set(valueLabel, strconv.FormatFloat(s.V, 'f', -1, 64))
 			metric = lb.Labels()

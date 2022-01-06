@@ -67,7 +67,7 @@
 # b promql/engine.go:559
 # b promql.(*evaluator).eval
 b engine.go:1189
-b engine.go:1193
+# b engine.go:1193
 b promql.(*evaluator).aggregation
 # b engine.go:1650
 # b promql.(*evaluator).VectorscalarBinop
