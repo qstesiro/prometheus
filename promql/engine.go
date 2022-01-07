@@ -2334,7 +2334,7 @@ func (ev *evaluator) aggregation(op parser.ItemType, grouping []string, without 
 		}
 
 		switch op {
-		case parser.SUM:
+		case parser.SUM: // 完成
 			group.value += s.V
 
 		case parser.AVG:
@@ -2359,15 +2359,15 @@ func (ev *evaluator) aggregation(op parser.ItemType, grouping []string, without 
 			// Divide each side of the `-` by `group.groupCount` to avoid float64 overflows.
 			group.mean += s.V/float64(group.groupCount) - group.mean/float64(group.groupCount)
 
-		case parser.GROUP:
+		case parser.GROUP: // 完成
 			// Do nothing. Required to avoid the panic in `default:` below.
 
-		case parser.MAX:
+		case parser.MAX: // 完成
 			if group.value < s.V || math.IsNaN(group.value) {
 				group.value = s.V
 			}
 
-		case parser.MIN:
+		case parser.MIN: // 完成
 			if group.value > s.V || math.IsNaN(group.value) {
 				group.value = s.V
 			}
