@@ -2264,7 +2264,7 @@ func (ev *evaluator) aggregation(op parser.ItemType, grouping []string, without 
 		metric := s.Metric
 
 		if op == parser.COUNT_VALUES {
-			// count_values只保留参数标签
+			// count_values附加上参数标签
 			lb.Reset(metric)
 			lb.Set(valueLabel, strconv.FormatFloat(s.V, 'f', -1, 64))
 			metric = lb.Labels()
@@ -2337,7 +2337,7 @@ func (ev *evaluator) aggregation(op parser.ItemType, grouping []string, without 
 		case parser.SUM: // 完成
 			group.value += s.V
 
-		case parser.AVG:
+		case parser.AVG: // 完成
 			group.groupCount++
 			if math.IsInf(group.mean, 0) {
 				if math.IsInf(s.V, 0) && (group.mean > 0) == (s.V > 0) {
@@ -2357,6 +2357,7 @@ func (ev *evaluator) aggregation(op parser.ItemType, grouping []string, without 
 				}
 			}
 			// Divide each side of the `-` by `group.groupCount` to avoid float64 overflows.
+			// 主要为了降低浮点溢出的可能性 !!!
 			group.mean += s.V/float64(group.groupCount) - group.mean/float64(group.groupCount)
 
 		case parser.GROUP: // 完成
@@ -2372,7 +2373,7 @@ func (ev *evaluator) aggregation(op parser.ItemType, grouping []string, without 
 				group.value = s.V
 			}
 
-		case parser.COUNT, parser.COUNT_VALUES:
+		case parser.COUNT, parser.COUNT_VALUES: // 完成
 			group.groupCount++
 
 		case parser.STDVAR, parser.STDDEV:
