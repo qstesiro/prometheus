@@ -472,6 +472,7 @@ Outer:
 		res = append(res, l)
 	}
 	res = append(res, b.add...)
+	// 排序
 	sort.Sort(res)
 
 	return res

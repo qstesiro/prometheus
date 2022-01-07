@@ -2220,8 +2220,8 @@ type groupedAggregation struct {
 	value       float64
 	mean        float64
 	groupCount  int
-	heap        vectorByValueHeap
-	reverseHeap vectorByReverseValueHeap
+	heap        vectorByValueHeap        // 用于topk/quantile
+	reverseHeap vectorByReverseValueHeap // 用于bottomk
 }
 
 // aggregation evaluates an aggregation operation on a Vector.
@@ -2288,7 +2288,7 @@ func (ev *evaluator) aggregation(op parser.ItemType, grouping []string, without 
 				lb.Reset(metric)
 				lb.Del(grouping...)
 				lb.Del(labels.MetricName)
-				m = lb.Labels()
+				m = lb.Labels() // 已经排序
 			} else {
 				m = make(labels.Labels, 0, len(grouping))
 				for _, l := range metric {
@@ -2328,9 +2328,9 @@ func (ev *evaluator) aggregation(op parser.ItemType, grouping []string, without 
 					Metric: s.Metric,
 				})
 			case parser.GROUP:
-				result[groupingKey].value = 1
+				result[groupingKey].value = 1 // 值恒定为1
 			}
-			continue
+			continue // 注意: continue了
 		}
 
 		switch op {
