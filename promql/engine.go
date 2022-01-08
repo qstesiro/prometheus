@@ -2339,7 +2339,7 @@ func (ev *evaluator) aggregation(op parser.ItemType, grouping []string, without 
 
 		case parser.AVG: // 完成
 			group.groupCount++
-			if math.IsInf(group.mean, 0) {
+			if math.IsInf(group.mean, 0) { // 处理相当完备(完美)差距!!!
 				if math.IsInf(s.V, 0) && (group.mean > 0) == (s.V > 0) {
 					// The `mean` and `s.V` values are `Inf` of the same sign.  They
 					// can't be subtracted, but the value of `mean` is correct
