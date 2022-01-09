@@ -2269,7 +2269,7 @@ func (ev *evaluator) aggregation(op parser.ItemType, grouping []string, without 
 			lb.Set(valueLabel, strconv.FormatFloat(s.V, 'f', -1, 64))
 			metric = lb.Labels()
 		}
-
+		// 当不使用without/by的情况下按空标签列表计算(所有vector归为同一组)返回计算结果标签列表为空{}
 		var (
 			groupingKey uint64
 		)
@@ -2283,7 +2283,7 @@ func (ev *evaluator) aggregation(op parser.ItemType, grouping []string, without 
 		// Add a new group if it doesn't exist.
 		if !ok {
 			var m labels.Labels
-
+			// 当不使用without/by的情况下按空标签列表计算(所有vector归为同一组)返回计算结果标签列表为空{}
 			if without {
 				lb.Reset(metric)
 				lb.Del(grouping...)
@@ -2382,7 +2382,7 @@ func (ev *evaluator) aggregation(op parser.ItemType, grouping []string, without 
 			group.mean += delta / float64(group.groupCount)
 			group.value += delta * (s.V - group.mean)
 
-		case parser.TOPK:
+		case parser.TOPK: // 完成
 			if int64(len(group.heap)) < k || group.heap[0].V < s.V || math.IsNaN(group.heap[0].V) {
 				if int64(len(group.heap)) == k {
 					heap.Pop(&group.heap)
@@ -2393,7 +2393,7 @@ func (ev *evaluator) aggregation(op parser.ItemType, grouping []string, without 
 				})
 			}
 
-		case parser.BOTTOMK:
+		case parser.BOTTOMK: // 完成
 			if int64(len(group.reverseHeap)) < k || group.reverseHeap[0].V > s.V || math.IsNaN(group.reverseHeap[0].V) {
 				if int64(len(group.reverseHeap)) == k {
 					heap.Pop(&group.reverseHeap)

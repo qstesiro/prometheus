@@ -992,6 +992,7 @@ var AtModifierUnsafeFunctions = map[string]struct{}{
 	"timestamp": {},
 }
 
+// 实现了container/heap.Interface接口
 type vectorByValueHeap Vector
 
 func (s vectorByValueHeap) Len() int {
@@ -1021,6 +1022,7 @@ func (s *vectorByValueHeap) Pop() interface{} {
 	return el
 }
 
+// 实现了container/heap.Interface接口
 type vectorByReverseValueHeap Vector
 
 func (s vectorByReverseValueHeap) Len() int {
