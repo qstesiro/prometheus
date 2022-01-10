@@ -416,6 +416,10 @@ curl localhost:9090/api/v1/query \
      -g -G | jq
 
 # function
+# timestamp
+curl localhost:9090/api/v1/query \
+     --data-urlencode 'query=timestamp(prometheus_target_interval_length_seconds{})' \
+     -g -G | jq
 curl localhost:9090/api/v1/query \
      --data-urlencode 'query=timestamp(prometheus_target_interval_length_seconds{})' \
      -g -G | jq
@@ -424,6 +428,30 @@ curl localhost:9090/api/v1/query_range \
      --data-urlencode 'start=2022-01-10T15:50:00.000+08:00' \
      --data-urlencode 'end=2022-01-10T15:50:20.000+08:00' \
      --data-urlencode 'step=10s' \
+     -g -G | jq
+# vector
+# abs
+curl localhost:9090/api/v1/query \
+     --data-urlencode 'query=abs(prometheus_target_interval_length_seconds{})' \
+     -g -G | jq
+# absent
+curl localhost:9090/api/v1/query \
+     --data-urlencode 'query=absent(prometheus_target_interval_length_seconds{})' \
+     -g -G | jq
+curl localhost:9090/api/v1/query \
+     --data-urlencode 'query=absent(prometheus_target_interval_length_seconds_xxx{})' \
+     -g -G | jq
+# matrix
+# max_over_time
+curl localhost:9090/api/v1/query \
+     --data-urlencode 'query=max_over_time(prometheus_target_interval_length_seconds{}[5s:5s])' \
+     -g -G | jq
+# absent_over_time
+curl localhost:9090/api/v1/query \
+     --data-urlencode 'query=absent_over_time(prometheus_target_interval_length_seconds{}[5s:5s])' \
+     -g -G | jq
+curl localhost:9090/api/v1/query \
+     --data-urlencode 'query=absent_over_time(prometheus_target_interval_length_seconds_xxx{}[5s:5s])' \
      -g -G | jq
 
 # StepInvariantExpr

@@ -78,7 +78,7 @@ b promql.funcTimestamp
 # b promql.(*evaluator).VectorBinop
 # b engine.go:1936
 # b promql.setOffsetForAtModifier
-# b engine.go:1592
+b engine.go:1571
 # b promql.(*evaluator).rangeEval
 # b promql.(*evaluator).vectorSelectorSingle
 # b promql.checkAndExpandSeriesSet
