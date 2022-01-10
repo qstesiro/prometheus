@@ -1207,6 +1207,7 @@ func (ev *evaluator) eval(expr parser.Expr) (parser.Value, storage.Warnings) {
 		{
 			call := FunctionCalls[e.Func.Name]
 			if e.Func.Name == "timestamp" {
+				// timestamp参数只能是vector,不允许是range,以下注释不明白 ???
 				// Matrix evaluation always returns the evaluation time,
 				// so this function needs special handling when given
 				// a vector selector.
