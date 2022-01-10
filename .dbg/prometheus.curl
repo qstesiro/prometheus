@@ -415,6 +415,17 @@ curl localhost:9090/api/v1/query \
      --data-urlencode 'query=quantile(0.2, prometheus_target_interval_length_seconds{})' \
      -g -G | jq
 
+# function
+curl localhost:9090/api/v1/query \
+     --data-urlencode 'query=timestamp(prometheus_target_interval_length_seconds{})' \
+     -g -G | jq
+curl localhost:9090/api/v1/query_range \
+     --data-urlencode 'query=timestamp(prometheus_target_interval_length_seconds{})' \
+     --data-urlencode 'start=2022-01-10T15:50:00.000+08:00' \
+     --data-urlencode 'end=2022-01-10T15:50:20.000+08:00' \
+     --data-urlencode 'step=10s' \
+     -g -G | jq
+
 # StepInvariantExpr
 # 无法使用Matrix类型触发StepInvariantExpr代码 ???
 curl localhost:9090/api/v1/query \

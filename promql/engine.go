@@ -944,7 +944,7 @@ func (enh *EvalNodeHelper) signatureFunc(on bool, names ...string) func(labels.L
 }
 
 // 按列纵向处理,每次funcCall处理一列数据,funcCall控制了具体的进行何种运算
-// matrixes
+// matrixes (每次获取一个序列的时间段数据)
 // -----
 //      |0| {l1=v1,l2=v2,...,ln=vn} [{t1,v1},{t2,v2},...,{tn,vn}]
 //      |1| {l1=v1,l2=v2,...,ln=vn} [{t1,v1},{t2,v2},...,{tn,vn}]
