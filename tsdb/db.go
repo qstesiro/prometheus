@@ -178,7 +178,7 @@ type DB struct {
 	compactCancel context.CancelFunc
 }
 
-// ??? 学习指标好样例
+// 学习指标好样例 !!!
 type dbMetrics struct {
 	loadedBlocks         prometheus.GaugeFunc
 	symbolTableSize      prometheus.GaugeFunc
@@ -297,7 +297,7 @@ var ErrClosed = errors.New("db already closed")
 // DBReadOnly provides APIs for read only operations on a database.
 // Current implementation doesn't support concurrency so
 // all API calls should happen in the same go routine.
-// ??? ./cmd/promtool/tsdb.go:339
+// ./cmd/promtool/tsdb.go:339 ???
 type DBReadOnly struct {
 	logger  log.Logger
 	dir     string
@@ -566,7 +566,7 @@ func validateOpts(opts *Options, rngs []int64) (*Options, []int64) {
 	return opts, rngs
 }
 
-// ??? 返回值必须同时命名或不命名,可以使用_占位
+// 返回值必须同时命名或不命名,可以使用_占位 !!!
 func open(dir string, l log.Logger, r prometheus.Registerer, opts *Options, rngs []int64) (_ *DB, returnedErr error) {
 	if err := os.MkdirAll(dir, 0777); err != nil {
 		return nil, err
@@ -669,9 +669,9 @@ func open(dir string, l log.Logger, r prometheus.Registerer, opts *Options, rngs
 	headOpts.ChunkRange = rngs[0] // ??? 2h
 	headOpts.ChunkDirRoot = dir
 	headOpts.ChunkPool = db.chunkPool
-	headOpts.ChunkWriteBufferSize = opts.HeadChunksWriteBufferSize // ??? 4M
-	headOpts.StripeSize = opts.StripeSize                          // ??? 16K
-	headOpts.SeriesCallback = opts.SeriesLifecycleCallback         // ??? 当前版本总是空
+	headOpts.ChunkWriteBufferSize = opts.HeadChunksWriteBufferSize // 4M
+	headOpts.StripeSize = opts.StripeSize                          // 16K
+	headOpts.SeriesCallback = opts.SeriesLifecycleCallback         // 当前版本总是空
 	db.head, err = NewHead(r, l, wlog, headOpts)
 	if err != nil {
 		return nil, err
@@ -763,7 +763,7 @@ func (db *DB) run() {
 				level.Error(db.logger).Log("msg", "reloadBlocks", "err", err)
 			}
 			db.cmtx.Unlock()
-			// ???
+			// !!!
 			select {
 			case db.compactc <- struct{}{}:
 			default:

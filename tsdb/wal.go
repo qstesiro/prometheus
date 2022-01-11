@@ -1274,7 +1274,7 @@ func MigrateWAL(logger log.Logger, dir string) (err error) {
 			if err != nil {
 				return
 			}
-			err = repl.Log(enc.Series(s, b[:0])) // 优化用法 ???
+			err = repl.Log(enc.Series(s, b[:0])) // 优化用法 !!!
 		},
 		func(s []record.RefSample) {
 			if err != nil {

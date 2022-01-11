@@ -1403,7 +1403,7 @@ loop:
 	return
 }
 
-// 避免内容复制比string(b)效率更高 ???
+// 避免内容复制比string(b)效率更高 !!!
 func yoloString(b []byte) string {
 	return *((*string)(unsafe.Pointer(&b)))
 }

@@ -952,7 +952,7 @@ func (w *Writer) writePostingsToTmpFiles() error {
 		if startPos%16 != 0 {
 			return errors.Errorf("series not 16-byte aligned at %d", startPos)
 		}
-		offsets = append(offsets, uint32(startPos/16)) // ??? 为什么除16,用时再乘
+		offsets = append(offsets, uint32(startPos/16)) // 为什么除16,用时再乘 ???
 		// Skip to next series.
 		// 跳过当前series
 		x := d.Uvarint()       // 单个序列长度

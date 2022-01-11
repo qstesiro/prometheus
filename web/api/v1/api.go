@@ -1412,7 +1412,7 @@ func (api *API) respond(w http.ResponseWriter, data interface{}, warnings storag
 		warningStrings = append(warningStrings, warning.Error())
 	}
 	// 此处注意进入的data是二维数组但是转换后的json是一维数据元素为map
-	// 实现此效果是通过Labels实现了MarshalJSON函数达到 ???
+	// 实现此效果是通过Labels实现了MarshalJSON函数达到 !!!
 	json := jsoniter.ConfigCompatibleWithStandardLibrary
 	b, err := json.Marshal(&response{
 		Status:   statusMessage,

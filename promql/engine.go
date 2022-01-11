@@ -1233,6 +1233,7 @@ func (ev *evaluator) eval(expr parser.Expr) (parser.Value, storage.Warnings) {
 				matrixArg      bool
 				warnings       storage.Warnings
 			)
+			// 为什么只查找首个Matrix参数 ???
 			for i := range e.Args {
 				unwrapParenExpr(&e.Args[i])
 				a := unwrapStepInvariantExpr(e.Args[i])
@@ -1264,13 +1265,13 @@ func (ev *evaluator) eval(expr parser.Expr) (parser.Value, storage.Warnings) {
 				}, e.Args...)
 			}
 
-			inArgs := make([]parser.Value, len(e.Args))
+			inArgs := make([]parser.Value, len(e.Args)) // call调用参数
 			// Evaluate any non-matrix arguments.
-			otherArgs := make([]Matrix, len(e.Args))
-			otherInArgs := make([]Vector, len(e.Args))
+			otherArgs := make([]Matrix, len(e.Args))   // 记录非Matrix类型参数的值
+			otherInArgs := make([]Vector, len(e.Args)) // 运算过程临时变量
 			for i, e := range e.Args {
 				if i != matrixArgIndex {
-					val, ws := ev.eval(e)
+					val, ws := ev.eval(e) // 计算非Matrix类型参数的值
 					otherArgs[i] = val.(Matrix)
 					otherInArgs[i] = Vector{Sample{}}
 					inArgs[i] = otherInArgs[i]
@@ -1290,6 +1291,7 @@ func (ev *evaluator) eval(expr parser.Expr) (parser.Value, storage.Warnings) {
 			offset := durationMilliseconds(selVS.Offset)
 			selRange := durationMilliseconds(sel.Range)
 			stepRange := selRange
+			// 参数的时间范围不能大于整体查询的时间间隔
 			if stepRange > ev.interval {
 				stepRange = ev.interval
 			}

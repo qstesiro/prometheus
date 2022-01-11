@@ -677,7 +677,7 @@ func (w *WAL) log(rec []byte, final bool) error {
 		default:
 			typ = recMiddle
 		}
-		// // 文档中没有标注 ???
+		// 文档中没有标注 ???
 		// https://github.com/qstesiro/prometheus/blob/main/tsdb/docs/format/wal.md
 		if compressed {
 			// 00001[000|001|010|011|100]

@@ -124,8 +124,8 @@ func DefaultHeadOptions() *HeadOptions {
 		ChunkRange:           DefaultBlockDuration, // 2h
 		ChunkDirRoot:         "",
 		ChunkPool:            chunkenc.NewPool(),
-		ChunkWriteBufferSize: chunks.DefaultWriteBufferSize, // ??? 4M
-		StripeSize:           DefaultStripeSize,             // ??? 16K
+		ChunkWriteBufferSize: chunks.DefaultWriteBufferSize, // 4M
+		StripeSize:           DefaultStripeSize,             // 16K
 		SeriesCallback:       &noopSeriesLifecycleCallback{},
 	}
 }
@@ -156,7 +156,7 @@ type headMetrics struct {
 	mmapChunkCorruptionTotal prometheus.Counter
 }
 
-// 从学习prometheus指标相关库的角度来看源码是比较好的学习资料 ???
+// 从学习prometheus指标相关库的角度来看源码是比较好的学习资料 !!!
 func newHeadMetrics(h *Head, r prometheus.Registerer) *headMetrics {
 	m := &headMetrics{
 		activeAppenders: prometheus.NewGauge(prometheus.GaugeOpts{
@@ -517,7 +517,7 @@ func (h *Head) loadWAL(r *wal.Reader, multiRef map[uint64]uint64, mmappedChunks 
 			rec := r.Record()
 			switch dec.Type(rec) {
 			case record.Series:
-				// 代码中多次使用此种处理方式节省空间且高效 ???
+				// 代码中多次使用此种处理方式节省空间且高效 !!!
 				series := seriesPool.Get().([]record.RefSeries)[:0]
 				series, err = dec.Series(rec, series)
 				if err != nil {
@@ -877,7 +877,7 @@ func (h *Head) truncateMemory(mint int64) (err error) {
 	if actualMint > h.minTime.Load() {
 		// The actual mint of the Head is higher than the one asked to truncate. ???
 		// 在此种情况下最终的h.minValidTime必定落入(mint, h.MaxTime()-h.chunkRange.Load()/2]
-		// |_____|_________________________________________________________|
+		// +-----|---------------------------------------------------------+
 		// mint  h.MaxTime()-h.chunkRange.Load()/2                         h.maxTime
 		// 此段代码的功能两种解释:
 		// - 对于下次启始时间点的优化(跳过部分空白)
@@ -1940,7 +1940,7 @@ type stripeLock struct {
 	// }
 	sync.RWMutex // 24byte
 	// Padding to avoid multiple locks being on the same cache line.
-	// 提升效率避免乒乓效应 ???
+	// 提升效率避免乒乓效应 !!!
 	// https://juejin.cn/post/6844903779276439560
 	_ [40]byte
 }
