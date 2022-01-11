@@ -67,8 +67,9 @@
 # b promql/engine.go:559
 # b promql.(*evaluator).eval
 b promql/engine.go:1206
-b promql/engine.go:1223
+# b promql/engine.go:1223
 b promql.funcTimestamp
+b promql.funcAbs
 # b promql.(*evaluator).aggregation
 # b engine.go:2263
 # b engine.go:2337
@@ -78,7 +79,7 @@ b promql.funcTimestamp
 # b promql.(*evaluator).VectorBinop
 # b engine.go:1936
 # b promql.setOffsetForAtModifier
-b engine.go:1571
+# b engine.go:1571
 # b promql.(*evaluator).rangeEval
 # b promql.(*evaluator).vectorSelectorSingle
 # b promql.checkAndExpandSeriesSet

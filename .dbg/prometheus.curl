@@ -181,19 +181,6 @@ curl 10.138.16.190:9090/api/v1/query_range \
      --data-urlencode 'step=10s' \
      --globoff \
      -X POST | jq
-
-# Query vs RangeQuery
-# 以下两个查询结果等价(使用query可以完全替代query_range)
-curl localhost:9090/api/v1/query \
-     --data-urlencode 'query={__name__="go_gc_duration_seconds_count"}[1m:10s]' \
-     --data-urlencode 'time=2021-11-07T07:32:00.000Z' \
-     -g -G | jq
-curl localhost:9090/api/v1/query_range \
-     --data-urlencode 'query={__name__="go_gc_duration_seconds_count"}' \
-     --data-urlencode 'start=2021-11-07T07:31:00.000Z' \
-     --data-urlencode 'end=2021-11-07T07:32:00.000Z' \
-     --data-urlencode 'step=10s' \
-     -g -G | jq
      
 # START_METRIC_SELECTOR vector_selector
 # go_gc_duration_seconds
@@ -266,193 +253,263 @@ curl localhost:9090/api/v1/query \
      --data-urlencode 'query={__name__="prometheus_target_interval_length_seconds"} @1641305027.000 + {__name__="prometheus_target_interval_length_seconds"} @1641305027.000' \
      -g -G | jq
 
-# Binary operators - Arithmetic
-curl localhost:9090/api/v1/query \
-     --data-urlencode 'query=10' \
-     -g -G | jq
-curl localhost:9090/api/v1/query \
-     --data-urlencode 'query=test' \
-     -g -G | jq
-curl localhost:9090/api/v1/query \
-     --data-urlencode 'query=-10' \
-     -g -G | jq
-curl localhost:9090/api/v1/query \
-     --data-urlencode 'query=10 * 20' \
-     -g -G | jq
-curl localhost:9090/api/v1/query \
-     --data-urlencode 'query=10 * (20 * 30)' \
-     -g -G | jq
-curl localhost:9090/api/v1/query \
-     --data-urlencode 'query=go_goroutines{}[1m:10s]' \
-     -g -G | jq
-curl localhost:9090/api/v1/query_range \
-     --data-urlencode 'query=go_goroutines{}' \
-     --data-urlencode 'start=2021-12-28T10:10:00.000Z' \
-     --data-urlencode 'end=2021-12-28T10:11:00.000Z' \
-     --data-urlencode 'step=10s' \
-     -g -G | jq
-curl localhost:9090/api/v1/query \
-     --data-urlencode 'query=go_goroutines{}[10s]' \
-     -g -G | jq
-curl localhost:9090/api/v1/query \
-     --data-urlencode 'query=(go_goroutines{})' \
-     -g -G | jq
-curl localhost:9090/api/v1/query \
-     --data-urlencode 'query=go_goroutines{} * 10' \
-     -g -G | jq
-curl localhost:9090/api/v1/query \
-     --data-urlencode 'query=go_goroutines{} * go_goroutines{}' \
-     -g -G | jq
-curl localhost:9090/api/v1/query \
-     --data-urlencode 'query=prometheus_engine_query_duration_seconds * prometheus_engine_query_duration_seconds' \
-     -g -G | jq
-
-# Binary operators - Comparison
-curl localhost:9090/api/v1/query \
-     --data-urlencode 'query=10 >bool 1' \
-     -g -G | jq
-curl localhost:9090/api/v1/query \
-     --data-urlencode 'query=go_gc_duration_seconds{} < 1' \
-     -g -G | jq
-curl localhost:9090/api/v1/query \
-     --data-urlencode 'query=go_gc_duration_seconds{} <bool 10' \
-     -g -G | jq
-curl localhost:9090/api/v1/query \
-     --data-urlencode 'query=go_gc_duration_seconds{quantile="0.5"}' \
-     -g -G | jq
-curl localhost:9090/api/v1/query \
-     --data-urlencode 'query=go_gc_duration_seconds{} == go_gc_duration_seconds{}' \
-     -g -G | jq
-curl localhost:9090/api/v1/query \
-     --data-urlencode 'query=go_gc_duration_seconds{} ==bool go_gc_duration_seconds{}' \
-     -g -G | jq
-
-# Binary operators - Logical/set
-curl localhost:9090/api/v1/query \
-     --data-urlencode 'query=go_gc_duration_seconds{quantile='0.5'}  and go_gc_duration_seconds{}' \
-     -g -G | jq
-curl localhost:9090/api/v1/query \
-     --data-urlencode 'query=go_gc_duration_seconds{quantile='0.5'}  or go_gc_duration_seconds{}' \
-     -g -G | jq
-curl localhost:9090/api/v1/query \
-     --data-urlencode 'query=go_gc_duration_seconds{quantile='0.5'}  unless on(quantile) go_gc_duration_seconds{}' \
-     -g -G | jq
-
-# Binary operators - Matching
-# one to one
-curl localhost:9090/api/v1/query \
-     --data-urlencode 'query=prometheus_target_interval_length_seconds{} / prometheus_target_interval_length_seconds{}' \
-     -g -G | jq
-curl localhost:9090/api/v1/query \
-     --data-urlencode 'query=prometheus_target_interval_length_seconds{} * prometheus_target_interval_length_seconds{}' \
-     -g -G | jq
-curl localhost:9090/api/v1/query \
-     --data-urlencode 'query=prometheus_target_interval_length_seconds{quantile="0.5"} / prometheus_target_interval_length_seconds{}' \
-     -g -G | jq
-curl localhost:9090/api/v1/query \
-     --data-urlencode 'query=prometheus_target_interval_length_seconds{quantile="0.5"} * on(interval, quantile) prometheus_target_interval_length_seconds{}' \
-     -g -G | jq
-# one-to-many
-curl localhost:9090/api/v1/query \
-     --data-urlencode 'query=prometheus_target_interval_length_seconds{quantile="0.5"}[10s] @1641305027.000 / ignoring(quantile) group_right prometheus_target_interval_length_seconds{}[10s] @1641305027.000' \
-     -g -G | jq
-# many-to-one
-curl localhost:9090/api/v1/query \
-     --data-urlencode 'query=prometheus_target_interval_length_seconds{} / ignoring(quantile) group_left prometheus_target_interval_length_seconds{quantile="0.5"}' \
-     -g -G | jq
-# and/or/unless
-curl localhost:9090/api/v1/query \
-     --data-urlencode 'query=prometheus_target_interval_length_seconds{quantile="0.5"} and prometheus_target_interval_length_seconds{}' \
-     -g -G | jq
-curl localhost:9090/api/v1/query \
-     --data-urlencode 'query=prometheus_target_interval_length_seconds{quantile="0.5"} or prometheus_target_interval_length_seconds{}' \
-     -g -G | jq
-curl localhost:9090/api/v1/query \
-     --data-urlencode 'query=prometheus_target_interval_length_seconds{quantile="0.5"} unless prometheus_target_interval_length_seconds{}' \
-     -g -G | jq
-
-# Aggregation
-curl localhost:9090/api/v1/query \
-     --data-urlencode 'query=sum(prometheus_target_interval_length_seconds{}) without(quantile)' \
-     -g -G | jq
-curl localhost:9090/api/v1/query \
-     --data-urlencode 'query=max(prometheus_target_interval_length_seconds{}) without(quantile)' \
-     -g -G | jq
-curl localhost:9090/api/v1/query \
-     --data-urlencode 'query=min(prometheus_target_interval_length_seconds{}) without(quantile)' \
-     -g -G | jq
-curl localhost:9090/api/v1/query \
-     --data-urlencode 'query=avg(prometheus_target_interval_length_seconds{}) without(quantile)' \
-     -g -G | jq
-curl localhost:9090/api/v1/query \
-     --data-urlencode 'query=group(prometheus_target_interval_length_seconds{})' \
-     -g -G | jq
-curl localhost:9090/api/v1/query \
-     --data-urlencode 'query=group(prometheus_target_interval_length_seconds{instance="localhost:9090", interval="5s", job="prometheus", quantile="0.5"}) without (quantile)' \
-     -g -G | jq
-curl localhost:9090/api/v1/query \
-     --data-urlencode 'query=stddev(prometheus_target_interval_length_seconds{}) without(quantile)' \
-     -g -G | jq
-curl localhost:9090/api/v1/query \
-     --data-urlencode 'query=stdvar(prometheus_target_interval_length_seconds{}) without(quantile)' \
-     -g -G | jq
-curl localhost:9090/api/v1/query \
-     --data-urlencode 'query=count(prometheus_target_interval_length_seconds{}) without(quantile)' \
-     -g -G | jq
-curl localhost:9090/api/v1/query \
-     --data-urlencode 'query=count_values("quantile", prometheus_target_interval_length_seconds{})' \
-     -g -G | jq
-curl localhost:9090/api/v1/query \
-     --data-urlencode 'query=count_values("quantile", prometheus_target_interval_length_seconds{})' \
-     -g -G | jq
-curl localhost:9090/api/v1/query \
-     --data-urlencode 'query=topk(2, prometheus_target_interval_length_seconds{})' \
-     -g -G | jq
-curl localhost:9090/api/v1/query \
-     --data-urlencode 'query=bottomk(2, prometheus_target_interval_length_seconds{})' \
-     -g -G | jq
-curl localhost:9090/api/v1/query \
-     --data-urlencode 'query=quantile(0.2, prometheus_target_interval_length_seconds{})' \
-     -g -G | jq
-
-# function
-# timestamp
-curl localhost:9090/api/v1/query \
-     --data-urlencode 'query=timestamp(prometheus_target_interval_length_seconds{})' \
-     -g -G | jq
-curl localhost:9090/api/v1/query \
-     --data-urlencode 'query=timestamp(prometheus_target_interval_length_seconds{})' \
-     -g -G | jq
-curl localhost:9090/api/v1/query_range \
-     --data-urlencode 'query=timestamp(prometheus_target_interval_length_seconds{})' \
-     --data-urlencode 'start=2022-01-10T15:50:00.000+08:00' \
-     --data-urlencode 'end=2022-01-10T15:50:20.000+08:00' \
-     --data-urlencode 'step=10s' \
-     -g -G | jq
+# Query接口 vs RangeQuery接口
+# Query接口的RangeSelector可以部分替代RangeQuery接口的Vector查询
+# Query接口的Subquery可以可以完全替代RangeQuery接口的Vector查询
+# Query接口查询无法替代RangeQuery接口的FuncCall查询
 # vector
-# abs
 curl localhost:9090/api/v1/query \
-     --data-urlencode 'query=abs(prometheus_target_interval_length_seconds{})' \
-     -g -G | jq
-# absent
-curl localhost:9090/api/v1/query \
-     --data-urlencode 'query=absent(prometheus_target_interval_length_seconds{})' \
-     -g -G | jq
-curl localhost:9090/api/v1/query \
-     --data-urlencode 'query=absent(prometheus_target_interval_length_seconds_xxx{})' \
+     --data-urlencode 'query=prometheus_target_interval_length_seconds{}' \
      -g -G | jq
 # matrix
-# max_over_time
 curl localhost:9090/api/v1/query \
-     --data-urlencode 'query=max_over_time(prometheus_target_interval_length_seconds{}[5s:5s])' \
+     --data-urlencode 'query=prometheus_target_interval_length_seconds{}[10s]' \
      -g -G | jq
-# absent_over_time
+curl localhost:9090/api/v1/query_range \
+     --data-urlencode 'query=prometheus_target_interval_length_seconds{}' \
+     --data-urlencode 'start=2022-01-11T09:53:00.000+08:00' \
+     --data-urlencode 'end=2022-01-11T09:53:20.000+08:00' \
+     --data-urlencode 'step=10s' \
+     -g -G | jq
+curl localhost:9090/api/v1/query_range \
+     --data-urlencode 'query=prometheus_target_interval_length_seconds{}[10s]' \
+     --data-urlencode 'start=2022-01-11T09:53:00.000+08:00' \
+     --data-urlencode 'end=2022-01-11T09:53:20.000+08:00' \
+     --data-urlencode 'step=10s' \
+     -g -G | jq
+# 以下两个查询结果等价
 curl localhost:9090/api/v1/query \
-     --data-urlencode 'query=absent_over_time(prometheus_target_interval_length_seconds{}[5s:5s])' \
+     --data-urlencode 'query={__name__="go_gc_duration_seconds_count"}[1m:10s]' \
+     --data-urlencode 'time=2021-11-07T07:32:00.000Z' \
      -g -G | jq
-curl localhost:9090/api/v1/query \
-     --data-urlencode 'query=absent_over_time(prometheus_target_interval_length_seconds_xxx{}[5s:5s])' \
+curl localhost:9090/api/v1/query_range \
+     --data-urlencode 'query={__name__="go_gc_duration_seconds_count"}' \
+     --data-urlencode 'start=2021-11-07T07:31:00.000Z' \
+     --data-urlencode 'end=2021-11-07T07:32:00.000Z' \
+     --data-urlencode 'step=10s' \
      -g -G | jq
+
+# Binary operators
+{
+    # Arithmetic
+    {
+        curl localhost:9090/api/v1/query \
+             --data-urlencode 'query=10' \
+             -g -G | jq
+        curl localhost:9090/api/v1/query \
+             --data-urlencode 'query=test' \
+             -g -G | jq
+        curl localhost:9090/api/v1/query \
+             --data-urlencode 'query=-10' \
+             -g -G | jq
+        curl localhost:9090/api/v1/query \
+             --data-urlencode 'query=10 * 20' \
+             -g -G | jq
+        curl localhost:9090/api/v1/query \
+             --data-urlencode 'query=10 * (20 * 30)' \
+             -g -G | jq
+        curl localhost:9090/api/v1/query \
+             --data-urlencode 'query=go_goroutines{}[1m:10s]' \
+             -g -G | jq
+        curl localhost:9090/api/v1/query_range \
+             --data-urlencode 'query=go_goroutines{}' \
+             --data-urlencode 'start=2021-12-28T10:10:00.000Z' \
+             --data-urlencode 'end=2021-12-28T10:11:00.000Z' \
+             --data-urlencode 'step=10s' \
+             -g -G | jq
+        curl localhost:9090/api/v1/query \
+             --data-urlencode 'query=go_goroutines{}[10s]' \
+             -g -G | jq
+        curl localhost:9090/api/v1/query \
+             --data-urlencode 'query=(go_goroutines{})' \
+             -g -G | jq
+        curl localhost:9090/api/v1/query \
+             --data-urlencode 'query=go_goroutines{} * 10' \
+             -g -G | jq
+        curl localhost:9090/api/v1/query \
+             --data-urlencode 'query=go_goroutines{} * go_goroutines{}' \
+             -g -G | jq
+        curl localhost:9090/api/v1/query \
+             --data-urlencode 'query=prometheus_engine_query_duration_seconds * prometheus_engine_query_duration_seconds' \
+             -g -G | jq
+    }
+    
+    # Comparison
+    {
+        curl localhost:9090/api/v1/query \
+             --data-urlencode 'query=10 >bool 1' \
+             -g -G | jq
+        curl localhost:9090/api/v1/query \
+             --data-urlencode 'query=go_gc_duration_seconds{} < 1' \
+             -g -G | jq
+        curl localhost:9090/api/v1/query \
+             --data-urlencode 'query=go_gc_duration_seconds{} <bool 10' \
+             -g -G | jq
+        curl localhost:9090/api/v1/query \
+             --data-urlencode 'query=go_gc_duration_seconds{quantile="0.5"}' \
+             -g -G | jq
+        curl localhost:9090/api/v1/query \
+             --data-urlencode 'query=go_gc_duration_seconds{} == go_gc_duration_seconds{}' \
+             -g -G | jq
+        curl localhost:9090/api/v1/query \
+             --data-urlencode 'query=go_gc_duration_seconds{} ==bool go_gc_duration_seconds{}' \
+             -g -G | jq
+    }
+    
+    # Logical/set
+    {
+        curl localhost:9090/api/v1/query \
+             --data-urlencode 'query=go_gc_duration_seconds{quantile='0.5'}  and go_gc_duration_seconds{}' \
+             -g -G | jq
+        curl localhost:9090/api/v1/query \
+             --data-urlencode 'query=go_gc_duration_seconds{quantile='0.5'}  or go_gc_duration_seconds{}' \
+             -g -G | jq
+        curl localhost:9090/api/v1/query \
+             --data-urlencode 'query=go_gc_duration_seconds{quantile='0.5'}  unless on(quantile) go_gc_duration_seconds{}' \
+             -g -G | jq
+    }
+    
+    # Matching
+    {
+        # one to one
+        {
+            curl localhost:9090/api/v1/query \
+                 --data-urlencode 'query=prometheus_target_interval_length_seconds{} / prometheus_target_interval_length_seconds{}' \
+                 -g -G | jq
+            curl localhost:9090/api/v1/query \
+                 --data-urlencode 'query=prometheus_target_interval_length_seconds{} * prometheus_target_interval_length_seconds{}' \
+                 -g -G | jq
+            curl localhost:9090/api/v1/query \
+                 --data-urlencode 'query=prometheus_target_interval_length_seconds{quantile="0.5"} / prometheus_target_interval_length_seconds{}' \
+                 -g -G | jq
+            curl localhost:9090/api/v1/query \
+                 --data-urlencode 'query=prometheus_target_interval_length_seconds{quantile="0.5"} * on(interval, quantile) prometheus_target_interval_length_seconds{}' \
+                 -g -G | jq
+        }
+        
+        # one-to-many
+        {
+    curl localhost:9090/api/v1/query \
+         --data-urlencode 'query=prometheus_target_interval_length_seconds{quantile="0.5"}[10s] @1641305027.000 / ignoring(quantile) group_right prometheus_target_interval_length_seconds{}[10s] @1641305027.000' \
+         -g -G | jq
+        }
+        
+        # many-to-one
+        {
+            curl localhost:9090/api/v1/query \
+                 --data-urlencode 'query=prometheus_target_interval_length_seconds{} / ignoring(quantile) group_left prometheus_target_interval_length_seconds{quantile="0.5"}' \
+                 -g -G | jq
+        }
+        
+        # and/or/unless
+        {
+            curl localhost:9090/api/v1/query \
+                 --data-urlencode 'query=prometheus_target_interval_length_seconds{quantile="0.5"} and prometheus_target_interval_length_seconds{}' \
+                 -g -G | jq
+            curl localhost:9090/api/v1/query \
+                 --data-urlencode 'query=prometheus_target_interval_length_seconds{quantile="0.5"} or prometheus_target_interval_length_seconds{}' \
+                 -g -G | jq
+            curl localhost:9090/api/v1/query \
+                 --data-urlencode 'query=prometheus_target_interval_length_seconds{quantile="0.5"} unless prometheus_target_interval_length_seconds{}' \
+                 -g -G | jq
+        }
+    }
+}
+
+# Aggregation
+{
+    curl localhost:9090/api/v1/query \
+         --data-urlencode 'query=sum(prometheus_target_interval_length_seconds{}) without(quantile)' \
+         -g -G | jq
+    curl localhost:9090/api/v1/query \
+         --data-urlencode 'query=max(prometheus_target_interval_length_seconds{}) without(quantile)' \
+         -g -G | jq
+    curl localhost:9090/api/v1/query \
+         --data-urlencode 'query=min(prometheus_target_interval_length_seconds{}) without(quantile)' \
+         -g -G | jq
+    curl localhost:9090/api/v1/query \
+         --data-urlencode 'query=avg(prometheus_target_interval_length_seconds{}) without(quantile)' \
+         -g -G | jq
+    curl localhost:9090/api/v1/query \
+         --data-urlencode 'query=group(prometheus_target_interval_length_seconds{})' \
+         -g -G | jq
+    curl localhost:9090/api/v1/query \
+         --data-urlencode 'query=group(prometheus_target_interval_length_seconds{instance="localhost:9090", interval="5s", job="prometheus", quantile="0.5"}) without (quantile)' \
+         -g -G | jq
+    curl localhost:9090/api/v1/query \
+         --data-urlencode 'query=stddev(prometheus_target_interval_length_seconds{}) without(quantile)' \
+         -g -G | jq
+    curl localhost:9090/api/v1/query \
+         --data-urlencode 'query=stdvar(prometheus_target_interval_length_seconds{}) without(quantile)' \
+         -g -G | jq
+    curl localhost:9090/api/v1/query \
+         --data-urlencode 'query=count(prometheus_target_interval_length_seconds{}) without(quantile)' \
+         -g -G | jq
+    curl localhost:9090/api/v1/query \
+         --data-urlencode 'query=count_values("quantile", prometheus_target_interval_length_seconds{})' \
+         -g -G | jq
+    curl localhost:9090/api/v1/query \
+         --data-urlencode 'query=count_values("quantile", prometheus_target_interval_length_seconds{})' \
+         -g -G | jq
+    curl localhost:9090/api/v1/query \
+         --data-urlencode 'query=topk(2, prometheus_target_interval_length_seconds{})' \
+         -g -G | jq
+    curl localhost:9090/api/v1/query \
+         --data-urlencode 'query=bottomk(2, prometheus_target_interval_length_seconds{})' \
+         -g -G | jq
+    curl localhost:9090/api/v1/query \
+         --data-urlencode 'query=quantile(0.2, prometheus_target_interval_length_seconds{})' \
+         -g -G | jq
+}
+
+# function
+{
+    # timestamp
+    {
+        curl localhost:9090/api/v1/query \
+             --data-urlencode 'query=timestamp(prometheus_target_interval_length_seconds{})' \
+             -g -G | jq
+        curl localhost:9090/api/v1/query \
+             --data-urlencode 'query=timestamp(prometheus_target_interval_length_seconds{})' \
+             -g -G | jq
+        curl localhost:9090/api/v1/query_range \
+             --data-urlencode 'query=timestamp(prometheus_target_interval_length_seconds{})' \
+             --data-urlencode 'start=2022-01-10T15:50:00.000+08:00' \
+             --data-urlencode 'end=2022-01-10T15:50:20.000+08:00' \
+             --data-urlencode 'step=10s' \
+             -g -G | jq
+    }
+
+    # args=vector
+    {
+        # fun(vector)
+        curl localhost:9090/api/v1/query \
+             --data-urlencode 'query=abs(prometheus_target_interval_length_seconds{})' \
+             -g -G | jq
+        # matrix(fun(vector))
+        curl localhost:9090/api/v1/query_range \
+             --data-urlencode 'query=timestamp(prometheus_target_interval_length_seconds{})' \
+             --data-urlencode 'start=2022-01-10T15:50:00.000+08:00' \
+             --data-urlencode 'end=2022-01-10T15:50:20.000+08:00' \
+             --data-urlencode 'step=10s' \
+             -g -G | jq
+    }
+
+    # args = matrix
+    {
+        # fun(matrix)
+        curl localhost:9090/api/v1/query \
+             --data-urlencode 'query=max_over_time(prometheus_target_interval_length_seconds{}[5s:5s])' \
+             -g -G | jq
+        # matrix(func(matrix))
+        curl localhost:9090/api/v1/query_range \
+             --data-urlencode 'query=max_over_time(prometheus_target_interval_length_seconds{}[10s])' \
+             --data-urlencode 'start=2022-01-10T15:50:00.000+08:00' \
+             --data-urlencode 'end=2022-01-10T15:50:20.000+08:00' \
+             --data-urlencode 'step=10s' \
+             -g -G | jq
+    }
+}
 
 # StepInvariantExpr
 # 无法使用Matrix类型触发StepInvariantExpr代码 ???
