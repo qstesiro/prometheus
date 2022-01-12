@@ -67,9 +67,11 @@
 # b promql/engine.go:559
 # b promql.(*evaluator).eval
 b promql/engine.go:1206
+b promql/engine.go:1305
+b promql/engine.go:1335
 # b promql/engine.go:1223
-b promql.funcTimestamp
-b promql.funcAbs
+# b promql.funcTimestamp
+# b promql.funcAbs
 # b promql.(*evaluator).aggregation
 # b engine.go:2263
 # b engine.go:2337

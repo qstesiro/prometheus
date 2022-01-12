@@ -1233,7 +1233,8 @@ func (ev *evaluator) eval(expr parser.Expr) (parser.Value, storage.Warnings) {
 				matrixArg      bool
 				warnings       storage.Warnings
 			)
-			// 为什么只查找首个Matrix参数 ???
+			// 只查找首个Matrix参数是因为当前版本中没有函数是支持多于一个matrix参数的函数
+			// 后续如果增加新的函数支持两个或两个以上的matrix函数此代码需要修改 ???
 			for i := range e.Args {
 				unwrapParenExpr(&e.Args[i])
 				a := unwrapStepInvariantExpr(e.Args[i])
@@ -1247,6 +1248,8 @@ func (ev *evaluator) eval(expr parser.Expr) (parser.Value, storage.Warnings) {
 					matrixArgIndex = i
 					matrixArg = true
 					// Replacing parser.SubqueryExpr with parser.MatrixSelector.
+					// 将Subquery查询转换为MatrixSelector
+					// 同时计算获取series迭代器
 					val, totalSamples, ws := ev.evalSubquery(subq)
 					e.Args[i] = val
 					warnings = append(warnings, ws...)
@@ -1269,6 +1272,7 @@ func (ev *evaluator) eval(expr parser.Expr) (parser.Value, storage.Warnings) {
 			// Evaluate any non-matrix arguments.
 			otherArgs := make([]Matrix, len(e.Args))   // 记录非Matrix类型参数的值
 			otherInArgs := make([]Vector, len(e.Args)) // 运算过程临时变量
+			// 计算并填充非matrix参数的值
 			for i, e := range e.Args {
 				if i != matrixArgIndex {
 					val, ws := ev.eval(e) // 计算非Matrix类型参数的值
@@ -1281,7 +1285,8 @@ func (ev *evaluator) eval(expr parser.Expr) (parser.Value, storage.Warnings) {
 
 			sel := unwrapStepInvariantExpr(e.Args[matrixArgIndex]).(*parser.MatrixSelector)
 			selVS := sel.VectorSelector.(*parser.VectorSelector)
-
+			// 参数类型为Subquery并被转换为Matrix类型的情况下因为已经计算过Series了所以不会再次触发计算
+			// 只有参数直接为MatrixSelector的情况下才会计算Series
 			ws, err := checkAndExpandSeriesSet(ev.ctx, sel)
 			warnings = append(warnings, ws...)
 			if err != nil {
@@ -1324,6 +1329,16 @@ func (ev *evaluator) eval(expr parser.Expr) (parser.Value, storage.Warnings) {
 					// Set the non-matrix arguments.
 					// They are scalar, so it is safe to use the step number
 					// when looking up the argument, as there will be no gaps.
+					// 此处二级索引恒定使用0是因为当前版本中所有函数参数matrix只能与scalar配合使用
+					// 所以非matrix的参数必定是scalar,这样使用就没有问题
+					// 如果要支持vector需要增加一级循环处理:
+					// for j := range e.Args {
+					// 	if j != matrixArgIndex {
+					// 		for k := 0; k < len(otherArgs[j]); k += 1 {
+					// 			otherInArgs[j][k].V = otherArgs[j][k].Points[step].V
+					// 		}
+					// 	}
+					// }
 					for j := range e.Args {
 						if j != matrixArgIndex {
 							otherInArgs[j][0].V = otherArgs[j][0].Points[step].V

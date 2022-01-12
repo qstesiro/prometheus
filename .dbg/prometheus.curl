@@ -501,6 +501,22 @@ curl localhost:9090/api/v1/query_range \
         curl localhost:9090/api/v1/query \
              --data-urlencode 'query=max_over_time(prometheus_target_interval_length_seconds{}[5s:5s])' \
              -g -G | jq
+        curl localhost:9090/api/v1/query \
+             --data-urlencode 'query=max_over_time(prometheus_target_interval_length_seconds{instance="localhost:9090", interval="5s", job="prometheus", quantile="0.99"}[5s:5s])' \             
+        -g -G | jq
+        # matrix&scalar
+        curl localhost:9090/api/v1/query \
+             --data-urlencode 'query=holt_winters(prometheus_target_interval_length_seconds{}[1m], 0.1, 0.9)' \
+             -g -G | jq
+        curl localhost:9090/api/v1/query_range \
+             --data-urlencode 'query=predict_linear(prometheus_target_interval_length_seconds{}[1m:10s], 3600)' \
+             --data-urlencode 'start=2022-01-12T10:40:00.000+08:00' \
+             --data-urlencode 'end=2022-01-12T10:40:20.000+08:00' \
+             --data-urlencode 'step=10s' \
+             -g -G | jq
+        curl localhost:9090/api/v1/query \
+             --data-urlencode 'query=holt_winters(prometheus_target_interval_length_seconds{}[1m:10s], 0.1, 0.9)' \
+             -g -G | jq
         # matrix(func(matrix))
         curl localhost:9090/api/v1/query_range \
              --data-urlencode 'query=max_over_time(prometheus_target_interval_length_seconds{}[10s])' \
