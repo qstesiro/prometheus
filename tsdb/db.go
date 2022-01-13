@@ -143,6 +143,7 @@ type Options struct {
 
 type BlocksToDeleteFunc func(blocks []*Block) map[ulid.ULID]struct{}
 
+// 实现了storage.Storage接口
 // DB handles reads and writes of time series falling into
 // a hashed partition of a seriedb.
 type DB struct {
@@ -1487,6 +1488,7 @@ func (db *DB) Querier(_ context.Context, mint, maxt int64) (storage.Querier, err
 		}
 	}
 	if maxt >= db.head.MinTime() {
+		// 增加head中的内容
 		blocks = append(blocks, NewRangeHead(db.head, mint, maxt))
 	}
 
@@ -1520,6 +1522,7 @@ func (db *DB) ChunkQuerier(_ context.Context, mint, maxt int64) (storage.ChunkQu
 		}
 	}
 	if maxt >= db.head.MinTime() {
+		// 增加head中的内容
 		blocks = append(blocks, NewRangeHead(db.head, mint, maxt))
 	}
 

@@ -1039,6 +1039,7 @@ func sendAlerts(s sender, externalURL string) rules.NotifyFunc {
 	}
 }
 
+// 实现了storage.Storage接口
 // readyStorage implements the Storage interface while allowing to set the actual
 // storage at a later point in time.
 type readyStorage struct {
@@ -1067,6 +1068,7 @@ func (s *readyStorage) get() *tsdb.DB {
 // StartTime implements the Storage interface.
 func (s *readyStorage) StartTime() (int64, error) {
 	if x := s.get(); x != nil {
+		// tsdb.DB已经实现StartTime函数 ???
 		var startTime int64
 
 		if len(x.Blocks()) > 0 {

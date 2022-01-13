@@ -5,7 +5,7 @@
 # b prometheus/main.go:156
 # b prometheus/main.go:458
 # b prometheus/main.go:565
-# b web.New
+b web.New
 # b web.go:331
 # b web.go:339
 # b web.go:347
@@ -63,12 +63,12 @@
 # b parser.(*parser).assembleVectorSelector
 
 # b remote.(*Storage).ApplyConfig
-# b promql.(*Engine).execEvalStmt
+b promql.(*Engine).execEvalStmt
 # b promql/engine.go:559
 # b promql.(*evaluator).eval
-b promql/engine.go:1206
-b promql/engine.go:1305
-b promql/engine.go:1335
+# b promql/engine.go:1206
+# b promql/engine.go:1305
+# b promql/engine.go:1335
 # b promql/engine.go:1223
 # b promql.funcTimestamp
 # b promql.funcAbs

@@ -24,6 +24,7 @@ import (
 	tsdb_errors "github.com/prometheus/prometheus/tsdb/errors"
 )
 
+// 实现storage.Storage接口
 type fanout struct {
 	logger log.Logger
 

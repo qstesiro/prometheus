@@ -290,7 +290,7 @@ curl localhost:9090/api/v1/query_range \
      -g -G | jq
 
 # Binary operators
-{
+{    
     # Arithmetic
     {
         curl localhost:9090/api/v1/query \
@@ -389,9 +389,9 @@ curl localhost:9090/api/v1/query_range \
         
         # one-to-many
         {
-    curl localhost:9090/api/v1/query \
-         --data-urlencode 'query=prometheus_target_interval_length_seconds{quantile="0.5"}[10s] @1641305027.000 / ignoring(quantile) group_right prometheus_target_interval_length_seconds{}[10s] @1641305027.000' \
-         -g -G | jq
+            curl localhost:9090/api/v1/query \
+                 --data-urlencode 'query=prometheus_target_interval_length_seconds{quantile="0.5"}[10s] @1641305027.000 / ignoring(quantile) group_right prometheus_target_interval_length_seconds{}[10s] @1641305027.000' \
+                 -g -G | jq
         }
         
         # many-to-one
