@@ -20,6 +20,7 @@ import (
 	"github.com/prometheus/prometheus/pkg/labels"
 )
 
+// 与storage.Querier接口相同 ???
 type genericQuerier interface {
 	LabelQuerier
 	Select(bool, *SelectHints, ...*labels.Matcher) genericSeriesSet

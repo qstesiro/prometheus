@@ -1481,7 +1481,7 @@ func (db *DB) Querier(_ context.Context, mint, maxt int64) (storage.Querier, err
 
 	db.mtx.RLock()
 	defer db.mtx.RUnlock()
-
+	// 获取所有与[mint,maxt]区间的重叠的chunk包括head
 	for _, b := range db.blocks {
 		if b.OverlapsClosedInterval(mint, maxt) {
 			blocks = append(blocks, b)
@@ -1491,7 +1491,7 @@ func (db *DB) Querier(_ context.Context, mint, maxt int64) (storage.Querier, err
 		// 增加head中的内容
 		blocks = append(blocks, NewRangeHead(db.head, mint, maxt))
 	}
-
+	// 通过BlockReader构建Querier
 	blockQueriers := make([]storage.Querier, 0, len(blocks))
 	for _, b := range blocks {
 		q, err := NewBlockQuerier(b, mint, maxt)
