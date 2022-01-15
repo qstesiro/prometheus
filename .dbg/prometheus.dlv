@@ -63,9 +63,14 @@
 # b parser.(*parser).assembleVectorSelector
 
 # b remote.(*Storage).ApplyConfig
-b promql.(*Engine).execEvalStmt
-b promql/engine.go:754
+# b promql.(*Engine).execEvalStmt
+# b promql/engine.go:754
+# b storage.(*mergeGenericQuerier).Select
+# b storage/merge.go:141
+# b storage/merge.go:145
 # b promql/engine.go:559
+b promql/engine.go:803
+# b promql.(*evaluator).Eval
 # b promql.(*evaluator).eval
 # b promql/engine.go:1206
 # b promql/engine.go:1305

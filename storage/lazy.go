@@ -13,11 +13,12 @@
 
 package storage
 
+// 实现了storage.genericSeriesSet接口
 // lazyGenericSeriesSet is a wrapped series set that is initialised on first call to Next().
 type lazyGenericSeriesSet struct {
 	init func() (genericSeriesSet, bool)
 
-	set genericSeriesSet
+	set genericSeriesSet // Next函数中执行init
 }
 
 func (c *lazyGenericSeriesSet) Next() bool {

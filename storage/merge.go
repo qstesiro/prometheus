@@ -291,6 +291,7 @@ func NewMergeChunkSeriesSet(sets []ChunkSeriesSet, mergeFunc VerticalChunkSeries
 	return &chunkSeriesSetAdapter{newGenericMergeSeriesSet(genericSets, (&chunkSeriesMergerAdapter{VerticalChunkSeriesMergeFunc: mergeFunc}).Merge)}
 }
 
+// 实现了storage.genericSeriesSet
 // genericMergeSeriesSet implements genericSeriesSet.
 type genericMergeSeriesSet struct {
 	currentLabels labels.Labels
