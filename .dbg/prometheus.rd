@@ -91,7 +91,7 @@ alias dlv='gob && rm -rf data/ && dlv exec ./prometheus --init .dbg/prometheus.d
    at ./scrape/scrape.go:1039
 8  0x000000000047cf81 in runtime.goexit
    at /home/qstesiro/ext/go/src/runtime/asm_amd64.s:1371
-   
+
 # HELP go_gc_duration_seconds A summary of the pause duration of garbage collection cycles.
 # TYPE go_gc_duration_seconds summary
 go_gc_duration_seconds{quantile="0"} 1.9092e-05
@@ -871,7 +871,7 @@ promhttp_metric_handler_requests_total{code="503"} 0
     at /home/qstesiro/go/src/net/http/server.go:1952
 37  0x000000000047cf81 in runtime.goexit
     at /home/qstesiro/go/src/runtime/asm_amd64.s:1371
-    
+
 # 远程读并发栈
 0  0x0000000002bd8ce9 in github.com/prometheus/prometheus/storage/remote.(*Client).Read
    at ./storage/remote/client.go:268
@@ -893,7 +893,7 @@ promhttp_metric_handler_requests_total{code="503"} 0
    at ./storage/merge.go:131
 9  0x000000000047cf81 in runtime.goexit
    at /home/qstesiro/go/src/runtime/asm_amd64.s:1371
-   
+
 memChunk/mmappedChunk区别 !!!
 if numSamples == samplesPerChunk/4 {
 memSeries.head.maxTime !!!
@@ -920,3 +920,9 @@ prometheus_target_interval_length_seconds{quantile="0.5"} / ignoring(intervals) 
 go_gc_duration_seconds{quantile=0.5} < go_gc_duration_seconds{quantile=0.75}
 
 (go_gc_duration_seconds_count{} + go_gc_duration_seconds_count{}) @ start()
+
+Queryable.Querier: readStorage.Querier -> db.Querier -> querierAdapter.Querier(实际调用mergeGenericQuerier.Querier)
+Querier.Select: mergeGenericQuerier.Select -> genericQuerierAdapter.Select -> blockQuerier.Select
+SerieSet.At: blockSeriesSet.At
+SeriesEntry.Iterator: populateWithDelGenericSeriesIterator.toSeriesIterator
+Iterator.At: populateWithDelSeriesIterator.At
