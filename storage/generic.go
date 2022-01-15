@@ -75,6 +75,7 @@ func newGenericQuerierFromChunk(cq ChunkQuerier) genericQuerier {
 	return &genericQuerierAdapter{LabelQuerier: cq, cq: cq}
 }
 
+// 实现了storage.Querier接口
 type querierAdapter struct {
 	// 结构继承接口(新用法) ???
 	// 细想一下这种用法会产生复杂的问题,值得深入研究
@@ -83,16 +84,17 @@ type querierAdapter struct {
 	genericQuerier
 }
 
+func (q *querierAdapter) Select(sortSeries bool, hints *SelectHints, matchers ...*labels.Matcher) SeriesSet {
+	return &seriesSetAdapter{q.genericQuerier.Select(sortSeries, hints, matchers...)}
+}
+
+// 实现了storage.SeriesSet接口
 type seriesSetAdapter struct {
 	genericSeriesSet
 }
 
 func (a *seriesSetAdapter) At() Series {
 	return a.genericSeriesSet.At().(Series)
-}
-
-func (q *querierAdapter) Select(sortSeries bool, hints *SelectHints, matchers ...*labels.Matcher) SeriesSet {
-	return &seriesSetAdapter{q.genericQuerier.Select(sortSeries, hints, matchers...)}
 }
 
 type chunkQuerierAdapter struct {

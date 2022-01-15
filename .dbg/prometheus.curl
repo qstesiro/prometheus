@@ -83,7 +83,7 @@ curl localhost:9090/api/v1/query \
      --data-urlencode 'query=sum(rate(log_save_discard{cluster = "qd-aliyun", group =~ "^storage.*"}[1m])) by (cluster) or (absent(log_save_discard{cluster = "qd-aliyun", group =~ "^storage.*"}) - 1)' \
      --data-urlencode 'time=2021-09-26T09:32:00.000+08:00' \
      -g -G | jq
-     
+
 # query_range
 curl localhost:9090/api/v1/query_range \
      --data-urlencode 'query={__name__="go_gc_duration_seconds_count"}' \
@@ -119,7 +119,7 @@ curl localhost:9090/api/v1/series \
      --data-urlencode 'start=2021-09-26T09:32:00.000+08:00' \
      --data-urlencode 'end=2021-09-26T09:33:00.000+08:00' \
      -g -G | jq
-     
+
 curl localhost:9090/api/v1/labels \
      -X GET | jq
 curl localhost:9090/api/v1/labels \
@@ -148,7 +148,7 @@ curl localhost:9090/api/v1/labels \
      --data-urlencode 'match[]={__name__="go_gc_duration_seconds_count"}' \
      --data-urlencode 'start=2021-09-26T09:32:00.000+08:00' \
      --data-urlencode 'end=2021-09-26T09:33:00.000+08:00' \
-     -g -G | jq     
+     -g -G | jq
 
 curl localhost:9090/api/v1/label/job/values \
      -X GET | jq
@@ -159,15 +159,15 @@ curl localhost:9090/api/v1/label/quantile/values \
      --data-urlencode 'start=2021-09-26T09:32:00.000+08:00' \
      --data-urlencode 'end=2021-09-26T09:33:00.000+08:00' \
      -G | jq
-     
-# 查询值只支持GET方法     
+
+# 查询值只支持GET方法
 curl localhost:9090/api/v1/label/quantile/values \
      -X GET | jq
 curl localhost:9090/api/v1/label/quantile/values \
      --data-urlencode 'match[]={__name__="go_gc_duration_seconds"}' \
      --data-urlencode 'start=2021-06-03T15:01:16.666+08:00' \
      --data-urlencode 'end=2021-06-03T15:01:51.900+08:00' \
-     -g -G | jq     
+     -g -G | jq
 curl localhost:9090/api/v1/label/quantile/values
      --data-urlencode 'match[]={__name__="go_gc_duration_seconds",quantile="1"}' \
      --data-urlencode 'start=2021-06-03T15:01:16.666+08:00' \
@@ -181,7 +181,7 @@ curl 10.138.16.190:9090/api/v1/query_range \
      --data-urlencode 'step=10s' \
      --globoff \
      -X POST | jq
-     
+
 # START_METRIC_SELECTOR vector_selector
 # go_gc_duration_seconds
 curl localhost:9090/api/v1/labels \
@@ -225,7 +225,7 @@ curl localhost:9090/api/v1/labels \
      --data-urlencode 'start=2021-11-02T12:35:19.000Z' \
      --data-urlencode 'end=2021-11-02T12:36:19.000Z' \
      -g -G | jq
-     
+
 # offset @modifier
 curl localhost:9090/api/v1/query \
      --data-urlencode 'query={__name__="go_gc_duration_seconds_count"}[10s] offset 10s' \
@@ -290,7 +290,7 @@ curl localhost:9090/api/v1/query_range \
      -g -G | jq
 
 # Binary operators
-{    
+{
     # Arithmetic
     {
         curl localhost:9090/api/v1/query \
@@ -333,7 +333,7 @@ curl localhost:9090/api/v1/query_range \
              --data-urlencode 'query=prometheus_engine_query_duration_seconds * prometheus_engine_query_duration_seconds' \
              -g -G | jq
     }
-    
+
     # Comparison
     {
         curl localhost:9090/api/v1/query \
@@ -355,7 +355,7 @@ curl localhost:9090/api/v1/query_range \
              --data-urlencode 'query=go_gc_duration_seconds{} ==bool go_gc_duration_seconds{}' \
              -g -G | jq
     }
-    
+
     # Logical/set
     {
         curl localhost:9090/api/v1/query \
@@ -368,7 +368,7 @@ curl localhost:9090/api/v1/query_range \
              --data-urlencode 'query=go_gc_duration_seconds{quantile='0.5'}  unless on(quantile) go_gc_duration_seconds{}' \
              -g -G | jq
     }
-    
+
     # Matching
     {
         # one to one
@@ -386,21 +386,21 @@ curl localhost:9090/api/v1/query_range \
                  --data-urlencode 'query=prometheus_target_interval_length_seconds{quantile="0.5"} * on(interval, quantile) prometheus_target_interval_length_seconds{}' \
                  -g -G | jq
         }
-        
+
         # one-to-many
         {
             curl localhost:9090/api/v1/query \
                  --data-urlencode 'query=prometheus_target_interval_length_seconds{quantile="0.5"}[10s] @1641305027.000 / ignoring(quantile) group_right prometheus_target_interval_length_seconds{}[10s] @1641305027.000' \
                  -g -G | jq
         }
-        
+
         # many-to-one
         {
             curl localhost:9090/api/v1/query \
                  --data-urlencode 'query=prometheus_target_interval_length_seconds{} / ignoring(quantile) group_left prometheus_target_interval_length_seconds{quantile="0.5"}' \
                  -g -G | jq
         }
-        
+
         # and/or/unless
         {
             curl localhost:9090/api/v1/query \
@@ -502,7 +502,7 @@ curl localhost:9090/api/v1/query_range \
              --data-urlencode 'query=max_over_time(prometheus_target_interval_length_seconds{}[5s:5s])' \
              -g -G | jq
         curl localhost:9090/api/v1/query \
-             --data-urlencode 'query=max_over_time(prometheus_target_interval_length_seconds{instance="localhost:9090", interval="5s", job="prometheus", quantile="0.99"}[5s:5s])' \             
+             --data-urlencode 'query=max_over_time(prometheus_target_interval_length_seconds{instance="localhost:9090", interval="5s", job="prometheus", quantile="0.99"}[5s:5s])' \
         -g -G | jq
         # matrix&scalar
         curl localhost:9090/api/v1/query \

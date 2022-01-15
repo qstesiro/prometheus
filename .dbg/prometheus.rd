@@ -921,7 +921,8 @@ go_gc_duration_seconds{quantile=0.5} < go_gc_duration_seconds{quantile=0.75}
 
 (go_gc_duration_seconds_count{} + go_gc_duration_seconds_count{}) @ start()
 
-Queryable.Querier: readStorage.Querier -> db.Querier -> querierAdapter.Querier(实际调用mergeGenericQuerier.Querier)
+Queryable.Querier: fanout.Querier -> querierAdapter.Querier(实际调用mergeGenericQuerier.Querier)
+readStorage.Querier -> db.Querier -> querierAdapter.Querier
 Querier.Select: mergeGenericQuerier.Select -> genericQuerierAdapter.Select -> blockQuerier.Select
 SerieSet.At: blockSeriesSet.At
 SeriesEntry.Iterator: populateWithDelGenericSeriesIterator.toSeriesIterator
