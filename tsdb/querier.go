@@ -617,6 +617,7 @@ func (p *populateWithDelGenericSeriesIterator) toChunkSeriesIterator() chunks.It
 	return &populateWithDelChunkSeriesIterator{populateWithDelGenericSeriesIterator: p}
 }
 
+// 实现了chunkenc.Iterator接口
 // populateWithDelSeriesIterator allows to iterate over samples for the single series.
 type populateWithDelSeriesIterator struct {
 	*populateWithDelGenericSeriesIterator
