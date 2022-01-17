@@ -37,6 +37,7 @@ type genericSeriesSet interface {
 
 type genericSeriesMergeFunc func(...Labels) Labels
 
+// 实现了genericSeriesSet接口
 type genericSeriesSetAdapter struct {
 	SeriesSet
 }
@@ -45,14 +46,7 @@ func (a *genericSeriesSetAdapter) At() Labels {
 	return a.SeriesSet.At()
 }
 
-type genericChunkSeriesSetAdapter struct {
-	ChunkSeriesSet
-}
-
-func (a *genericChunkSeriesSetAdapter) At() Labels {
-	return a.ChunkSeriesSet.At()
-}
-
+// 实现了genericQuerier接口
 type genericQuerierAdapter struct {
 	LabelQuerier
 
@@ -72,16 +66,12 @@ func newGenericQuerierFrom(q Querier) genericQuerier {
 	return &genericQuerierAdapter{LabelQuerier: q, q: q}
 }
 
-func newGenericQuerierFromChunk(cq ChunkQuerier) genericQuerier {
-	return &genericQuerierAdapter{LabelQuerier: cq, cq: cq}
-}
-
 // 实现了storage.Querier接口
 type querierAdapter struct {
 	// 结构继承接口(新用法) ???
 	// 细想一下这种用法会产生复杂的问题,值得深入研究
 	// - 继承多个接口,接口函数有重叠(如: genericQuerierAdapter)
-	// - 创建对象实例时(如果中需要部分功能)是否可以只实现部分(个别)接口的方法
+	// - 创建对象实例时(如果只需要部分功能)是否可以只实现部分(个别)接口的方法
 	genericQuerier
 }
 
@@ -98,12 +88,22 @@ func (a *seriesSetAdapter) At() Series {
 	return a.genericSeriesSet.At().(Series)
 }
 
+// -------------------------------------------------------------
+
 type chunkQuerierAdapter struct {
 	genericQuerier
 }
 
 type chunkSeriesSetAdapter struct {
 	genericSeriesSet
+}
+
+type genericChunkSeriesSetAdapter struct {
+	ChunkSeriesSet
+}
+
+func (a *genericChunkSeriesSetAdapter) At() Labels {
+	return a.ChunkSeriesSet.At()
 }
 
 func (a *chunkSeriesSetAdapter) At() ChunkSeries {
@@ -113,6 +113,12 @@ func (a *chunkSeriesSetAdapter) At() ChunkSeries {
 func (q *chunkQuerierAdapter) Select(sortSeries bool, hints *SelectHints, matchers ...*labels.Matcher) ChunkSeriesSet {
 	return &chunkSeriesSetAdapter{q.genericQuerier.Select(sortSeries, hints, matchers...)}
 }
+
+func newGenericQuerierFromChunk(cq ChunkQuerier) genericQuerier {
+	return &genericQuerierAdapter{LabelQuerier: cq, cq: cq}
+}
+
+// ------------------------------------------------------------
 
 type seriesMergerAdapter struct {
 	VerticalSeriesMergeFunc
