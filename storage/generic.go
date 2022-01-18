@@ -37,6 +37,17 @@ type genericSeriesSet interface {
 
 type genericSeriesMergeFunc func(...Labels) Labels
 
+// ------------------------------------------------------------------
+
+// 实现了storage.SeriesSet接口
+type seriesSetAdapter struct {
+	genericSeriesSet
+}
+
+func (a *seriesSetAdapter) At() Series {
+	return a.genericSeriesSet.At().(Series)
+}
+
 // 实现了genericSeriesSet接口
 type genericSeriesSetAdapter struct {
 	SeriesSet
@@ -79,35 +90,29 @@ func (q *querierAdapter) Select(sortSeries bool, hints *SelectHints, matchers ..
 	return &seriesSetAdapter{q.genericQuerier.Select(sortSeries, hints, matchers...)}
 }
 
-// 实现了storage.SeriesSet接口
-type seriesSetAdapter struct {
-	genericSeriesSet
-}
-
-func (a *seriesSetAdapter) At() Series {
-	return a.genericSeriesSet.At().(Series)
-}
-
 // -------------------------------------------------------------
 
+// 实现了storage.ChunkQuerier接口
 type chunkQuerierAdapter struct {
 	genericQuerier
 }
 
+// 实现了storage.ChunkSeriesSet接口
 type chunkSeriesSetAdapter struct {
 	genericSeriesSet
 }
 
+func (a *chunkSeriesSetAdapter) At() ChunkSeries {
+	return a.genericSeriesSet.At().(ChunkSeries)
+}
+
+// 实现了genericSeriesSet接口
 type genericChunkSeriesSetAdapter struct {
 	ChunkSeriesSet
 }
 
 func (a *genericChunkSeriesSetAdapter) At() Labels {
 	return a.ChunkSeriesSet.At()
-}
-
-func (a *chunkSeriesSetAdapter) At() ChunkSeries {
-	return a.genericSeriesSet.At().(ChunkSeries)
 }
 
 func (q *chunkQuerierAdapter) Select(sortSeries bool, hints *SelectHints, matchers ...*labels.Matcher) ChunkSeriesSet {
