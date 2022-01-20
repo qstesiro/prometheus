@@ -1013,13 +1013,14 @@ func (h *Head) Stats(statsByLabelName string) *Stats {
 	}
 }
 
+// 实现了tsdb.BlockReader接口
 type RangeHead struct {
 	head       *Head
 	mint, maxt int64
 }
 
+// tsdb.BlockReader.Size函数定义在head.go最后
 // NewRangeHead returns a *RangeHead.
-// 实现tsdb.BlockReader接口(Size函数定义在head.go最后)
 func NewRangeHead(head *Head, mint, maxt int64) *RangeHead {
 	return &RangeHead{
 		head: head,
@@ -1029,14 +1030,17 @@ func NewRangeHead(head *Head, mint, maxt int64) *RangeHead {
 }
 
 func (h *RangeHead) Index() (IndexReader, error) {
+	// 返回tsdb.headIndexReader实例
 	return h.head.indexRange(h.mint, h.maxt), nil
 }
 
 func (h *RangeHead) Chunks() (ChunkReader, error) {
+	// 返回tsdb.headChunkReader实例
 	return h.head.chunksRange(h.mint, h.maxt, h.head.iso.State())
 }
 
 func (h *RangeHead) Tombstones() (tombstones.Reader, error) {
+	// 返回tombstones.MemTombstones实例
 	return h.head.tombstones, nil
 }
 
@@ -1578,6 +1582,7 @@ func (h *Head) String() string {
 	return "head"
 }
 
+// 实现了tsdb.ChunkReader接口
 type headChunkReader struct {
 	head       *Head
 	mint, maxt int64
@@ -1661,6 +1666,7 @@ func (c *safeChunk) Iterator(reuseIter chunkenc.Iterator) chunkenc.Iterator {
 	return it
 }
 
+// 实现了tsdb.IndexReader接口
 type headIndexReader struct {
 	head       *Head
 	mint, maxt int64

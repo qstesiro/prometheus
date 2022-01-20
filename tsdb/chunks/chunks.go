@@ -459,6 +459,7 @@ func (b realByteSlice) Range(start, end int) []byte {
 	return b[start:end]
 }
 
+// 实现了tsdb.ChunkReader接口
 // Reader implements a ChunkReader for a serialized byte stream
 // of series data.
 type Reader struct {

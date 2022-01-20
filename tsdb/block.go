@@ -118,8 +118,8 @@ type ChunkReader interface {
 	Close() error
 }
 
-// BlockReader provides reading access to a data block.
 // 没有BlockWriter ???
+// BlockReader provides reading access to a data block.
 type BlockReader interface {
 	// Index returns an IndexReader over the block's data.
 	Index() (IndexReader, error)
@@ -248,6 +248,7 @@ func writeMetaFile(logger log.Logger, dir string, meta *BlockMeta) (int64, error
 	return int64(n), fileutil.Replace(tmp, path)
 }
 
+// 实现了tsdb.BlockReader接口
 // Block represents a directory of time series data covering a continuous time range.
 type Block struct {
 	mtx            sync.RWMutex
@@ -289,19 +290,19 @@ func OpenBlock(logger log.Logger, dir string, pool chunkenc.Pool) (pb *Block, er
 	if err != nil {
 		return nil, err
 	}
-
+	// 返回chunks.Reader实例
 	cr, err := chunks.NewDirReader(chunkDir(dir), pool)
 	if err != nil {
 		return nil, err
 	}
 	closers = append(closers, cr)
-
+	// 返回index.Reader实例
 	ir, err := index.NewFileReader(filepath.Join(dir, indexFilename))
 	if err != nil {
 		return nil, err
 	}
 	closers = append(closers, ir)
-
+	// 返回tombstones.MemTombstones实例
 	tr, sizeTomb, err := tombstones.ReadTombstones(dir)
 	if err != nil {
 		return nil, err

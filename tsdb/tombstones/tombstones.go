@@ -231,6 +231,7 @@ type MemTombstones struct {
 	mtx         sync.RWMutex
 }
 
+// 实现了tombstones.Reader接口
 // NewMemTombstones creates new in memory Tombstone Reader
 // that allows adding new intervals.
 func NewMemTombstones() *MemTombstones {

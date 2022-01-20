@@ -1243,6 +1243,7 @@ type StringIter interface {
 	Err() error
 }
 
+// 实现了tsdb.IndexReader接口
 type Reader struct {
 	b   ByteSlice
 	toc *TOC
