@@ -1175,8 +1175,8 @@ func (ev *evaluator) evalSubquery(subq *parser.SubqueryExpr) (*parser.MatrixSele
 	return ms, totalSamples, ws
 }
 
-// eval evaluates the given expression as the given AST expression node requires.
 // 函数复杂度太高了吧(你大爷) ???
+// eval evaluates the given expression as the given AST expression node requires.
 func (ev *evaluator) eval(expr parser.Expr) (parser.Value, storage.Warnings) {
 	// This is the top-level evaluation method.
 	// Thus, we check for timeout/cancellation here.
@@ -1267,7 +1267,16 @@ func (ev *evaluator) eval(expr parser.Expr) (parser.Value, storage.Warnings) {
 					return call(v, e.Args, enh), warnings
 				}, e.Args...)
 			}
-
+			// 按列运算,每次列运算scalar会被扩展为与matrix相同的元素个数(行&列)sample的matrix
+			//
+			// s1 {l1=v1,...ln=vn} | [{t1,v1},...,{tn,vn}] | [{t1,v1},...,{tn,vn}] | [{t1,v1},...,{tn,vn}]
+			//    ...              | ...                   | ...                   | ...
+			// sn {l1=vn,...ln=vn} | [{t1,v1},...,{tn,vn}] | [{t1,v1},...,{tn,vn}] | [{t1,v1},...,{tn,vn}]
+			//                     |                       |                       |
+			// 	                   |         {t,v}         |         {t,v}         |         {t,v}
+			// ---------------------------------------------------------------------------------------------
+			// r {l1=v1,...,ln=vn} |         {t,v}         |         {t,v}         |         {t,v}
+			//
 			inArgs := make([]parser.Value, len(e.Args)) // call调用参数
 			// Evaluate any non-matrix arguments.
 			otherArgs := make([]Matrix, len(e.Args))   // 记录非Matrix类型参数的值
