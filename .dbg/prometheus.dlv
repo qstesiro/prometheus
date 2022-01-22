@@ -165,9 +165,9 @@ b promql/engine.go:803
 # b tsdb.(*initAppender).Rollback
 
 # b tsdb.(*headAppender).Append
-# b tsdb.(*headAppender).log
 # b tsdb.(*headAppender).Commit
 # b tsdb.(*headAppender).Rollback
+# b tsdb.(*headAppender).log
 
 # b tsdb.newMemSeries
 # b tsdb.(*memSeries).append

@@ -1085,11 +1085,12 @@ func (h *RangeHead) String() string {
 	return fmt.Sprintf("range head (mint: %d, maxt: %d)", h.MinTime(), h.MaxTime())
 }
 
+// 实现了storage.Appender接口
+// 只有当data下没有任何历史数据时才会创建initAppender
 // initAppender is a helper to initialize the time bounds of the head
 // upon the first sample it receives.
-// 只有当data下没有任何历史数据时才会创建initAppender
 type initAppender struct {
-	app  storage.Appender
+	app  storage.Appender // 引用headAppender实例
 	head *Head
 }
 
@@ -1204,7 +1205,7 @@ func (h *Head) putBytesBuffer(b []byte) {
 	h.bytesPool.Put(b[:0])
 }
 
-// 实现storage.Appender
+// 实现了storage.Appender接口
 type headAppender struct {
 	head         *Head
 	minValidTime int64 // No samples below this timestamp are allowed.
@@ -1229,6 +1230,7 @@ func (a *headAppender) Append(ref uint64, lset labels.Labels, t int64, v float64
 
 	// 此处理进行series的过滤操作
 	s := a.head.series.getByID(ref)
+	// series首次出现
 	if s == nil {
 		// Ensure no empty labels have gotten through.
 		lset = lset.WithoutEmpty()
@@ -1316,10 +1318,10 @@ func (a *headAppender) log() error {
 	return nil
 }
 
-// storage.Appender
 // 提交之前写入数据[按批次]
 // 先记录WAL再写入采样对应序列的chunk中
 // 因为记录了WAL所以只要成功提交后就保证数据不会丢失
+// storage.Appender
 func (a *headAppender) Commit() (err error) {
 	if a.closed {
 		return ErrAppenderClosed
