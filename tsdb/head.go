@@ -77,7 +77,7 @@ type Head struct {
 
 	symMtx sync.RWMutex
 	// 记录Symbols为headIndexReader对象
-	// series所有标签名与标签值(通过map去重)
+	// 记录有sample还驻留在内存中(包括普通chunk与headChunk)的series所有标签名与标签值(通过map去重)
 	symbols map[string]struct{}
 
 	deletedMtx sync.Mutex
@@ -87,6 +87,8 @@ type Head struct {
 	deleted map[uint64]int // Deleted series, and what WAL segment they must be kept until.
 
 	// 记录Postings为headIndexReader所用
+	// 记录有sample还驻留在内存中(包括普通chunk与headChunk)的series标签对应的值对应的refid
+	// map[label.name]map[label.value][]id
 	postings *index.MemPostings // Postings lists for terms.
 
 	tombstones *tombstones.MemTombstones
@@ -1447,7 +1449,7 @@ func (h *Head) gc() int64 {
 	// 截断所有chunks包括headChunk(压缩也会处理headChunk)都小于minTime的serie应该被删除
 	deleted, chunksRemoved, actualMint := h.series.gc(mint)
 	seriesRemoved := len(deleted)
-
+	// 指标记录
 	h.metrics.seriesRemoved.Add(float64(seriesRemoved))
 	h.metrics.chunksRemoved.Add(float64(chunksRemoved))
 	h.metrics.chunks.Sub(float64(chunksRemoved))
@@ -1930,8 +1932,10 @@ const (
 type stripeSeries struct {
 	size int
 	// series/hashes/locks的i值为id计算的hash(id&uint64(s.size-1))
-	series                  []map[uint64]*memSeries // k值为id,主要用于存储(猜测)
-	hashes                  []seriesHashmap         // k值为labels的hash(labels.Lables.Hash()),主要用于查询(猜测)
+	// [id&uint64(s.size-1)]map[id]*memSeries
+	series []map[uint64]*memSeries // k值为id,主要用于存储(猜测)
+	// [id&uint64(s.size-1)]map[labels.Lables.Hash()]*memSeries
+	hashes                  []seriesHashmap // k值为labels的hash(labels.Lables.Hash()),主要用于查询(猜测)
 	locks                   []stripeLock
 	seriesLifecycleCallback SeriesLifecycleCallback
 }
@@ -1994,7 +1998,7 @@ func (s *stripeSeries) gc(mint int64) (map[uint64]struct{}, int, int64) {
 				series.Lock()
 				rmChunks += series.truncateChunksBefore(mint)
 
-				// 还有chunk数据大(等)于的series保留
+				// 还有chunk数据大(等)于mint的series保留
 				if len(series.mmappedChunks) > 0 || series.headChunk != nil || series.pendingCommit {
 					seriesMint := series.minTime()
 					if seriesMint < actualMint {
@@ -2018,7 +2022,8 @@ func (s *stripeSeries) gc(mint int64) (map[uint64]struct{}, int, int64) {
 				if i != j {
 					s.locks[j].Lock()
 				}
-
+				// 记录所有sample.t < mint的series删除
+				// 从series/hashes中删除series
 				deleted[series.ref] = struct{}{}
 				s.hashes[i].del(hash, series.lset)
 				delete(s.series[j], series.ref)

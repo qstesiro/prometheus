@@ -226,6 +226,7 @@ func (p *MemPostings) EnsureOrder() {
 
 // Delete removes all ids in the given map from the postings lists.
 // 为什么不使用切片为参数 ???
+// 隐约感觉算法可以优化后续再仔细分析一下 ???
 func (p *MemPostings) Delete(deleted map[uint64]struct{}) {
 	var keys, vals []string
 
