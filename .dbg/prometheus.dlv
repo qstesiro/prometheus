@@ -164,6 +164,10 @@ b promql/engine.go:803
 # b tsdb.(*initAppender).Commit
 # b tsdb.(*initAppender).Rollback
 
+# b tsdb.NewHead
+b head.go:356
+# b scrape.go:1317
+# b scrape.go:1349
 # b tsdb.(*headAppender).Append
 # b tsdb.(*headAppender).Commit
 # b tsdb.(*headAppender).Rollback

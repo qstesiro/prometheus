@@ -35,7 +35,7 @@ git config --local -l
     # 不删除data
     alias dlv='gob && dlv exec ./prometheus --init .dbg/prometheus.dlv -- --config.file=documentation/examples/prometheus.yml --enable-feature=promql-at-modifier --query.timeout=1h'
     # 删除data
-    alias dlv='gob && rm -rf data/ && dlv exec ./prometheus --init .dbg/prometheus.dlv -- --config.file=documentation/examples/prometheus.yml'
+    alias dlv='gob && rm -rf data/ && dlv exec ./prometheus --init .dbg/prometheus.dlv -- --config.file=documentation/examples/prometheus.yml --enable-feature=promql-at-modifier --query.timeout=1h'
 }
 
 memChunk/mmappedChunk区别 !!!

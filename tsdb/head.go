@@ -77,7 +77,7 @@ type Head struct {
 
 	symMtx sync.RWMutex
 	// 记录Symbols为headIndexReader对象
-	// series所有标签名与标签值
+	// series所有标签名与标签值(通过map去重)
 	symbols map[string]struct{}
 
 	deletedMtx sync.Mutex
@@ -1219,9 +1219,9 @@ type headAppender struct {
 	closed                          bool
 }
 
-// storage.Appender
 // 记录单条采样数据只写入内存列表
 // 两个列表一个记录采样另一个记录序列
+// storage.Appender
 func (a *headAppender) Append(ref uint64, lset labels.Labels, t int64, v float64) (uint64, error) {
 	if t < a.minValidTime {
 		a.head.metrics.outOfBoundSamples.Inc()
@@ -1232,12 +1232,13 @@ func (a *headAppender) Append(ref uint64, lset labels.Labels, t int64, v float64
 	s := a.head.series.getByID(ref)
 	// series首次出现
 	if s == nil {
+		// 判定是否有错误标签
 		// Ensure no empty labels have gotten through.
 		lset = lset.WithoutEmpty()
 		if len(lset) == 0 {
 			return 0, errors.Wrap(ErrInvalidSample, "empty labelset")
 		}
-
+		// 判定是否有错误标签
 		if l, dup := lset.HasDuplicateLabelNames(); dup {
 			return 0, errors.Wrap(ErrInvalidSample, fmt.Sprintf(`label name "%s" is not unique`, l))
 		}

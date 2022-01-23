@@ -27,9 +27,9 @@ import (
 // map[""]map[""][]{1,2,3,...} (所有id)
 var allPostingsKey = labels.Label{}
 
-// AllPostingsKey returns the label key that is used to store the postings list of all existing IDs.
 // 这种存储方式有点怪,脑回路清奇
 // 直接存储于一个列表多好 ???
+// AllPostingsKey returns the label key that is used to store the postings list of all existing IDs.
 func AllPostingsKey() (name, value string) {
 	return allPostingsKey.Name, allPostingsKey.Value
 }
@@ -40,7 +40,7 @@ func AllPostingsKey() (name, value string) {
 // unordered batch fills on startup.
 type MemPostings struct {
 	mtx     sync.RWMutex
-	m       map[string]map[string][]uint64 // map[label.name]map[label.value][]series.id
+	m       map[string]map[string][]uint64 // 数据map[label.name]map[label.value][]series.id
 	ordered bool
 }
 
