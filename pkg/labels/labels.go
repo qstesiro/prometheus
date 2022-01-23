@@ -18,7 +18,7 @@ import (
 	"encoding/json"
 	"sort"
 	"strconv"
-
+	// 这个库效率更高(工作中如有需要可以使用) !!!
 	"github.com/cespare/xxhash/v2"
 )
 
@@ -144,6 +144,7 @@ func (ls Labels) Hash() uint64 {
 	for i, v := range ls {
 		if len(b)+len(v.Name)+len(v.Value)+2 >= cap(b) {
 			// If labels entry is 1KB+ do not allocate whole entry.
+			// 实际还是处理了所有label,只是kv之间的连接符与前阈值的不同而已 ???
 			h := xxhash.New()
 			_, _ = h.Write(b)
 			for _, v := range ls[i:] {

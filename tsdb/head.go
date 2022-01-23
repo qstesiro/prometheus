@@ -1880,7 +1880,7 @@ func (h *Head) getOrCreateWithID(id, hash uint64, lset labels.Labels) (*memSerie
 // on top of a regular hashmap and holds a slice of series to resolve hash collisions.
 // Its methods require the hash to be submitted with it to avoid re-computations throughout
 // the code.
-type seriesHashmap map[uint64][]*memSeries
+type seriesHashmap map[uint64][]*memSeries // k值为hash
 
 func (m seriesHashmap) get(hash uint64, lset labels.Labels) *memSeries {
 	for _, s := range m[hash] {
@@ -1904,6 +1904,7 @@ func (m seriesHashmap) set(hash uint64, s *memSeries) {
 
 func (m seriesHashmap) del(hash uint64, lset labels.Labels) {
 	var rem []*memSeries
+	// 删除时效率不高(不过在实际使用中应该很少有删除的情况)
 	for _, s := range m[hash] {
 		if !labels.Equal(s.lset, lset) {
 			rem = append(rem, s)
@@ -1918,8 +1919,7 @@ func (m seriesHashmap) del(hash uint64, lset labels.Labels) {
 
 const (
 	// DefaultStripeSize is the default number of entries to allocate in the stripeSeries hash map.
-	// 16K
-	DefaultStripeSize = 1 << 14
+	DefaultStripeSize = 1 << 14 // 16K
 )
 
 // stripeSeries locks modulo ranges of IDs and hashes to reduce lock contention.
@@ -1927,14 +1927,16 @@ const (
 // with the maps was profiled to be slower – likely due to the additional pointer
 // dereferences.
 type stripeSeries struct {
-	size                    int
-	series                  []map[uint64]*memSeries // 主要用于存储(猜测)
-	hashes                  []seriesHashmap         // 主要用于查询(猜测)
+	size int
+	// series/hashes/locks的i值为id计算的hash(id&uint64(s.size-1))
+	series                  []map[uint64]*memSeries // k值为id,主要用于存储(猜测)
+	hashes                  []seriesHashmap         // k值为labels的hash(labels.Lables.Hash()),主要用于查询(猜测)
 	locks                   []stripeLock
 	seriesLifecycleCallback SeriesLifecycleCallback
 }
 
 type stripeLock struct {
+	// 以下是标准库中锁的定义
 	// type Mutex struct {
 	//     key int32;
 	//     sema int32;
