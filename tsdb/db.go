@@ -760,7 +760,7 @@ func (db *DB) run() {
 
 		select {
 		case <-time.After(1 * time.Minute):
-			// 数据量比较大的情况下minute内能处理完吗 ???
+			// 触发压缩逻辑尝试压缩线逻处理
 			db.cmtx.Lock()
 			if err := db.reloadBlocks(); err != nil {
 				level.Error(db.logger).Log("msg", "reloadBlocks", "err", err)
@@ -772,12 +772,14 @@ func (db *DB) run() {
 			default:
 			}
 		case <-db.compactc:
-			// 每分钟触发一次能处理完吗 ???
+			// 两种情况会触发压缩线处理逻辑(尝试处理)
+			// - 每次采样被提交
+			// - 分钟周期触发
 			db.metrics.compactionsTriggered.Inc()
 
 			db.autoCompactMtx.Lock()
 			if db.autoCompact { // 当前恒定为true
-				level.Info(db.logger).Log("msg", "---------------------------- start compact")
+				level.Info(db.logger).Log("msg", "---------------------------- start compact ???")
 				if err := db.Compact(); err != nil {
 					level.Error(db.logger).Log("msg", "compaction failed", "err", err)
 					backoff = exponential(backoff, 1*time.Second, 1*time.Minute)
@@ -808,12 +810,13 @@ type dbAppender struct {
 
 func (a dbAppender) Commit() error {
 	err := a.Appender.Commit()
-	level.Info(a.db.logger).Log("msg", "---------------------------- commit sample")
+	level.Info(a.db.logger).Log("msg", "---------------------------- commit sample ???")
 	// We could just run this check every few minutes practically. But for benchmarks
 	// and high frequency use cases this is the safer way.
+	// 判定是否需要处理压缩逻辑
 	if a.db.head.compactable() {
 		select {
-		case a.db.compactc <- struct{}{}:
+		case a.db.compactc <- struct{}{}: // 触发压缩线逻处理(一定会执行因为已经判定过了)
 		default:
 		}
 	}

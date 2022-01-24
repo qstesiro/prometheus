@@ -1352,7 +1352,7 @@ func (a *headAppender) Commit() (err error) {
 		series.cleanupAppendIDsBelow(a.cleanupAppendIDsBelow)
 		series.pendingCommit = false
 		series.Unlock()
-
+		// 指标处理
 		if !ok {
 			total--
 			a.head.metrics.outOfOrderSamples.Inc()
@@ -1438,6 +1438,7 @@ func (h *Head) Delete(mint, maxt int64, ms ...*labels.Matcher) error {
 	return nil
 }
 
+// 清理超出驻留时间的数据,其中处理压缩线逻辑
 // gc removes data before the minimum timestamp from the head.
 // It returns the actual min times of the chunks present in the Head.
 func (h *Head) gc() int64 {
@@ -2299,11 +2300,11 @@ func (s *memSeries) truncateChunksBefore(mint int64) (removed int) {
 	return removed
 }
 
+// 写入采样数据,其中处理切割线逻辑
 // append adds the sample (t, v) to the series. The caller also has to provide
 // the appendID for isolation. (The appendID can be zero, which results in no
 // isolation for this append.)
 // It is unsafe to call this concurrently with s.iterator(...) without holding the series lock.
-// 写入采样数据
 func (s *memSeries) append(t int64, v float64, appendID uint64, chunkDiskMapper *chunks.ChunkDiskMapper) (sampleInOrder, chunkCreated bool) {
 	// Based on Gorilla white papers this offers near-optimal compression ratio
 	// so anything bigger that this has diminishing returns and increases
