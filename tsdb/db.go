@@ -604,7 +604,7 @@ func open(dir string, l log.Logger, r prometheus.Registerer, opts *Options, rngs
 		dir:            dir,
 		logger:         l,
 		opts:           opts,
-		compactc:       make(chan struct{}, 1),
+		compactc:       make(chan struct{}, 1), // 注意这个1,保证了最多只有一次请求未被处理
 		donec:          make(chan struct{}),
 		stopc:          make(chan struct{}),
 		autoCompact:    true,
@@ -667,7 +667,7 @@ func open(dir string, l log.Logger, r prometheus.Registerer, opts *Options, rngs
 	}
 
 	headOpts := DefaultHeadOptions()
-	headOpts.ChunkRange = rngs[0] // ??? 2h
+	headOpts.ChunkRange = rngs[0] // 修改了默认的块压缩时间(只是为什么使用rngs[0]不明白) ???
 	headOpts.ChunkDirRoot = dir
 	headOpts.ChunkPool = db.chunkPool
 	headOpts.ChunkWriteBufferSize = opts.HeadChunksWriteBufferSize // 4M
@@ -755,25 +755,29 @@ func (db *DB) run() {
 		case <-db.stopc:
 			return
 		case <-time.After(backoff):
+			// 这用法 !!!
 		}
 
 		select {
 		case <-time.After(1 * time.Minute):
+			// 数据量比较大的情况下minute内能处理完吗 ???
 			db.cmtx.Lock()
 			if err := db.reloadBlocks(); err != nil {
 				level.Error(db.logger).Log("msg", "reloadBlocks", "err", err)
 			}
 			db.cmtx.Unlock()
-			// !!!
+			// 这用法 !!!
 			select {
 			case db.compactc <- struct{}{}:
 			default:
 			}
 		case <-db.compactc:
+			// 每分钟触发一次能处理完吗 ???
 			db.metrics.compactionsTriggered.Inc()
 
 			db.autoCompactMtx.Lock()
 			if db.autoCompact { // 当前恒定为true
+				level.Info(db.logger).Log("msg", "---------------------------- start compact")
 				if err := db.Compact(); err != nil {
 					level.Error(db.logger).Log("msg", "compaction failed", "err", err)
 					backoff = exponential(backoff, 1*time.Second, 1*time.Minute)
@@ -804,7 +808,7 @@ type dbAppender struct {
 
 func (a dbAppender) Commit() error {
 	err := a.Appender.Commit()
-
+	level.Info(a.db.logger).Log("msg", "---------------------------- commit sample")
 	// We could just run this check every few minutes practically. But for benchmarks
 	// and high frequency use cases this is the safer way.
 	if a.db.head.compactable() {

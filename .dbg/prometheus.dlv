@@ -142,13 +142,15 @@ b promql/engine.go:803
 # b tsdb.openBlocks
 # b tsdb.newStripeSeries
 # b tsdb.(*DB).Compact
-# b tsdb/db.go:846
+# b tsdb/db.go:853
 # b tsdb.(*DB).compactHead
 # b tsdb.(*DB).compactBlocks
 # b tsdb.(*DB).CompactHead
 # b tsdb.(*noopSeriesLifecycleCallback).PreCreation
 # b tsdb.(*noopSeriesLifecycleCallback).PostCreation
 # b tsdb.(*noopSeriesLifecycleCallback).PostDeletion
+# b tsdb.(dbAppender).Commit
+# b db.go:810
 
 # head
 # b tsdb.NewHead
@@ -165,7 +167,7 @@ b promql/engine.go:803
 # b tsdb.(*initAppender).Rollback
 
 # b tsdb.NewHead
-b head.go:356
+# b head.go:356
 # b scrape.go:1317
 # b scrape.go:1349
 # b tsdb.(*headAppender).Append
