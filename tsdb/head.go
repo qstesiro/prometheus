@@ -1783,8 +1783,14 @@ func (h *headIndexReader) SortedPostings(p index.Postings) index.Postings {
 	return index.NewListPostings(ep)
 }
 
-// Series returns the series for the given reference.
 // lbls,chks使用指针还不如直接使用返回值
+// chks = [
+//   seriesId(5)|firstChunkId(3),
+//   ...,
+//   seriesId(5)|firstChunkId+len(mmap-chunk)(3),
+//   seriesId(5)|headChunkId
+// ]
+// Series returns the series for the given reference.
 func (h *headIndexReader) Series(ref uint64, lbls *labels.Labels, chks *[]chunks.Meta) error {
 	s := h.head.series.getByID(ref)
 
@@ -1808,15 +1814,15 @@ func (h *headIndexReader) Series(ref uint64, lbls *labels.Labels, chks *[]chunks
 		*chks = append(*chks, chunks.Meta{
 			MinTime: c.minTime,
 			MaxTime: c.maxTime,
-			Ref:     packChunkID(s.ref, uint64(s.chunkID(i))),
+			Ref:     packChunkID(s.ref, uint64(s.chunkID(i))), // 只使用了Ref
 		})
 	}
 	// 如果headChunk与时间区间重叠需要在压缩时一并处理headChunk ???
 	if s.headChunk != nil && s.headChunk.OverlapsClosedInterval(h.mint, h.maxt) {
 		*chks = append(*chks, chunks.Meta{
 			MinTime: s.headChunk.minTime,
-			MaxTime: math.MaxInt64, // Set the head chunks as open (being appended to).
-			Ref:     packChunkID(s.ref, uint64(s.chunkID(len(s.mmappedChunks)))),
+			MaxTime: math.MaxInt64,                                               // Set the head chunks as open (being appended to).
+			Ref:     packChunkID(s.ref, uint64(s.chunkID(len(s.mmappedChunks)))), // 只使用了Ref
 		})
 	}
 

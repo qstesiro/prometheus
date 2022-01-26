@@ -480,6 +480,7 @@ func Merge(its ...Postings) Postings {
 	return p
 }
 
+// 小根堆实现
 type postingsHeap []Postings
 
 func (h postingsHeap) Len() int           { return len(h) }
