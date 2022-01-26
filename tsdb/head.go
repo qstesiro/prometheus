@@ -78,6 +78,7 @@ type Head struct {
 	symMtx sync.RWMutex
 	// 记录Symbols为headIndexReader对象
 	// 记录有sample还驻留在内存中(包括普通chunk与headChunk)的series所有标签名与标签值(通过map去重)
+	// 数据map[label.name/label.value]struct{}
 	symbols map[string]struct{}
 
 	deletedMtx sync.Mutex
@@ -88,7 +89,7 @@ type Head struct {
 
 	// 记录Postings为headIndexReader所用
 	// 记录有sample还驻留在内存中(包括普通chunk与headChunk)的series标签对应的值对应的refid
-	// map[label.name]map[label.value][]id
+	// 数据map[label.name]map[label.value][]id
 	postings *index.MemPostings // Postings lists for terms.
 
 	tombstones *tombstones.MemTombstones
@@ -1685,14 +1686,14 @@ func (h *headIndexReader) Close() error {
 func (h *headIndexReader) Symbols() index.StringIter {
 	h.head.symMtx.RLock()
 	res := make([]string, 0, len(h.head.symbols))
-
+	// 实际使用中这个表估计会很大,标签名不会太多,但是标签值太多了 ???
 	for s := range h.head.symbols {
 		res = append(res, s)
 	}
 	h.head.symMtx.RUnlock()
 
 	sort.Strings(res)
-	return index.NewStringListIter(res)
+	return index.NewStringListIter(res) // 实际index.stringListIter
 }
 
 // SortedLabelValues returns label values present in the head for the
@@ -1717,7 +1718,7 @@ func (h *headIndexReader) LabelValues(name string, matchers ...*labels.Matcher) 
 	if h.maxt < h.head.MinTime() || h.mint > h.head.MaxTime() {
 		return []string{}, nil
 	}
-
+	// 不需要匹配直接返回所有值
 	if len(matchers) == 0 {
 		h.head.symMtx.RLock()
 		defer h.head.symMtx.RUnlock()
@@ -1750,10 +1751,10 @@ func (h *headIndexReader) Postings(name string, values ...string) (index.Posting
 	for _, value := range values {
 		res = append(res, h.head.postings.Get(name, value))
 	}
-	return index.Merge(res...), nil
+	return index.Merge(res...), nil // 实际index.mergedPostings
 }
 
-// 按label.name与label.value排序而按series.id排序
+// 排序规则参见lables.Compare函数
 func (h *headIndexReader) SortedPostings(p index.Postings) index.Postings {
 	series := make([]*memSeries, 0, 128)
 

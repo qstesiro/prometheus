@@ -379,12 +379,13 @@ func inversePostingsForMatcher(ix IndexReader, m *labels.Matcher) (index.Posting
 }
 
 func labelValuesWithMatchers(r IndexReader, name string, matchers ...*labels.Matcher) ([]string, error) {
+	// 创建匹配规则 label.name !=""
 	// We're only interested in metrics which have the label <name>.
 	requireLabel, err := labels.NewMatcher(labels.MatchNotEqual, name, "")
 	if err != nil {
 		return nil, errors.Wrapf(err, "Failed to instantiate label matcher")
 	}
-
+	// 增加新创建的规则
 	var p index.Postings
 	p, err = PostingsForMatchers(r, append(matchers, requireLabel)...)
 	if err != nil {

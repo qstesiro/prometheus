@@ -364,6 +364,7 @@ type Postings interface {
 	Err() error
 }
 
+// 实现了Postings接口
 // errPostings is an empty iterator that always errors.
 type errPostings struct {
 	err error
@@ -374,6 +375,7 @@ func (e errPostings) Seek(uint64) bool { return false }
 func (e errPostings) At() uint64       { return 0 }
 func (e errPostings) Err() error       { return e.err }
 
+// 实现了Postings接口
 var emptyPostings = errPostings{}
 
 // EmptyPostings returns a postings list that's always empty.
@@ -406,6 +408,7 @@ func Intersect(its ...Postings) Postings {
 	return newIntersectPostings(its...)
 }
 
+// 实现了Postings接口
 type intersectPostings struct {
 	arr []Postings
 	cur uint64
@@ -495,6 +498,7 @@ func (h *postingsHeap) Pop() interface{} {
 	return x
 }
 
+// 实现了Postings接口
 type mergedPostings struct {
 	h           postingsHeap
 	initialized bool
@@ -507,6 +511,7 @@ func newMergedPostings(p []Postings) (m *mergedPostings, nonEmpty bool) {
 
 	for _, it := range p {
 		// NOTE: mergedPostings struct requires the user to issue an initial Next.
+		// 第一次mergedPostings.Next执行会初始化,直接获取.At(),所以没有问题
 		if it.Next() {
 			ph = append(ph, it)
 		} else {
@@ -609,6 +614,7 @@ func Without(full, drop Postings) Postings {
 	return newRemovedPostings(full, drop)
 }
 
+// 实现了Postings接口
 type removedPostings struct {
 	full, remove Postings
 
@@ -682,6 +688,7 @@ func (rp *removedPostings) Err() error {
 	return rp.remove.Err()
 }
 
+// 实现了Postings接口
 // ListPostings implements the Postings interface over a plain list.
 type ListPostings struct {
 	list []uint64
@@ -736,6 +743,7 @@ func (it *ListPostings) Err() error {
 	return nil
 }
 
+// 实现了Postings接口
 // bigEndianPostings implements the Postings interface over a byte stream of
 // big endian numbers.
 type bigEndianPostings struct {

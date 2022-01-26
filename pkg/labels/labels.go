@@ -363,6 +363,10 @@ func FromStrings(ss ...string) Labels {
 	return res
 }
 
+// 按以下规则比较
+// - 标签名
+// - 标签值
+// - 标签名/标签值的对数
 // Compare compares the two label sets.
 // The result will be 0 if a==b, <0 if a < b, and >0 if a > b.
 func Compare(a, b Labels) int {
