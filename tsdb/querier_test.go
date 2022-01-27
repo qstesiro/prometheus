@@ -1579,11 +1579,11 @@ func TestPostingsForMatchers(t *testing.T) {
 	}()
 	// 增加指标
 	app := h.Appender(context.Background())
-	app.Append(0, labels.FromStrings("n", "1"), 0, 0)
-	app.Append(0, labels.FromStrings("n", "1", "i", "a"), 0, 0)
-	app.Append(0, labels.FromStrings("n", "1", "i", "b"), 0, 0)
-	app.Append(0, labels.FromStrings("n", "2"), 0, 0)
-	app.Append(0, labels.FromStrings("n", "2.5"), 0, 0)
+	app.Append(0, labels.FromStrings("n", "1"), 0, 0)           // {"n": "1"}
+	app.Append(0, labels.FromStrings("n", "1", "i", "a"), 0, 0) // {"n": "1", "i": "a"}
+	app.Append(0, labels.FromStrings("n", "1", "i", "b"), 0, 0) // {"n": "1", "i": "b"}
+	app.Append(0, labels.FromStrings("n", "2"), 0, 0)           // {"n": "2"}
+	app.Append(0, labels.FromStrings("n", "2.5"), 0, 0)         // {"n": "2.5"}
 	require.NoError(t, app.Commit())
 	// 测试用例
 	cases := []struct {
@@ -1592,7 +1592,9 @@ func TestPostingsForMatchers(t *testing.T) {
 	}{
 		// Simple equals.
 		{
-			matchers: []*labels.Matcher{labels.MustNewMatcher(labels.MatchEqual, "n", "1")},
+			matchers: []*labels.Matcher{
+				labels.MustNewMatcher(labels.MatchEqual, "n", "1"),
+			},
 			exp: []labels.Labels{
 				labels.FromStrings("n", "1"),
 				labels.FromStrings("n", "1", "i", "a"),
@@ -1600,17 +1602,27 @@ func TestPostingsForMatchers(t *testing.T) {
 			},
 		},
 		{
-			matchers: []*labels.Matcher{labels.MustNewMatcher(labels.MatchEqual, "n", "1"), labels.MustNewMatcher(labels.MatchEqual, "i", "a")},
+			matchers: []*labels.Matcher{
+				labels.MustNewMatcher(labels.MatchEqual, "n", "1"),
+				labels.MustNewMatcher(labels.MatchEqual, "i", "a"),
+			},
 			exp: []labels.Labels{
 				labels.FromStrings("n", "1", "i", "a"),
 			},
 		},
 		{
-			matchers: []*labels.Matcher{labels.MustNewMatcher(labels.MatchEqual, "n", "1"), labels.MustNewMatcher(labels.MatchEqual, "i", "missing")},
-			exp:      []labels.Labels{},
+			matchers: []*labels.Matcher{
+				labels.MustNewMatcher(labels.MatchEqual, "n", "1"),
+				labels.MustNewMatcher(labels.MatchEqual, "i", "missing"),
+			},
+			exp: []labels.Labels{},
 		},
 		{
-			matchers: []*labels.Matcher{labels.MustNewMatcher(labels.MatchEqual, "missing", "")},
+			matchers: []*labels.Matcher{
+				labels.MustNewMatcher(labels.MatchEqual, "missing", ""),
+			},
+			// 结果中除了匹配包含missing=""的序列外还匹配所有不包含missing=""的序列
+			// 只对==与=~运算才有此特殊规则
 			exp: []labels.Labels{
 				labels.FromStrings("n", "1"),
 				labels.FromStrings("n", "1", "i", "a"),
@@ -1619,42 +1631,58 @@ func TestPostingsForMatchers(t *testing.T) {
 				labels.FromStrings("n", "2.5"),
 			},
 		},
+
 		// Not equals.
 		{
-			matchers: []*labels.Matcher{labels.MustNewMatcher(labels.MatchNotEqual, "n", "1")},
+			matchers: []*labels.Matcher{
+				labels.MustNewMatcher(labels.MatchNotEqual, "n", "1"),
+			},
 			exp: []labels.Labels{
 				labels.FromStrings("n", "2"),
 				labels.FromStrings("n", "2.5"),
 			},
 		},
 		{
-			matchers: []*labels.Matcher{labels.MustNewMatcher(labels.MatchNotEqual, "i", "")},
+			matchers: []*labels.Matcher{
+				labels.MustNewMatcher(labels.MatchNotEqual, "i", ""),
+			},
 			exp: []labels.Labels{
 				labels.FromStrings("n", "1", "i", "a"),
 				labels.FromStrings("n", "1", "i", "b"),
 			},
 		},
 		{
-			matchers: []*labels.Matcher{labels.MustNewMatcher(labels.MatchNotEqual, "missing", "")},
-			exp:      []labels.Labels{},
+			matchers: []*labels.Matcher{
+				labels.MustNewMatcher(labels.MatchNotEqual, "missing", ""),
+			},
+			exp: []labels.Labels{},
 		},
 		{
-			matchers: []*labels.Matcher{labels.MustNewMatcher(labels.MatchEqual, "n", "1"), labels.MustNewMatcher(labels.MatchNotEqual, "i", "a")},
+			matchers: []*labels.Matcher{
+				labels.MustNewMatcher(labels.MatchEqual, "n", "1"),
+				labels.MustNewMatcher(labels.MatchNotEqual, "i", "a"),
+			},
 			exp: []labels.Labels{
 				labels.FromStrings("n", "1"),
 				labels.FromStrings("n", "1", "i", "b"),
 			},
 		},
 		{
-			matchers: []*labels.Matcher{labels.MustNewMatcher(labels.MatchEqual, "n", "1"), labels.MustNewMatcher(labels.MatchNotEqual, "i", "")},
+			matchers: []*labels.Matcher{
+				labels.MustNewMatcher(labels.MatchEqual, "n", "1"),
+				labels.MustNewMatcher(labels.MatchNotEqual, "i", ""),
+			},
 			exp: []labels.Labels{
 				labels.FromStrings("n", "1", "i", "a"),
 				labels.FromStrings("n", "1", "i", "b"),
 			},
 		},
+
 		// Regex.
 		{
-			matchers: []*labels.Matcher{labels.MustNewMatcher(labels.MatchRegexp, "n", "^1$")},
+			matchers: []*labels.Matcher{
+				labels.MustNewMatcher(labels.MatchRegexp, "n", "^1$"),
+			},
 			exp: []labels.Labels{
 				labels.FromStrings("n", "1"),
 				labels.FromStrings("n", "1", "i", "a"),
@@ -1662,20 +1690,30 @@ func TestPostingsForMatchers(t *testing.T) {
 			},
 		},
 		{
-			matchers: []*labels.Matcher{labels.MustNewMatcher(labels.MatchEqual, "n", "1"), labels.MustNewMatcher(labels.MatchRegexp, "i", "^a$")},
+			matchers: []*labels.Matcher{
+				labels.MustNewMatcher(labels.MatchEqual, "n", "1"),
+				labels.MustNewMatcher(labels.MatchRegexp, "i", "^a$"),
+			},
 			exp: []labels.Labels{
 				labels.FromStrings("n", "1", "i", "a"),
 			},
 		},
 		{
-			matchers: []*labels.Matcher{labels.MustNewMatcher(labels.MatchEqual, "n", "1"), labels.MustNewMatcher(labels.MatchRegexp, "i", "^a?$")},
+			matchers: []*labels.Matcher{
+				labels.MustNewMatcher(labels.MatchEqual, "n", "1"),
+				labels.MustNewMatcher(labels.MatchRegexp, "i", "^a?$"),
+			},
 			exp: []labels.Labels{
 				labels.FromStrings("n", "1"),
 				labels.FromStrings("n", "1", "i", "a"),
 			},
 		},
 		{
-			matchers: []*labels.Matcher{labels.MustNewMatcher(labels.MatchRegexp, "i", "^$")},
+			matchers: []*labels.Matcher{
+				labels.MustNewMatcher(labels.MatchRegexp, "i", "^$"),
+			},
+			// 结果中除了匹配包含i=~"^$"的序列外还匹配所有不包含i=~"^$"的序列
+			// 只对==""与=~"正则空"运算才有此特殊规则
 			exp: []labels.Labels{
 				labels.FromStrings("n", "1"),
 				labels.FromStrings("n", "2"),
@@ -1683,13 +1721,19 @@ func TestPostingsForMatchers(t *testing.T) {
 			},
 		},
 		{
-			matchers: []*labels.Matcher{labels.MustNewMatcher(labels.MatchEqual, "n", "1"), labels.MustNewMatcher(labels.MatchRegexp, "i", "^$")},
+			matchers: []*labels.Matcher{
+				labels.MustNewMatcher(labels.MatchEqual, "n", "1"),
+				labels.MustNewMatcher(labels.MatchRegexp, "i", "^$"),
+			},
 			exp: []labels.Labels{
 				labels.FromStrings("n", "1"),
 			},
 		},
 		{
-			matchers: []*labels.Matcher{labels.MustNewMatcher(labels.MatchEqual, "n", "1"), labels.MustNewMatcher(labels.MatchRegexp, "i", "^.*$")},
+			matchers: []*labels.Matcher{
+				labels.MustNewMatcher(labels.MatchEqual, "n", "1"),
+				labels.MustNewMatcher(labels.MatchRegexp, "i", "^.*$"), // 可以匹配空但不是只能匹配空
+			},
 			exp: []labels.Labels{
 				labels.FromStrings("n", "1"),
 				labels.FromStrings("n", "1", "i", "a"),
@@ -1697,67 +1741,100 @@ func TestPostingsForMatchers(t *testing.T) {
 			},
 		},
 		{
-			matchers: []*labels.Matcher{labels.MustNewMatcher(labels.MatchEqual, "n", "1"), labels.MustNewMatcher(labels.MatchRegexp, "i", "^.+$")},
+			matchers: []*labels.Matcher{
+				labels.MustNewMatcher(labels.MatchEqual, "n", "1"),
+				labels.MustNewMatcher(labels.MatchRegexp, "i", "^.+$"),
+			},
 			exp: []labels.Labels{
 				labels.FromStrings("n", "1", "i", "a"),
 				labels.FromStrings("n", "1", "i", "b"),
 			},
 		},
+
 		// Not regex.
 		{
-			matchers: []*labels.Matcher{labels.MustNewMatcher(labels.MatchNotRegexp, "n", "^1$")},
+			matchers: []*labels.Matcher{
+				labels.MustNewMatcher(labels.MatchNotRegexp, "n", "^1$"),
+			},
 			exp: []labels.Labels{
 				labels.FromStrings("n", "2"),
 				labels.FromStrings("n", "2.5"),
 			},
 		},
 		{
-			matchers: []*labels.Matcher{labels.MustNewMatcher(labels.MatchEqual, "n", "1"), labels.MustNewMatcher(labels.MatchNotRegexp, "i", "^a$")},
+			matchers: []*labels.Matcher{
+				labels.MustNewMatcher(labels.MatchEqual, "n", "1"),
+				labels.MustNewMatcher(labels.MatchNotRegexp, "i", "^a$"),
+			},
 			exp: []labels.Labels{
 				labels.FromStrings("n", "1"),
-				labels.FromStrings("n", "1", "i", "b"),
+				labels.FromStrings("n", "1", "i", "b"), // ???
 			},
 		},
 		{
-			matchers: []*labels.Matcher{labels.MustNewMatcher(labels.MatchEqual, "n", "1"), labels.MustNewMatcher(labels.MatchNotRegexp, "i", "^a?$")},
+			matchers: []*labels.Matcher{
+				labels.MustNewMatcher(labels.MatchEqual, "n", "1"),
+				labels.MustNewMatcher(labels.MatchNotRegexp, "i", "^a?$"),
+			},
 			exp: []labels.Labels{
 				labels.FromStrings("n", "1", "i", "b"),
 			},
 		},
 		{
-			matchers: []*labels.Matcher{labels.MustNewMatcher(labels.MatchEqual, "n", "1"), labels.MustNewMatcher(labels.MatchNotRegexp, "i", "^$")},
+			matchers: []*labels.Matcher{
+				labels.MustNewMatcher(labels.MatchEqual, "n", "1"),
+				labels.MustNewMatcher(labels.MatchNotRegexp, "i", "^$"),
+			},
 			exp: []labels.Labels{
 				labels.FromStrings("n", "1", "i", "a"),
 				labels.FromStrings("n", "1", "i", "b"),
 			},
 		},
 		{
-			matchers: []*labels.Matcher{labels.MustNewMatcher(labels.MatchEqual, "n", "1"), labels.MustNewMatcher(labels.MatchNotRegexp, "i", "^.*$")},
-			exp:      []labels.Labels{},
+			matchers: []*labels.Matcher{
+				labels.MustNewMatcher(labels.MatchEqual, "n", "1"),
+				labels.MustNewMatcher(labels.MatchNotRegexp, "i", "^.*$"),
+			},
+			exp: []labels.Labels{},
 		},
 		{
-			matchers: []*labels.Matcher{labels.MustNewMatcher(labels.MatchEqual, "n", "1"), labels.MustNewMatcher(labels.MatchNotRegexp, "i", "^.+$")},
+			matchers: []*labels.Matcher{
+				labels.MustNewMatcher(labels.MatchEqual, "n", "1"),
+				labels.MustNewMatcher(labels.MatchNotRegexp, "i", "^.+$"),
+			},
 			exp: []labels.Labels{
-				labels.FromStrings("n", "1"),
+				labels.FromStrings("n", "1"), // ???
 			},
 		},
+
 		// Combinations.
 		{
-			matchers: []*labels.Matcher{labels.MustNewMatcher(labels.MatchEqual, "n", "1"), labels.MustNewMatcher(labels.MatchNotEqual, "i", ""), labels.MustNewMatcher(labels.MatchEqual, "i", "a")},
+			matchers: []*labels.Matcher{
+				labels.MustNewMatcher(labels.MatchEqual, "n", "1"),
+				labels.MustNewMatcher(labels.MatchNotEqual, "i", ""),
+				labels.MustNewMatcher(labels.MatchEqual, "i", "a"),
+			},
 			exp: []labels.Labels{
 				labels.FromStrings("n", "1", "i", "a"),
 			},
 		},
 		{
-			matchers: []*labels.Matcher{labels.MustNewMatcher(labels.MatchEqual, "n", "1"), labels.MustNewMatcher(labels.MatchNotEqual, "i", "b"), labels.MustNewMatcher(labels.MatchRegexp, "i", "^(b|a).*$")},
+			matchers: []*labels.Matcher{
+				labels.MustNewMatcher(labels.MatchEqual, "n", "1"),
+				labels.MustNewMatcher(labels.MatchNotEqual, "i", "b"),
+				labels.MustNewMatcher(labels.MatchRegexp, "i", "^(b|a).*$"),
+			},
 			exp: []labels.Labels{
 				labels.FromStrings("n", "1", "i", "a"),
 			},
 		},
+
 		// Set optimization for Regex.
 		// Refer to https://github.com/prometheus/prometheus/issues/2651.
 		{
-			matchers: []*labels.Matcher{labels.MustNewMatcher(labels.MatchRegexp, "n", "1|2")},
+			matchers: []*labels.Matcher{
+				labels.MustNewMatcher(labels.MatchRegexp, "n", "1|2"),
+			},
 			exp: []labels.Labels{
 				labels.FromStrings("n", "1"),
 				labels.FromStrings("n", "1", "i", "a"),
@@ -1766,28 +1843,37 @@ func TestPostingsForMatchers(t *testing.T) {
 			},
 		},
 		{
-			matchers: []*labels.Matcher{labels.MustNewMatcher(labels.MatchRegexp, "i", "a|b")},
+			matchers: []*labels.Matcher{
+				labels.MustNewMatcher(labels.MatchRegexp, "i", "a|b"),
+			},
 			exp: []labels.Labels{
 				labels.FromStrings("n", "1", "i", "a"),
 				labels.FromStrings("n", "1", "i", "b"),
 			},
 		},
 		{
-			matchers: []*labels.Matcher{labels.MustNewMatcher(labels.MatchRegexp, "n", "x1|2")},
+			matchers: []*labels.Matcher{
+				labels.MustNewMatcher(labels.MatchRegexp, "n", "x1|2"),
+			},
 			exp: []labels.Labels{
 				labels.FromStrings("n", "2"),
 			},
 		},
 		{
-			matchers: []*labels.Matcher{labels.MustNewMatcher(labels.MatchRegexp, "n", "2|2\\.5")},
+			matchers: []*labels.Matcher{
+				labels.MustNewMatcher(labels.MatchRegexp, "n", "2|2\\.5"),
+			},
 			exp: []labels.Labels{
 				labels.FromStrings("n", "2"),
 				labels.FromStrings("n", "2.5"),
 			},
 		},
+
 		// Empty value.
 		{
-			matchers: []*labels.Matcher{labels.MustNewMatcher(labels.MatchRegexp, "i", "c||d")},
+			matchers: []*labels.Matcher{
+				labels.MustNewMatcher(labels.MatchRegexp, "i", "c||d"), // ???
+			},
 			exp: []labels.Labels{
 				labels.FromStrings("n", "1"),
 				labels.FromStrings("n", "2"),
