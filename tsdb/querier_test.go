@@ -1806,7 +1806,7 @@ func TestPostingsForMatchers(t *testing.T) {
 		}
 		p, err := PostingsForMatchers(ir, c.matchers...)
 		require.NoError(t, err)
-
+		// 分析结果
 		for p.Next() {
 			lbls := labels.Labels{}
 			require.NoError(t, ir.Series(p.At(), &lbls, &[]chunks.Meta{}))
