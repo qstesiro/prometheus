@@ -234,16 +234,27 @@ func PostingsForMatchers(ix IndexReader, ms ...*labels.Matcher) (index.Postings,
 	labelMustBeSet := make(map[string]bool, len(ms))
 	for _, m := range ms {
 		if !m.Matches("") {
+			// 以下条件触发
+			// - l == "非空"
+			// - l != ""
+			// - l =~ "非空正则"
+			// - l !~ "空正则"
+			// 以上条件代表标签必须存在且值不为空
 			labelMustBeSet[m.Name] = true
 		}
+		// 其它情况触发
+		// l == ""
+		// l != "非空"
+		// l =~ "空正则"
+		// l !~ "非空正则"
 	}
-
 	for _, m := range ms {
-		if labelMustBeSet[m.Name] {
+		if labelMustBeSet[m.Name] { // 值不为空的情况
 			// If this matcher must be non-empty, we can be smarter.
 			matchesEmpty := m.Matches("")
 			isNot := m.Type == labels.MatchNotEqual || m.Type == labels.MatchNotRegexp
 			if isNot && matchesEmpty { // l!="foo"
+				// 此条件永远不会被触发,labelMustBeSet=true的情况下Matches("")一定为假 ???
 				// If the label can't be empty and is a Not and the inner matcher
 				// doesn't match empty, then subtract it out at the end.
 				inverse, err := m.Inverse()
@@ -257,6 +268,9 @@ func PostingsForMatchers(ix IndexReader, ms ...*labels.Matcher) (index.Postings,
 				}
 				notIts = append(notIts, it)
 			} else if isNot && !matchesEmpty { // l!=""
+				// 以下条件触发
+				// - l != ""       -> l == ""
+				// - l !~ "空正则" -> l =~ "空正则"
 				// If the label can't be empty and is a Not, but the inner matcher can
 				// be empty we need to use inversePostingsForMatcher.
 				inverse, err := m.Inverse()
@@ -270,6 +284,9 @@ func PostingsForMatchers(ix IndexReader, ms ...*labels.Matcher) (index.Postings,
 				}
 				its = append(its, it)
 			} else { // l="a"
+				// 以下条件触发
+				// - l == "非空"
+				// - l =~ "非空正则"
 				// Non-Not matcher, use normal postingsForMatcher.
 				it, err := postingsForMatcher(ix, m)
 				if err != nil {
@@ -277,11 +294,17 @@ func PostingsForMatchers(ix IndexReader, ms ...*labels.Matcher) (index.Postings,
 				}
 				its = append(its, it)
 			}
-		} else { // l=""
+		} else { // l="" 值为空的情况
+			// l == ""与标签不存在视为相同
 			// If the matchers for a labelname selects an empty value, it selects all
 			// the series which don't have the label name set too. See:
 			// https://github.com/prometheus/prometheus/issues/3575 and
 			// https://github.com/prometheus/prometheus/pull/3578#issuecomment-351653555
+			// 以下几种情况本质上都是值为空,使用inverse保证所有未定义label的series也被匹配
+			// l == ""         -> l != ""
+			// l != "非空"     -> l == "非空"
+			// l =~ "空正则"   -> l !~ "空正则"
+			// l !~ "非空正则" -> l =~ "非空正则"
 			it, err := inversePostingsForMatcher(ix, m)
 			if err != nil {
 				return nil, err
@@ -289,7 +312,7 @@ func PostingsForMatchers(ix IndexReader, ms ...*labels.Matcher) (index.Postings,
 			notIts = append(notIts, it)
 		}
 	}
-
+	// 没有正向匹配的情况下匹配所有series后续再将反向的剔除掉
 	// If there's nothing to subtract from, add in everything and remove the notIts later.
 	if len(its) == 0 && len(notIts) != 0 {
 		k, v := index.AllPostingsKey()
@@ -299,9 +322,9 @@ func PostingsForMatchers(ix IndexReader, ms ...*labels.Matcher) (index.Postings,
 		}
 		its = append(its, allPostings)
 	}
-
+	// 取交集
 	it := index.Intersect(its...)
-
+	// 剔除反向匹配series
 	for _, n := range notIts {
 		it = index.Without(it, n)
 	}
@@ -311,12 +334,12 @@ func PostingsForMatchers(ix IndexReader, ms ...*labels.Matcher) (index.Postings,
 
 func postingsForMatcher(ix IndexReader, m *labels.Matcher) (index.Postings, error) {
 	// This method will not return postings for missing labels.
-
+	// 处理 l == v
 	// Fast-path for equal matching.
 	if m.Type == labels.MatchEqual {
 		return ix.Postings(m.Name, m.Value)
 	}
-
+	// 处理 l =~ v
 	// Fast-path for set matching.
 	if m.Type == labels.MatchRegexp {
 		setMatches := findSetMatches(m.GetRegexString())
@@ -330,9 +353,9 @@ func postingsForMatcher(ix IndexReader, m *labels.Matcher) (index.Postings, erro
 	if err != nil {
 		return nil, err
 	}
-
+	// 处理 l != v || l !~ v
 	var res []string
-	lastVal, isSorted := "", true
+	lastVal, isSorted := "", true // 优化使用,小技巧嘎嘎好 !!!
 	for _, val := range vals {
 		if m.Matches(val) {
 			res = append(res, val)
@@ -361,7 +384,7 @@ func inversePostingsForMatcher(ix IndexReader, m *labels.Matcher) (index.Posting
 	}
 
 	var res []string
-	lastVal, isSorted := "", true
+	lastVal, isSorted := "", true // 优化使用,小技巧嘎嘎好 !!!
 	for _, val := range vals {
 		if !m.Matches(val) {
 			res = append(res, val)

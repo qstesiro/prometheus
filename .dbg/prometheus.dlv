@@ -69,7 +69,7 @@
 # b storage/merge.go:141
 # b storage/merge.go:145
 # b promql/engine.go:559
-b promql/engine.go:803
+# b promql/engine.go:803
 # b promql.(*evaluator).Eval
 # b promql.(*evaluator).eval
 # b promql/engine.go:1206
@@ -181,6 +181,8 @@ b promql/engine.go:803
 # b head.go:2262
 
 # b chunks.(*ChunkDiskMapper).cut
+
+b tsdb.TestPostingsForMatchers
 
 # b chunks.(*ChunkDiskMapper).Truncate
 # b tsdb.NewBlockQuerier

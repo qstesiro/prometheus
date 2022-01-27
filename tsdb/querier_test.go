@@ -1577,7 +1577,7 @@ func TestPostingsForMatchers(t *testing.T) {
 	defer func() {
 		require.NoError(t, h.Close())
 	}()
-
+	// 增加指标
 	app := h.Appender(context.Background())
 	app.Append(0, labels.FromStrings("n", "1"), 0, 0)
 	app.Append(0, labels.FromStrings("n", "1", "i", "a"), 0, 0)
@@ -1585,7 +1585,7 @@ func TestPostingsForMatchers(t *testing.T) {
 	app.Append(0, labels.FromStrings("n", "2"), 0, 0)
 	app.Append(0, labels.FromStrings("n", "2.5"), 0, 0)
 	require.NoError(t, app.Commit())
-
+	// 测试用例
 	cases := []struct {
 		matchers []*labels.Matcher
 		exp      []labels.Labels

@@ -31,11 +31,17 @@ git config --local -l
 
 # 编译与调试
 {
+    # 编译
     alias gob='CGO_ENABLED=0 go build -v -gcflags "all=-N -l" -o prometheus cmd/prometheus/main.go'
+
     # 不删除data
     alias dlv='gob && dlv exec ./prometheus --init .dbg/prometheus.dlv -- --config.file=documentation/examples/prometheus.yml --enable-feature=promql-at-modifier --query.timeout=1h'
+
     # 删除data
     alias dlv='gob && rm -rf data/ && dlv exec ./prometheus --init .dbg/prometheus.dlv -- --config.file=documentation/examples/prometheus.yml --enable-feature=promql-at-modifier --query.timeout=1h'
+
+    # 测试
+    alias dlv='CGO_ENABLED=0 dlv test github.com/prometheus/prometheus/tsdb --init .dbg/prometheus.dlv -- -test.run TestPostingsForMatchers'
 }
 
 memChunk/mmappedChunk区别 !!!
