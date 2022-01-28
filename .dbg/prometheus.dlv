@@ -182,7 +182,8 @@
 
 # b chunks.(*ChunkDiskMapper).cut
 
-b tsdb.TestPostingsForMatchers
+# b tsdb.TestPostingsForMatchers
+b tsdb.PostingsForMatchers
 
 # b chunks.(*ChunkDiskMapper).Truncate
 # b tsdb.NewBlockQuerier
