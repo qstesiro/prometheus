@@ -234,19 +234,18 @@ func PostingsForMatchers(ix IndexReader, ms ...*labels.Matcher) (index.Postings,
 	labelMustBeSet := make(map[string]bool, len(ms))
 	for _, m := range ms {
 		if !m.Matches("") {
-			// 以下条件触发
-			// - l == "非空"
+			// 以下触发条件代表匹配条件决不会匹配到空(标签必须存在且值不为空)
+			// - l == "特定非空值"
 			// - l != ""
-			// - l =~ "非空正则"
-			// - l !~ "空正则"
-			// 以上条件代表标签必须存在且值不为空
+			// - l =~ "不能匹配空的正则"
+			// - l !~ "能匹配空的正则"
 			labelMustBeSet[m.Name] = true
 		}
-		// 其它情况触发
+		// 以下触发条件代表匹配条件一定或可能会匹配到空
 		// l == ""
-		// l != "非空"
-		// l =~ "空正则"
-		// l !~ "非空正则"
+		// l != "特定非空值"
+		// l =~ "能匹配空的正则"
+		// l !~ "不能匹配空的正则"
 	}
 	for _, m := range ms {
 		if labelMustBeSet[m.Name] { // 值不为空的情况
@@ -269,8 +268,8 @@ func PostingsForMatchers(ix IndexReader, ms ...*labels.Matcher) (index.Postings,
 				notIts = append(notIts, it)
 			} else if isNot && !matchesEmpty { // l!=""
 				// 以下条件触发
-				// - l != ""       -> l == ""
-				// - l !~ "空正则" -> l =~ "空正则"
+				// - l != ""               -> l == ""
+				// - l !~ "能匹配空的正则" -> l =~ "能匹配空的正则" (分析标签不存在的情况) ???
 				// If the label can't be empty and is a Not, but the inner matcher can
 				// be empty we need to use inversePostingsForMatcher.
 				inverse, err := m.Inverse()
@@ -285,8 +284,8 @@ func PostingsForMatchers(ix IndexReader, ms ...*labels.Matcher) (index.Postings,
 				its = append(its, it)
 			} else { // l="a"
 				// 以下条件触发
-				// - l == "非空"
-				// - l =~ "非空正则"
+				// - l == "特定非空值"
+				// - l =~ "不能匹配空的正则"
 				// Non-Not matcher, use normal postingsForMatcher.
 				it, err := postingsForMatcher(ix, m)
 				if err != nil {
@@ -300,11 +299,12 @@ func PostingsForMatchers(ix IndexReader, ms ...*labels.Matcher) (index.Postings,
 			// the series which don't have the label name set too. See:
 			// https://github.com/prometheus/prometheus/issues/3575 and
 			// https://github.com/prometheus/prometheus/pull/3578#issuecomment-351653555
-			// 以下几种情况本质上都是值为空,使用inverse保证所有未定义label的series也被匹配
-			// l == ""         -> l != ""
-			// l != "非空"     -> l == "非空"
-			// l =~ "空正则"   -> l !~ "空正则"
-			// l !~ "非空正则" -> l =~ "非空正则"
+			// 以下触发条件代表匹配条件一定或可能会匹配到空
+			// 使用inverse保证所有未定义label的series也被匹配
+			// l == ""
+			// l != "特定非空值"
+			// l =~ "能匹配空的正则"
+			// l !~ "不能匹配空的正则"
 			it, err := inversePostingsForMatcher(ix, m)
 			if err != nil {
 				return nil, err

@@ -1591,46 +1591,46 @@ func TestPostingsForMatchers(t *testing.T) {
 		exp      []labels.Labels
 	}{
 		// Simple equals.
-		{
-			matchers: []*labels.Matcher{
-				labels.MustNewMatcher(labels.MatchEqual, "n", "1"),
-			},
-			exp: []labels.Labels{
-				labels.FromStrings("n", "1"),
-				labels.FromStrings("n", "1", "i", "a"),
-				labels.FromStrings("n", "1", "i", "b"),
-			},
-		},
-		{
-			matchers: []*labels.Matcher{
-				labels.MustNewMatcher(labels.MatchEqual, "n", "1"),
-				labels.MustNewMatcher(labels.MatchEqual, "i", "a"),
-			},
-			exp: []labels.Labels{
-				labels.FromStrings("n", "1", "i", "a"),
-			},
-		},
-		{
-			matchers: []*labels.Matcher{
-				labels.MustNewMatcher(labels.MatchEqual, "n", "1"),
-				labels.MustNewMatcher(labels.MatchEqual, "i", "missing"),
-			},
-			exp: []labels.Labels{},
-		},
-		{
-			matchers: []*labels.Matcher{
-				labels.MustNewMatcher(labels.MatchEqual, "missing", ""),
-			},
-			// 结果中除了匹配包含missing=""的序列外还匹配所有不包含missing=""的序列
-			// 只对==与=~运算才有此特殊规则
-			exp: []labels.Labels{
-				labels.FromStrings("n", "1"),
-				labels.FromStrings("n", "1", "i", "a"),
-				labels.FromStrings("n", "1", "i", "b"),
-				labels.FromStrings("n", "2"),
-				labels.FromStrings("n", "2.5"),
-			},
-		},
+		// {
+		// 	matchers: []*labels.Matcher{
+		// 		labels.MustNewMatcher(labels.MatchEqual, "n", "1"),
+		// 	},
+		// 	exp: []labels.Labels{
+		// 		labels.FromStrings("n", "1"),
+		// 		labels.FromStrings("n", "1", "i", "a"),
+		// 		labels.FromStrings("n", "1", "i", "b"),
+		// 	},
+		// },
+		// {
+		// 	matchers: []*labels.Matcher{
+		// 		labels.MustNewMatcher(labels.MatchEqual, "n", "1"),
+		// 		labels.MustNewMatcher(labels.MatchEqual, "i", "a"),
+		// 	},
+		// 	exp: []labels.Labels{
+		// 		labels.FromStrings("n", "1", "i", "a"),
+		// 	},
+		// },
+		// {
+		// 	matchers: []*labels.Matcher{
+		// 		labels.MustNewMatcher(labels.MatchEqual, "n", "1"),
+		// 		labels.MustNewMatcher(labels.MatchEqual, "i", "missing"),
+		// 	},
+		// 	exp: []labels.Labels{},
+		// },
+		// {
+		// 	matchers: []*labels.Matcher{
+		// 		labels.MustNewMatcher(labels.MatchEqual, "missing", ""),
+		// 	},
+		// 	// 结果中除了匹配包含missing=""的序列外还匹配所有不包含missing=""的序列
+		// 	// 只对==与=~运算才有此特殊规则
+		// 	exp: []labels.Labels{
+		// 		labels.FromStrings("n", "1"),
+		// 		labels.FromStrings("n", "1", "i", "a"),
+		// 		labels.FromStrings("n", "1", "i", "b"),
+		// 		labels.FromStrings("n", "2"),
+		// 		labels.FromStrings("n", "2.5"),
+		// 	},
+		// },
 
 		// Not equals.
 		{
