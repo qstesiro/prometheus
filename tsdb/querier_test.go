@@ -1635,6 +1635,17 @@ func TestPostingsForMatchers(t *testing.T) {
 		// Not equals.
 		{
 			matchers: []*labels.Matcher{
+				labels.MustNewMatcher(labels.MatchNotEqual, "i", "a"),
+			},
+			exp: []labels.Labels{
+				labels.FromStrings("n", "1"),
+				labels.FromStrings("n", "1", "i", "b"),
+				labels.FromStrings("n", "2"),
+				labels.FromStrings("n", "2.5"),
+			},
+		},
+		{
+			matchers: []*labels.Matcher{
 				labels.MustNewMatcher(labels.MatchNotEqual, "n", "1"),
 			},
 			exp: []labels.Labels{

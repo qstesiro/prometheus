@@ -225,20 +225,24 @@ func findSetMatches(pattern string) []string {
 	return matches
 }
 
+// 这个函数的优化让我迷惑,是不是我想多了还是有什么特殊的优化 ???
+// - Inverse()与inversePostingsForMatcher有什么区别
+// - 当某个label至少有一个条件要求值决不会匹配到空的情况为什么如此复杂
+// 我注释了原有的代码,修改为我理解的操作可以通过单元测试
 // PostingsForMatchers assembles a single postings iterator against the index reader
 // based on the given matchers. The resulting postings are not ordered by series.
 func PostingsForMatchers(ix IndexReader, ms ...*labels.Matcher) (index.Postings, error) {
 	var its, notIts []index.Postings
 	// See which label must be non-empty.
 	// Optimization for case like {l=~".", l!="1"}.
-	labelMustBeSet := make(map[string]bool, len(ms))
+	labelMustBeSet := make(map[string]bool, len(ms)) // 注意这是个map,相同key可能会被覆盖
 	for _, m := range ms {
 		if !m.Matches("") {
 			// 以下触发条件代表匹配条件决不会匹配到空(标签必须存在且值不为空)
-			// - l == "特定非空值"
-			// - l != ""
-			// - l =~ "不能匹配空的正则"
-			// - l !~ "能匹配空的正则"
+			// l == "特定非空值"
+			// l != ""
+			// l =~ "不能匹配空的正则"
+			// l !~ "能匹配空的正则"
 			labelMustBeSet[m.Name] = true
 		}
 		// 以下触发条件代表匹配条件一定或可能会匹配到空
@@ -248,45 +252,83 @@ func PostingsForMatchers(ix IndexReader, ms ...*labels.Matcher) (index.Postings,
 		// l !~ "不能匹配空的正则"
 	}
 	for _, m := range ms {
-		if labelMustBeSet[m.Name] { // 值不为空的情况
-			// If this matcher must be non-empty, we can be smarter.
-			matchesEmpty := m.Matches("")
-			isNot := m.Type == labels.MatchNotEqual || m.Type == labels.MatchNotRegexp
-			if isNot && matchesEmpty { // l!="foo"
-				// 此条件永远不会被触发,labelMustBeSet=true的情况下Matches("")一定为假 ???
-				// If the label can't be empty and is a Not and the inner matcher
-				// doesn't match empty, then subtract it out at the end.
-				inverse, err := m.Inverse()
-				if err != nil {
-					return nil, err
-				}
+		if labelMustBeSet[m.Name] {
+			// 所有matchers中对于label至少有一个条件要求值决不会匹配到空
+			// 正常代码
+			{
+				// If this matcher must be non-empty, we can be smarter.
+				// matchesEmpty := m.Matches("")
+				// isNot := m.Type == labels.MatchNotEqual || m.Type == labels.MatchNotRegexp
+				// if isNot && matchesEmpty { // l!="foo"
+				// 	// 触发条件
+				// 	// l != "特定非空值"
+				// 	// l !~ "不能匹配空的正则"
+				// 	// If the label can't be empty and is a Not and the inner matcher
+				// 	// doesn't match empty, then subtract it out at the end.
+				// 	// 正常代码
+				// 	{
+				// 		// inverse, err := m.Inverse()
+				// 		// if err != nil {
+				// 		//     return nil, err
+				// 		// }
 
-				it, err := postingsForMatcher(ix, inverse)
-				if err != nil {
-					return nil, err
-				}
-				notIts = append(notIts, it)
-			} else if isNot && !matchesEmpty { // l!=""
-				// 以下条件触发
-				// - l != ""               -> l == ""
-				// - l !~ "能匹配空的正则" -> l =~ "能匹配空的正则" (分析标签不存在的情况) ???
-				// If the label can't be empty and is a Not, but the inner matcher can
-				// be empty we need to use inversePostingsForMatcher.
-				inverse, err := m.Inverse()
-				if err != nil {
-					return nil, err
-				}
+				// 		// it, err := postingsForMatcher(ix, inverse)
+				// 		// if err != nil {
+				// 		//     return nil, err
+				// 		// }
+				// 		// notIts = append(notIts, it)
+				// 	}
+				// 	// 测试代码
+				// 	{
+				// 		it, err := postingsForMatcher(ix, m)
+				// 		if err != nil {
+				// 			return nil, err
+				// 		}
+				// 		its = append(its, it)
+				// 	}
+				// } else if isNot && !matchesEmpty { // l!=""
+				// 	// 触发条件
+				// 	// l != ""
+				// 	// l !~ "能匹配空的正则"
+				// 	// If the label can't be empty and is a Not, but the inner matcher can
+				// 	// be empty we need to use inversePostingsForMatcher.
+				// 	// 正常代码
+				// 	{
+				// 		// inverse, err := m.Inverse()
+				// 		// if err != nil {
+				// 		// 	return nil, err
+				// 		// }
 
-				it, err := inversePostingsForMatcher(ix, inverse)
-				if err != nil {
-					return nil, err
-				}
-				its = append(its, it)
-			} else { // l="a"
-				// 以下条件触发
-				// - l == "特定非空值"
-				// - l =~ "不能匹配空的正则"
-				// Non-Not matcher, use normal postingsForMatcher.
+				// 		// it, err := inversePostingsForMatcher(ix, inverse)
+				// 		// if err != nil {
+				// 		// 	return nil, err
+				// 		// }
+				// 		// its = append(its, it)
+				// 	}
+				// 	// 测试代码
+				// 	{
+				// 		it, err := postingsForMatcher(ix, m)
+				// 		if err != nil {
+				// 			return nil, err
+				// 		}
+				// 		its = append(its, it)
+				// 	}
+				// } else { // l="a"
+				// 	// 以下条件触发
+				// 	// l == ""
+				// 	// l == "特定非空值"
+				// 	// l =~ "能匹配空的正则"
+				// 	// l =~ "不能匹配空的正则"
+				// 	// Non-Not matcher, use normal postingsForMatcher.
+				// 	it, err := postingsForMatcher(ix, m)
+				// 	if err != nil {
+				// 		return nil, err
+				// 	}
+				// 	its = append(its, it)
+				// }
+			}
+			// 测试代码
+			{
 				it, err := postingsForMatcher(ix, m)
 				if err != nil {
 					return nil, err
@@ -294,6 +336,7 @@ func PostingsForMatchers(ix IndexReader, ms ...*labels.Matcher) (index.Postings,
 				its = append(its, it)
 			}
 		} else { // l="" 值为空的情况
+			// 所有matchers中对于label的所有匹配条件或者一定或者可能会匹配到空
 			// l == ""与标签不存在视为相同
 			// If the matchers for a labelname selects an empty value, it selects all
 			// the series which don't have the label name set too. See:
@@ -305,11 +348,26 @@ func PostingsForMatchers(ix IndexReader, ms ...*labels.Matcher) (index.Postings,
 			// l != "特定非空值"
 			// l =~ "能匹配空的正则"
 			// l !~ "不能匹配空的正则"
-			it, err := inversePostingsForMatcher(ix, m)
-			if err != nil {
-				return nil, err
+			// 正常代码
+			{
+				// it, err := inversePostingsForMatcher(ix, m)
+				// if err != nil {
+				// 	return nil, err
+				// }
+				// 测试
 			}
-			notIts = append(notIts, it)
+			// 测试代码
+			{
+				inverse, err := m.Inverse()
+				if err != nil {
+					return nil, err
+				}
+				it, err := postingsForMatcher(ix, inverse)
+				if err != nil {
+					return nil, err
+				}
+				notIts = append(notIts, it)
+			}
 		}
 	}
 	// 没有正向匹配的情况下匹配所有series后续再将反向的剔除掉
