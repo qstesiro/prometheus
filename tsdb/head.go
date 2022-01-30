@@ -1657,7 +1657,7 @@ func (h *headChunkReader) Chunk(ref uint64) (chunkenc.Chunk, error) {
 	}, nil
 }
 
-// headChunk压缩时不是并发安全(具体细节后续还研究) ???
+// headChunk压缩时不是并发安全(具体细节后续再研究) ???
 type safeChunk struct {
 	chunkenc.Chunk
 	s               *memSeries
@@ -2499,6 +2499,7 @@ func (mc *memChunk) OverlapsClosedInterval(mint, maxt int64) bool {
 	return mc.minTime <= maxt && mint <= mc.maxTime
 }
 
+// 实现了chunkenc.Iterator
 type stopIterator struct {
 	chunkenc.Iterator
 
@@ -2513,6 +2514,7 @@ func (it *stopIterator) Next() bool {
 	return it.Iterator.Next()
 }
 
+// 实现了chunkenc.Iterator
 type memSafeIterator struct {
 	stopIterator
 

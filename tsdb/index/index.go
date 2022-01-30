@@ -1891,6 +1891,7 @@ func NewStringListIter(s []string) StringIter {
 	return &stringListIter{l: s}
 }
 
+// 实现了StringIter接口
 // symbolsIter implements StringIter.
 type stringListIter struct {
 	l   []string

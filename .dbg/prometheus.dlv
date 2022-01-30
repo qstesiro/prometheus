@@ -187,6 +187,10 @@
 # b tsdb/querier.go:259
 # b tsdb/querier.go:275
 
+# b tsdb.(*headChunkReader).Chunk
+# b tsdb.(*chunkenc).Appender
+b tsdb/head.go:2476
+
 # b chunks.(*ChunkDiskMapper).Truncate
 # b tsdb.NewBlockQuerier
 # b tsdb.newBlockBaseQuerier
