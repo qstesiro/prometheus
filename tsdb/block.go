@@ -16,6 +16,7 @@ package tsdb
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
@@ -277,6 +278,8 @@ type Block struct {
 // OpenBlock opens the block in the directory. It can be passed a chunk pool, which is used
 // to instantiate chunk structs.
 func OpenBlock(logger log.Logger, dir string, pool chunkenc.Pool) (pb *Block, err error) {
+	// debug ???
+	fmt.Printf("block dir: %s\n", dir)
 	if logger == nil {
 		logger = log.NewNopLogger()
 	}
