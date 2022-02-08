@@ -137,6 +137,7 @@ func (c *XORChunk) Iterator(it Iterator) Iterator {
 	return c.iterator(it)
 }
 
+// 实现了chunkenc.Appender接口
 type xorAppender struct {
 	b *bstream
 
@@ -157,6 +158,8 @@ func (a *xorAppender) Append(t int64, v float64) {
 		for _, b := range buf[:binary.PutVarint(buf, t)] {
 			a.b.writeByte(b)
 		}
+		// 浮点数二进制表示
+		// https://www.h-schmidt.net/FloatConverter/IEEE754.html
 		a.b.writeBits(math.Float64bits(v), 64)
 
 	} else if num == 1 {
@@ -166,7 +169,7 @@ func (a *xorAppender) Append(t int64, v float64) {
 		for _, b := range buf[:binary.PutUvarint(buf, tDelta)] {
 			a.b.writeByte(b)
 		}
-
+		// v也按增量处理 ???
 		a.writeVDelta(v)
 
 	} else {
@@ -191,7 +194,7 @@ func (a *xorAppender) Append(t int64, v float64) {
 			a.b.writeBits(0x0f, 4) // '1111'
 			a.b.writeBits(uint64(dod), 64)
 		}
-
+		// v也按增量处理 ???
 		a.writeVDelta(v)
 	}
 

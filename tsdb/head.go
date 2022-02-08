@@ -2347,6 +2347,7 @@ func (s *memSeries) append(t int64, v float64, appendID uint64, chunkDiskMapper 
 		c = s.cutNewHeadChunk(t, chunkDiskMapper)
 		chunkCreated = true
 	}
+	// 添加数据
 	s.app.Append(t, v)
 
 	c.maxTime = t // 代表当前头采样的最新时间

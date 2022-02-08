@@ -760,7 +760,7 @@ func (db *DB) run() {
 
 		select {
 		case <-time.After(1 * time.Minute):
-			// 触发压缩逻辑尝试压缩线逻处理
+			// 触发压缩逻辑尝试压缩线逻辑处理
 			db.cmtx.Lock()
 			if err := db.reloadBlocks(); err != nil {
 				level.Error(db.logger).Log("msg", "reloadBlocks", "err", err)
@@ -779,7 +779,7 @@ func (db *DB) run() {
 
 			db.autoCompactMtx.Lock()
 			if db.autoCompact { // 当前恒定为true
-				level.Info(db.logger).Log("msg", "---------------------------- start compact ???")
+				level.Info(db.logger).Log("msg", "---------------------------- start compact ???") // debug ???
 				if err := db.Compact(); err != nil {
 					level.Error(db.logger).Log("msg", "compaction failed", "err", err)
 					backoff = exponential(backoff, 1*time.Second, 1*time.Minute)
@@ -816,7 +816,7 @@ func (a dbAppender) Commit() error {
 	// 判定是否需要处理压缩逻辑
 	if a.db.head.compactable() {
 		select {
-		case a.db.compactc <- struct{}{}: // 触发压缩线逻处理(一定会执行因为已经判定过了)
+		case a.db.compactc <- struct{}{}: // 触发压缩线逻辑处理(一定会执行因为已经判定过了)
 		default:
 		}
 	}
