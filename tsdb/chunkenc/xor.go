@@ -214,6 +214,10 @@ func bitRange(x int64, nbits uint8) bool {
 	return -((1<<(nbits-1))-1) <= x && x <= 1<<(nbits-1)
 }
 
+func (a *xorAppender) writeTDelta(t int64) {
+	// 是否增加单独的时间写入函数逻辑对称性更好 ???
+}
+
 func (a *xorAppender) writeVDelta(v float64) {
 	vDelta := math.Float64bits(v) ^ math.Float64bits(a.v)
 
