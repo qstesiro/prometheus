@@ -59,6 +59,12 @@ type XORChunk struct {
 	b bstream
 }
 
+// 资料文章
+// http://www.nosqlnotes.com/technotes/tsdb/facebook-gorilla-1/
+// https://developer.aliyun.com/article/174535
+// https://www.jianshu.com/p/0e21343b244d
+// https://github.com/chenjiandongx/mandodb
+
 // NewXORChunk returns a new chunk with XOR encoding of the given size.
 func NewXORChunk() *XORChunk {
 	b := make([]byte, 2, 128)
