@@ -1,0 +1,29 @@
+NewConsumerGroup
+  NewClient
+    randomizeSeedBrokers
+      NewBroker
+  newConsumerGroup
+    NewConsumerFromClient
+      newConsumer
+
+consumerGroup.Consume
+  Client.RefreshMetadata
+  consumerGroup.newSession
+    newConsumerGroupSession
+      consumerGroupSession.consume
+        newConsumerGroupClaim
+          consumer.ConsumePartition
+            &partitionConsumer
+            client.Leader
+              client.RefreshMetadata
+                client.tryRefreshMetadata
+                  client.any
+                    Broker.Open
+            consumer.addChild
+            go partitionConsumer.dispatcher
+            go partitionConsumer.responseFeeder
+            consumer.refBrokerConsumer
+              consumer.newBrokerConsumer
+                &brokerConsumer
+                go brokerConsumer.subscriptionManager
+                go brokerConsumer.subscriptionConsumer
