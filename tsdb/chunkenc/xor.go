@@ -60,6 +60,7 @@ type XORChunk struct {
 }
 
 // 资料文章
+// https://www.vldb.org/pvldb/vol8/p1816-teller.pdf(论文)
 // http://www.nosqlnotes.com/technotes/tsdb/facebook-gorilla-1/
 // https://developer.aliyun.com/article/174535
 // https://www.jianshu.com/p/0e21343b244d
@@ -184,6 +185,7 @@ func (a *xorAppender) Append(t int64, v float64) {
 
 		// Gorilla has a max resolution of seconds, Prometheus milliseconds.
 		// Thus we use higher value range steps with larger bit size.
+		// 扩大了范围grollia精度是秒而prometheus精度是毫秒
 		switch {
 		case dod == 0:
 			a.b.writeBit(zero)
@@ -234,7 +236,7 @@ func (a *xorAppender) writeVDelta(v float64) {
 	if leading >= 32 {
 		leading = 31
 	}
-
+	// a.leading == uint8(0xff) 不可能成立 ???
 	if a.leading != 0xff && leading >= a.leading && trailing >= a.trailing {
 		a.b.writeBit(zero)
 		a.b.writeBits(vDelta>>a.trailing, 64-int(a.leading)-int(a.trailing))
