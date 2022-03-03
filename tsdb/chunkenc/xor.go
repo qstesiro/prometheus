@@ -156,6 +156,18 @@ type xorAppender struct {
 	trailing uint8
 }
 
+// +-------------------------------+-------------------+
+// |               T1              |         V1        |
+// +-------------------------------+-------------------+
+// |            TD=T2-T1           |      VD=V2^V1     |
+// +-------------------------------+-------------------+
+// |         TDOD=T3-T2-TD         |      VD=V3^V2     |
+// +-------------------------------+-------------------+
+// |              ...              |        ...        |
+// +-------------------------------+-------------------+
+// | TDOD[n]=T[n]-T[n-1]-TDOD[n-1] | VD[n]=V[n]^V[n-1] |
+// +-------------------------------+-------------------+
+
 func (a *xorAppender) Append(t int64, v float64) {
 	var tDelta uint64
 	num := binary.BigEndian.Uint16(a.b.bytes())
@@ -208,7 +220,7 @@ func (a *xorAppender) Append(t int64, v float64) {
 
 	a.t = t
 	a.v = v
-	binary.BigEndian.PutUint16(a.b.bytes(), num+1)
+	binary.BigEndian.PutUint16(a.b.bytes(), num+1) // 记录T/V对数
 	a.tDelta = tDelta
 }
 
@@ -260,13 +272,13 @@ type xorIterator struct {
 	numTotal uint16
 	numRead  uint16
 
-	t   int64
-	val float64
+	t   int64   // 前一个T
+	val float64 // 前一个V
 
 	leading  uint8
 	trailing uint8
 
-	tDelta uint64
+	tDelta uint64 // 前一个DOD
 	err    error
 }
 
@@ -295,7 +307,7 @@ func (it *xorIterator) Reset(b []byte) {
 	// The first 2 bytes contain chunk headers.
 	// We skip that for actual samples.
 	it.br = newBReader(b[2:])
-	it.numTotal = binary.BigEndian.Uint16(b)
+	it.numTotal = binary.BigEndian.Uint16(b) // 取出T/V对数
 
 	it.numRead = 0
 	it.t = 0
@@ -310,7 +322,7 @@ func (it *xorIterator) Next() bool {
 	if it.err != nil || it.numRead == it.numTotal {
 		return false
 	}
-
+	// 第一对T/V
 	if it.numRead == 0 {
 		t, err := binary.ReadVarint(&it.br)
 		if err != nil {
@@ -328,6 +340,7 @@ func (it *xorIterator) Next() bool {
 		it.numRead++
 		return true
 	}
+	// 第二对T/V
 	if it.numRead == 1 {
 		tDelta, err := binary.ReadUvarint(&it.br)
 		if err != nil {
@@ -339,7 +352,7 @@ func (it *xorIterator) Next() bool {
 
 		return it.readValue()
 	}
-
+	// 读取TDOD的长度前缀
 	var d byte
 	// read delta-of-delta
 	for i := 0; i < 4; i++ {
@@ -352,6 +365,7 @@ func (it *xorIterator) Next() bool {
 			it.err = err
 			return false
 		}
+		// 可能值10/110/1110/1111
 		if bit == zero {
 			break
 		}
