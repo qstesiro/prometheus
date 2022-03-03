@@ -117,7 +117,7 @@ func (c *XORChunk) Appender() (Appender, error) {
 		trailing: it.trailing,
 	}
 	if binary.BigEndian.Uint16(a.b.bytes()) == 0 {
-		a.leading = 0xff
+		a.leading = 0xff // 初始
 	}
 	return a, nil
 }
@@ -156,6 +156,7 @@ type xorAppender struct {
 	trailing uint8
 }
 
+// 整体格式
 // +-------------------------------+-------------------+
 // |               T1              |         V1        |
 // +-------------------------------+-------------------+
@@ -168,6 +169,19 @@ type xorAppender struct {
 // | TDOD[n]=T[n]-T[n-1]-TDOD[n-1] | VD[n]=V[n]^V[n-1] |
 // +-------------------------------+-------------------+
 
+// Delta-of-Delta格式
+// +-+
+// |0|
+// +-+
+// +----+---------+
+// |  10| 14位DOD |
+// +----+---------+
+// | 110| 17位DOD |
+// +----+---------+
+// |1110| 20位DOD |
+// +---+----------+
+// |1111| 64位DOD |
+// +---+----------+
 func (a *xorAppender) Append(t int64, v float64) {
 	var tDelta uint64
 	num := binary.BigEndian.Uint16(a.b.bytes())
@@ -188,7 +202,6 @@ func (a *xorAppender) Append(t int64, v float64) {
 		for _, b := range buf[:binary.PutUvarint(buf, tDelta)] {
 			a.b.writeByte(b)
 		}
-		// v也按增量处理 ???
 		a.writeVDelta(v)
 
 	} else {
@@ -197,7 +210,7 @@ func (a *xorAppender) Append(t int64, v float64) {
 
 		// Gorilla has a max resolution of seconds, Prometheus milliseconds.
 		// Thus we use higher value range steps with larger bit size.
-		// 扩大了范围grollia精度是秒而prometheus精度是毫秒
+		// 扩大了范围gorilla精度是秒而prometheus精度是毫秒
 		switch {
 		case dod == 0:
 			a.b.writeBit(zero)
@@ -214,7 +227,6 @@ func (a *xorAppender) Append(t int64, v float64) {
 			a.b.writeBits(0x0f, 4) // '1111'
 			a.b.writeBits(uint64(dod), 64)
 		}
-		// v也按增量处理 ???
 		a.writeVDelta(v)
 	}
 
@@ -232,13 +244,24 @@ func (a *xorAppender) writeTDelta(t int64) {
 	// 是否增加单独的时间写入函数逻辑对称性更好 ???
 }
 
+// XOR-Delta格式
+// +-+
+// |0|
+// +-+
+// +-+-+------------------+
+// |1|0| 与前顶替相同位数 |
+// +-+-+------------------+
+// +-+-+-----------------+-------------------+----------+
+// |1|1| leading长度(5b) |  差值占用位数(6b) | 差值数据 |
+// +-+-+-----------------+-------------------+----------+
 func (a *xorAppender) writeVDelta(v float64) {
 	vDelta := math.Float64bits(v) ^ math.Float64bits(a.v)
-
+	// 与前值相等
 	if vDelta == 0 {
 		a.b.writeBit(zero)
 		return
 	}
+	// 与前值不相等
 	a.b.writeBit(one)
 
 	leading := uint8(bits.LeadingZeros64(vDelta))
@@ -248,14 +271,20 @@ func (a *xorAppender) writeVDelta(v float64) {
 	if leading >= 32 {
 		leading = 31
 	}
-	// a.leading == uint8(0xff) 不可能成立 ???
+	// a.leading != 0xff 保证第二个值必须进行差值运算
 	if a.leading != 0xff && leading >= a.leading && trailing >= a.trailing {
+		// +-+-+------------------+
+		// |1|0| 与前顶替相同位数 |
+		// +-+-+------------------+
 		a.b.writeBit(zero)
 		a.b.writeBits(vDelta>>a.trailing, 64-int(a.leading)-int(a.trailing))
 	} else {
 		a.leading, a.trailing = leading, trailing
-
+		// +-+-+-----------------+-------------------+----------+
+		// |1|1| leading长度(5b) |  差值占用位数(6b) | 差值数据 |
+		// +-+-+-----------------+-------------------+----------+
 		a.b.writeBit(one)
+		// leading/tailing两者必须存储之一不然无法计算原始数据
 		a.b.writeBits(uint64(leading), 5)
 
 		// Note that if leading == trailing == 0, then sigbits == 64.  But that value doesn't actually fit into the 6 bits we have.
@@ -426,8 +455,10 @@ func (it *xorIterator) readValue() bool {
 	}
 
 	if bit == zero {
+		// 与前值相等
 		// it.val = it.val
 	} else {
+		// 与前值不相等
 		bit, err := it.br.readBitFast()
 		if err != nil {
 			bit, err = it.br.readBit()
@@ -439,8 +470,9 @@ func (it *xorIterator) readValue() bool {
 		if bit == zero {
 			// reuse leading/trailing zero bits
 			// it.leading, it.trailing = it.leading, it.trailing
+			// 复用前差值长度
 		} else {
-			bits, err := it.br.readBitsFast(5)
+			bits, err := it.br.readBitsFast(5) // leading位序列
 			if err != nil {
 				bits, err = it.br.readBits(5)
 			}
@@ -448,9 +480,9 @@ func (it *xorIterator) readValue() bool {
 				it.err = err
 				return false
 			}
-			it.leading = uint8(bits)
+			it.leading = uint8(bits) // 转换位序列
 
-			bits, err = it.br.readBitsFast(6)
+			bits, err = it.br.readBitsFast(6) // 差值长度位序列
 			if err != nil {
 				bits, err = it.br.readBits(6)
 			}
@@ -458,16 +490,16 @@ func (it *xorIterator) readValue() bool {
 				it.err = err
 				return false
 			}
-			mbits := uint8(bits)
+			mbits := uint8(bits) // 转换位序列
 			// 0 significant bits here means we overflowed and we actually need 64; see comment in encoder
 			if mbits == 0 {
 				mbits = 64
 			}
-			it.trailing = 64 - it.leading - mbits
+			it.trailing = 64 - it.leading - mbits // 计算tailing
 		}
 
-		mbits := 64 - it.leading - it.trailing
-		bits, err := it.br.readBitsFast(mbits)
+		mbits := 64 - it.leading - it.trailing // 差值长度
+		bits, err := it.br.readBitsFast(mbits) // 获取差值
 		if err != nil {
 			bits, err = it.br.readBits(mbits)
 		}
@@ -475,9 +507,9 @@ func (it *xorIterator) readValue() bool {
 			it.err = err
 			return false
 		}
-		vbits := math.Float64bits(it.val)
-		vbits ^= bits << it.trailing
-		it.val = math.Float64frombits(vbits)
+		vbits := math.Float64bits(it.val)    // 前值转换位序列
+		vbits ^= bits << it.trailing         // 还原当前值位序列
+		it.val = math.Float64frombits(vbits) // 转换为正常值
 	}
 
 	it.numRead++
