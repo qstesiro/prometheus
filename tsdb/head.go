@@ -1363,7 +1363,7 @@ func (a *headAppender) Commit() (err error) {
 			a.head.metrics.chunksCreated.Inc()
 		}
 	}
-
+	// 指标处理
 	a.head.metrics.samplesAppended.Add(float64(total))
 	a.head.updateMinMaxTime(a.mint, a.maxt) // 更新时间区间
 
