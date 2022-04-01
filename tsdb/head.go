@@ -1226,6 +1226,7 @@ type headAppender struct {
 // 两个列表一个记录采样另一个记录序列
 // storage.Appender
 func (a *headAppender) Append(ref uint64, lset labels.Labels, t int64, v float64) (uint64, error) {
+	// 判定是否非法
 	if t < a.minValidTime {
 		a.head.metrics.outOfBoundSamples.Inc()
 		return 0, storage.ErrOutOfBounds
@@ -1280,6 +1281,8 @@ func (a *headAppender) Append(ref uint64, lset labels.Labels, t int64, v float64
 	if t > a.maxt {
 		a.maxt = t
 	}
+	// samples与sampleSeries是1vs1关系
+	// series只有新创建的才会记录
 	// 记录采样值
 	a.samples = append(a.samples, record.RefSample{
 		Ref: s.ref,
