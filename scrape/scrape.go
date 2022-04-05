@@ -603,6 +603,7 @@ type scraper interface {
 }
 
 // targetScraper implements the scraper interface for a target.
+// 实现了scraper接口
 type targetScraper struct {
 	*Target
 
@@ -1089,6 +1090,7 @@ func (sl *scrapeLoop) scrapeAndReport(interval, timeout time.Duration, last, app
 			app.Rollback()
 			return
 		}
+		// 在一个目标的数据写入后立即提交
 		err = app.Commit()
 		if err != nil {
 			level.Error(sl.l).Log("msg", "Scrape commit failed", "err", err)
@@ -1118,11 +1120,13 @@ func (sl *scrapeLoop) scrapeAndReport(interval, timeout time.Duration, last, app
 
 	var contentType string
 	scrapeCtx, cancel := context.WithTimeout(sl.parentCtx, timeout)
+	// 抓取一个目标的数据
 	contentType, scrapeErr = sl.scraper.scrape(scrapeCtx, buf)
 	cancel()
 	// for debug ???
-	_v := buf.String()
-	_ = _v
+	{
+		fmt.Println(buf.String())
+	}
 	if scrapeErr == nil {
 		b = buf.Bytes()
 		// NOTE: There were issues with misbehaving clients in the past
@@ -1140,6 +1144,7 @@ func (sl *scrapeLoop) scrapeAndReport(interval, timeout time.Duration, last, app
 
 	// A failed scrape is the same as an empty scrape,
 	// we still call sl.append to trigger stale markers.
+	// 将一个抓取目标的数据写入
 	total, added, seriesAdded, appErr = sl.append(app, b, contentType, appendTime)
 	if appErr != nil {
 		app.Rollback()

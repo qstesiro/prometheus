@@ -1263,6 +1263,7 @@ func (a *headAppender) Append(ref uint64, lset labels.Labels, t int64, v float64
 	}
 
 	s.Lock()
+	// 仅仅判断数据是否合法
 	if err := s.appendable(t, v); err != nil {
 		s.Unlock()
 		if err == storage.ErrOutOfOrderSample {
@@ -1325,6 +1326,8 @@ func (a *headAppender) log() error {
 	return nil
 }
 
+// Commit调用时机是当一个被抓取目标的一次抓取结果执行完Append后立即执行提交
+// 也就是代表一个目标的一次抓取对应一次提交
 // 提交之前写入数据[按批次]
 // 先记录WAL再写入采样对应序列的chunk中
 // 因为记录了WAL所以只要成功提交后就保证数据不会丢失
@@ -1865,6 +1868,8 @@ func (h *Head) getOrCreate(hash uint64, lset labels.Labels) (*memSeries, bool, e
 }
 
 func (h *Head) getOrCreateWithID(id, hash uint64, lset labels.Labels) (*memSeries, bool, error) {
+	// 不明白为什么不先判断是否已经存在而是先创建一个新的 ???
+	// 代码应该是一开始这样写的,但是后续发现了问题并在getOrCreate中增加了提前的判断
 	s := newMemSeries(lset, id, h.chunkRange.Load(), &h.memChunkPool)
 
 	s, created, err := h.series.getOrSet(hash, s)
