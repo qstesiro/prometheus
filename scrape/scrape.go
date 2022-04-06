@@ -1083,7 +1083,7 @@ func (sl *scrapeLoop) scrapeAndReport(interval, timeout time.Duration, last, app
 
 	var total, added, seriesAdded int
 	var err, appErr, scrapeErr error
-
+	// 每次目标的数据抓取都会创建一个新的appender
 	app := sl.appender(sl.parentCtx)
 	defer func() {
 		if err != nil {

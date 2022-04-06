@@ -1218,7 +1218,7 @@ type headAppender struct {
 	samples      []record.RefSample
 	sampleSeries []*memSeries
 
-	appendID, cleanupAppendIDsBelow uint64
+	appendID, cleanupAppendIDsBelow uint64 // iso相关后续再分析 ???
 	closed                          bool
 }
 
@@ -1336,10 +1336,12 @@ func (a *headAppender) Commit() (err error) {
 	if a.closed {
 		return ErrAppenderClosed
 	}
+	// 标记为关闭一次提交或回滚后不再使用
 	defer func() { a.closed = true }()
 	// 记录WAL
 	if err := a.log(); err != nil {
 		//nolint: errcheck
+		// 这个处理看不明白, log已经失败了,再执行Rollback(其内部再次调用log) ???
 		a.Rollback() // Most likely the same error will happen again.
 		return errors.Wrap(err, "write to WAL")
 	}
@@ -1381,6 +1383,7 @@ func (a *headAppender) Rollback() (err error) {
 	if a.closed {
 		return ErrAppenderClosed
 	}
+	// 标记为关闭一次提交或回滚后不再使用
 	defer func() { a.closed = true }()
 	defer a.head.metrics.activeAppenders.Dec()
 	defer a.head.iso.closeAppend(a.appendID)

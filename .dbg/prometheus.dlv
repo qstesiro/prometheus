@@ -154,7 +154,7 @@
 
 # head
 # b tsdb.NewHead
-# b tsdb.(*Head).Appender
+b tsdb.(*Head).Appender
 # b tsdb.(*Head).initTime
 # b tsdb.(*Head).getOrCreateWithID
 # b tsdb.(*Head).Truncate
@@ -171,7 +171,7 @@
 # b scrape.go:1317
 # b scrape.go:1349
 # b tsdb.(*headAppender).Append
-b tsdb.(*headAppender).Commit
+# b tsdb.(*headAppender).Commit
 # b tsdb.(*headAppender).Rollback
 # b tsdb.(*headAppender).log
 
