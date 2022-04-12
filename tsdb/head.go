@@ -2352,10 +2352,10 @@ func (s *memSeries) append(t int64, v float64, appendID uint64, chunkDiskMapper 
 	// If we reach 25% of a chunk's desired sample count, set a definitive time
 	// at which to start the next chunk.
 	// At latest it must happen at the timestamp set when the chunk was cut.
-	// 根据采样频率动态调整切割线位置频率越高切割越频繁反之切割频率越低
-	// 但是切割最大时间窗口不会大于chunkRange(当前硬编码2h)
-	// 按此逻辑来看我们实际生产中所使用的采样频率来计算实际的切割触发都会少于2h
 	/*
+	   根据采样频率动态调整切割线位置频率越高切割越频繁反之切割频率越低
+	   但是切割最大时间窗口不会大于chunkRange(当前硬编码2h)
+	   按此逻辑来看我们实际生产中所使用的采样频率来计算实际的切割触发都会少于2h
 	   例如: 采样频率5s来计算切割频率大约为10m
 	   t1 = 5s * 30 = 150 = 2.5m
 	   t2 = t1 * 4 = 2.5m * 4 = 10m
@@ -2371,7 +2371,7 @@ func (s *memSeries) append(t int64, v float64, appendID uint64, chunkDiskMapper 
 	s.app.Append(t, v)
 
 	c.maxTime = t // 代表当前头采样的最新时间
-
+	// 此处与事务隔离有关还没有具体分析 ???
 	s.sampleBuf[0] = s.sampleBuf[1]
 	s.sampleBuf[1] = s.sampleBuf[2]
 	s.sampleBuf[2] = s.sampleBuf[3]
