@@ -2327,6 +2327,7 @@ func (s *memSeries) append(t int64, v float64, appendID uint64, chunkDiskMapper 
 	// Based on Gorilla white papers this offers near-optimal compression ratio
 	// so anything bigger that this has diminishing returns and increases
 	// the time range within which we have to decompress all samples.
+	// 假定一分采样一次
 	const samplesPerChunk = 120
 
 	c := s.head()
@@ -2342,6 +2343,7 @@ func (s *memSeries) append(t int64, v float64, appendID uint64, chunkDiskMapper 
 		chunkCreated = true
 	}
 	numSamples := c.chunk.NumSamples()
+	fmt.Printf("%s = %d\n", s.lset.String(), numSamples) // debug ???
 
 	// Out of order sample.
 	if c.maxTime >= t {
@@ -2350,7 +2352,14 @@ func (s *memSeries) append(t int64, v float64, appendID uint64, chunkDiskMapper 
 	// If we reach 25% of a chunk's desired sample count, set a definitive time
 	// at which to start the next chunk.
 	// At latest it must happen at the timestamp set when the chunk was cut.
-	// 不明白 ???
+	// 根据采样频率动态调整切割线位置频率越高切割越频繁反之切割频率越低
+	// 但是切割最大时间窗口不会大于chunkRange(当前硬编码2h)
+	// 按此逻辑来看我们实际生产中所使用的采样频率来计算实际的切割触发都会少于2h
+	/*
+	   例如: 采样频率5s来计算切割频率大约为10m
+	   t1 = 5s * 30 = 150 = 2.5m
+	   t2 = t1 * 4 = 2.5m * 4 = 10m
+	*/
 	if numSamples == samplesPerChunk/4 {
 		s.nextAt = computeChunkEndTime(c.minTime, c.maxTime, s.nextAt)
 	}

@@ -154,7 +154,7 @@
 
 # head
 # b tsdb.NewHead
-b tsdb.(*Head).Appender
+# b tsdb.(*Head).Appender
 # b tsdb.(*Head).initTime
 # b tsdb.(*Head).getOrCreateWithID
 # b tsdb.(*Head).Truncate
@@ -178,7 +178,8 @@ b tsdb.(*Head).Appender
 # b tsdb.newMemSeries
 # b tsdb.(*memSeries).append
 # b tsdb.(*memSeries).cutNewHeadChunk
-# b head.go:2262
+b tsdb.computeChunkEndTime
+# b head.go:2356
 
 # b chunks.(*ChunkDiskMapper).cut
 
