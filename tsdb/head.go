@@ -2148,7 +2148,7 @@ type memSeries struct {
 	nextAt        int64     // Timestamp at which to cut the next chunk.
 	sampleBuf     [4]sample // 记录最新写入headChunk的4个采样[具体作用还没有看明白] ???
 	pendingCommit bool      // Whether there are samples waiting to be committed to this series.
-
+	// 每次切割新的headChunk会赋值一个新的chunkenc.xorAppender
 	app chunkenc.Appender // Current appender for the chunk.
 
 	memChunkPool *sync.Pool
@@ -2198,9 +2198,9 @@ func (s *memSeries) cutNewHeadChunk(mint int64, chunkDiskMapper *chunks.ChunkDis
 
 	// Set upper bound on when the next chunk must be started. An earlier timestamp
 	// may be chosen dynamically at a later point.
-	// 设置下一个切割点
+	// 设置下一个切割点(chunkRange默认2h)
 	s.nextAt = rangeForTimestamp(mint, s.chunkRange)
-
+	// chunkenc.xorAppender类型
 	app, err := s.headChunk.chunk.Appender()
 	if err != nil {
 		panic(err)
@@ -2368,6 +2368,7 @@ func (s *memSeries) append(t int64, v float64, appendID uint64, chunkDiskMapper 
 		chunkCreated = true
 	}
 	// 添加数据
+	// app在cutNewHeadChunk中被赋值类型是chunkenc.xorAppender
 	s.app.Append(t, v)
 
 	c.maxTime = t // 代表当前头采样的最新时间
