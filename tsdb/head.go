@@ -2343,7 +2343,7 @@ func (s *memSeries) append(t int64, v float64, appendID uint64, chunkDiskMapper 
 		chunkCreated = true
 	}
 	numSamples := c.chunk.NumSamples()
-	fmt.Printf("%s = %d\n", s.lset.String(), numSamples) // debug ???
+	// fmt.Printf("%s = %d\n", s.lset.String(), numSamples) // for debug ???
 
 	// Out of order sample.
 	if c.maxTime >= t {
