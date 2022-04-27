@@ -70,7 +70,8 @@ const (
 	// MaxHeadChunkMetaSize is the max size of an mmapped chunks minus the chunks data.
 	// Max because the uvarint size can be smaller.
 	// ChunksFormatVersionSize = encoding(实际存储) = 1
-	// ┌─────────────────────┬───────────────────────┬───────────────────────┬───────────────────┬───────────────┬──────────────┬────────────────┐
+	// MaxChunkLengthFieldSize = binary.MaxVarintLen32(5字节)
+	// 整个chunk文件存储格式(MaxHeadChunkMetaSize中不包含data部分) ┌─────────────────────┬───────────────────────┬───────────────────────┬───────────────────┬───────────────┬──────────────┬────────────────┐
 	// │ series ref <8 byte> │ mint <8 byte, uint64> │ maxt <8 byte, uint64> │ encoding <1 byte> │ len <uvarint> │ data <bytes> │ CRC32 <4 byte> │
 	// └─────────────────────┴───────────────────────┴───────────────────────┴───────────────────┴───────────────┴──────────────┴────────────────┘
 	MaxHeadChunkMetaSize = SeriesRefSize + 2*MintMaxtSize + ChunksFormatVersionSize + MaxChunkLengthFieldSize + CRCSize
@@ -99,6 +100,7 @@ type ChunkDiskMapper struct {
 	curFileNumBytes atomic.Int64 // Bytes written in current open file.
 
 	/// Writer.
+	/// 写相关
 	dir             *os.File
 	writeBufferSize int
 
@@ -112,6 +114,7 @@ type ChunkDiskMapper struct {
 	writePathMtx sync.Mutex
 
 	/// Reader.
+	/// 读相关
 	// The int key in the map is the file number on the disk.
 	mmappedChunkFiles map[int]*mmappedChunkFile // Contains the m-mapped files for each chunk file mapped with its index.
 	closers           map[int]io.Closer         // Closers for resources behind the byte slices.
@@ -119,6 +122,7 @@ type ChunkDiskMapper struct {
 	pool              chunkenc.Pool             // This is used when fetching a chunk from the disk to allocate a chunk.
 
 	// Writer and Reader.
+	// 读写相关
 	// We flush chunks to disk in batches. Hence, we store them in this buffer
 	// from which chunks are served till they are flushed and are ready for m-mapping.
 	chunkBuffer *chunkBuffer
