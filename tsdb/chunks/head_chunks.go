@@ -872,7 +872,7 @@ const inBufferShards = 128 // 128 is a randomly chosen number.
 // chunkBuffer is a thread safe buffer for chunks.
 type chunkBuffer struct {
 	inBufferChunks     [inBufferShards]map[uint64]chunkenc.Chunk
-	inBufferChunksMtxs [inBufferShards]sync.RWMutex
+	inBufferChunksMtxs [inBufferShards]sync.RWMutex // 不需要padding(避免乒乓效应) ???
 }
 
 func newChunkBuffer() *chunkBuffer {
