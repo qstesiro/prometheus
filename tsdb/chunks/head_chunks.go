@@ -74,7 +74,7 @@ const (
 	// 整个chunk文件存储格式(MaxHeadChunkMetaSize中不包含data部分) ┌─────────────────────┬───────────────────────┬───────────────────────┬───────────────────┬───────────────┬──────────────┬────────────────┐
 	// │ series ref <8 byte> │ mint <8 byte, uint64> │ maxt <8 byte, uint64> │ encoding <1 byte> │ len <uvarint> │ data <bytes> │ CRC32 <4 byte> │
 	// └─────────────────────┴───────────────────────┴───────────────────────┴───────────────────┴───────────────┴──────────────┴────────────────┘
-	MaxHeadChunkMetaSize = SeriesRefSize + 2*MintMaxtSize + ChunksFormatVersionSize + MaxChunkLengthFieldSize + CRCSize
+	MaxHeadChunkMetaSize = SeriesRefSize + 2*MintMaxtSize + ChunksFormatVersionSize + MaxChunkLengthFieldSize + CRCSize // 34byte
 	// MinWriteBufferSize is the minimum write buffer size allowed.
 	MinWriteBufferSize = 64 * 1024 // 64KB.
 	// MaxWriteBufferSize is the maximum write buffer size allowed.
@@ -209,6 +209,7 @@ func (cdm *ChunkDiskMapper) openMMapFiles() (returnErr error) {
 	}
 
 	// Check for gaps in the files.
+	// 不允许有间隔在序号之间
 	sort.Ints(chkFileIndices)
 	if len(chkFileIndices) == 0 {
 		return nil
@@ -260,6 +261,7 @@ func listChunkFiles(dir string) (map[int]string, error) {
 // repairLastChunkFile deletes the last file if it's empty.
 // Because we don't fsync when creating these file, we could end
 // up with an empty file at the end during an abrupt shutdown.
+// 没有真的实际修复操作只是将大小为零的文件删除掉
 func repairLastChunkFile(files map[int]string) (_ map[int]string, returnErr error) {
 	lastFile := -1
 	for seq := range files {
@@ -375,6 +377,7 @@ func (cdm *ChunkDiskMapper) WriteChunk(seriesRef uint64, mint, maxt int64, chk c
 	cdm.chunkBuffer.put(chkRef, chk)
 
 	// 大于writeBufferSize刷新
+	// 此种情况不write不会写失败 ???
 	if len(chk.Bytes())+MaxHeadChunkMetaSize >= cdm.writeBufferSize {
 		// The chunk was bigger than the buffer itself.
 		// Flushing to not keep partial chunks in buffer.
@@ -396,6 +399,7 @@ func chunkRef(seq, offset uint64) (chunkRef uint64) {
 func (cdm *ChunkDiskMapper) shouldCutNewFile(chunkSize int) bool {
 	// MaxHeadChunkFileSize = 128 * 1024 * 1024 // 128 MiB.
 	return cdm.curFileSize() == 0 || // First head chunk file.
+		// 当前数据+新增数据+meta数据
 		cdm.curFileSize()+int64(chunkSize+MaxHeadChunkMetaSize) > MaxHeadChunkFileSize // Exceeds the max head chunk file size.
 }
 
