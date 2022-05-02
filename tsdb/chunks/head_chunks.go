@@ -377,7 +377,9 @@ func (cdm *ChunkDiskMapper) WriteChunk(seriesRef uint64, mint, maxt int64, chk c
 	cdm.chunkBuffer.put(chkRef, chk)
 
 	// 大于writeBufferSize刷新
-	// 此种情况不write不会写失败 ???
+	// 此种情况不write不会写失败,因为当写入数据大小超过缓冲大小就自动向底层flush数据
+	// 每次刷新都会完整flush整个缓冲区但是需要注意最后数据可能会有不满缓冲区的数据残留
+	// 在缓存区中所以需要flush一次,保证一个chunk的数据全都flush到磁盘
 	if len(chk.Bytes())+MaxHeadChunkMetaSize >= cdm.writeBufferSize {
 		// The chunk was bigger than the buffer itself.
 		// Flushing to not keep partial chunks in buffer.
