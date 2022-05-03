@@ -2144,9 +2144,26 @@ type memSeries struct {
 	ref           uint64
 	lset          labels.Labels
 	mmappedChunks []*mmappedChunk
-	headChunk     *memChunk
-	chunkRange    int64
-	firstChunkID  int // 每次截断会增加被删除的chunk个数,所以是单调递增
+	/*
+	                 +--------+---------+---------+---------+
+	   mmappedChunk  + chunk1 | chunk2  | chunk3  |   head  |
+	                 +---+----+----+----+----+----+---------+
+	                     |         |         |
+	              +------+         | +-------+
+	           +--+----------------+ |
+	           |  |                  |
+	           |  |  +------------+  |  +------------+  -+
+	           |  |  |    head    |  |  |    head    |   |
+	           |  |  +------------+  |  +------------+   |
+	           |  +--+   chunk1   |  +--+   chunk3   |   +-- 128M
+	           |     +------------+     +------------+   |
+	           +-----+   chunk2   |                      |
+	                 +------------+                     -+
+	*/
+
+	headChunk    *memChunk
+	chunkRange   int64
+	firstChunkID int // 每次截断会增加被删除的chunk个数,所以是单调递增
 
 	nextAt        int64     // Timestamp at which to cut the next chunk.
 	sampleBuf     [4]sample // 记录最新写入headChunk的4个采样[具体作用还没有看明白] ???
@@ -2567,7 +2584,7 @@ func (it *memSafeIterator) At() (int64, float64) {
 }
 
 type mmappedChunk struct {
-	ref              uint64
+	ref              uint64 // 高4位文件编号低4位文件内偏移
 	numSamples       uint16
 	minTime, maxTime int64
 }
