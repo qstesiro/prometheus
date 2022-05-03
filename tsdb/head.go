@@ -76,7 +76,7 @@ type Head struct {
 	series *stripeSeries
 
 	symMtx sync.RWMutex
-	// 记录Symbols为headIndexReader对象
+	// 记录Symbols为headIndexReader所用
 	// 记录有sample还驻留在内存中(包括普通chunk与headChunk)的series所有标签名与标签值(通过map去重)
 	// 数据map[label.name/label.value]struct{}
 	symbols map[string]struct{}
@@ -346,7 +346,7 @@ func NewHead(r prometheus.Registerer, l log.Logger, wal *wal.WAL, opts *HeadOpti
 		opts:       opts,
 		series:     newStripeSeries(opts.StripeSize, opts.SeriesCallback),
 		symbols:    map[string]struct{}{},
-		postings:   index.NewUnorderedMemPostings(),
+		postings:   index.NewUnorderedMemPostings(), // 无序
 		tombstones: tombstones.NewMemTombstones(),
 		iso:        newIsolation(),
 		deleted:    map[uint64]int{},
@@ -1249,7 +1249,10 @@ func (a *headAppender) Append(ref uint64, lset labels.Labels, t int64, v float64
 
 		var created bool
 		var err error
-		s, created, err = a.head.getOrCreate(lset.Hash(), lset) // hash与scrapeLoop.append中重复计算 ???
+		// 存在以下几个问题: ???
+		// - 数据还未提交但是lable数据已经在getOrCreate函数中被记录到symbols与postings中
+		// - hash与scrapeLoop.append中重复计算
+		s, created, err = a.head.getOrCreate(lset.Hash(), lset)
 		if err != nil {
 			return 0, err
 		}
@@ -1888,12 +1891,12 @@ func (h *Head) getOrCreateWithID(id, hash uint64, lset labels.Labels) (*memSerie
 
 	h.symMtx.Lock()
 	defer h.symMtx.Unlock()
-
+	// 写入符号表
 	for _, l := range lset {
 		h.symbols[l.Name] = struct{}{}
 		h.symbols[l.Value] = struct{}{}
 	}
-
+	// 写入posting(包括allPostingsKey)
 	h.postings.Add(id, lset)
 	return s, true, nil
 }
