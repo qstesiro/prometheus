@@ -79,7 +79,7 @@ type Compactor interface {
 // LeveledCompactor implements the Compactor interface.
 // 实现了Compactor接口
 type LeveledCompactor struct {
-	metrics   *compactorMetrics
+	metrics   *compactorMetrics // 指标信息
 	logger    log.Logger
 	ranges    []int64
 	chunkPool chunkenc.Pool
@@ -488,7 +488,11 @@ func (c *LeveledCompactor) Write(dest string, b BlockReader, mint, maxt int64, p
 
 	if parent != nil {
 		meta.Compaction.Parents = []BlockDesc{
-			{ULID: parent.ULID, MinTime: parent.MinTime, MaxTime: parent.MaxTime},
+			{
+				ULID:    parent.ULID,
+				MinTime: parent.MinTime,
+				MaxTime: parent.MaxTime,
+			},
 		}
 	}
 
@@ -563,7 +567,7 @@ func (c *LeveledCompactor) write(dest string, meta *BlockMeta, blocks ...BlockRe
 	// Populate chunk and index files into temporary directory with
 	// data of all blocks.
 	var chunkw ChunkWriter
-
+	// 对应chunks目录
 	chunkw, err = chunks.NewWriter(chunkDir(tmp))
 	if err != nil {
 		return errors.Wrap(err, "open chunk writer")
@@ -578,7 +582,7 @@ func (c *LeveledCompactor) write(dest string, meta *BlockMeta, blocks ...BlockRe
 			trange:      c.metrics.chunkRange,
 		}
 	}
-
+	// 对应index文件
 	indexw, err := index.NewWriter(c.ctx, filepath.Join(tmp, indexFilename))
 	if err != nil {
 		return errors.Wrap(err, "open index writer")
