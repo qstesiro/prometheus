@@ -196,7 +196,7 @@ func (c *LeveledCompactor) plan(dms []dirMeta) ([]string, error) {
 	sort.Slice(dms, func(i, j int) bool {
 		return dms[i].meta.MinTime < dms[j].meta.MinTime
 	})
-
+	// 选择重叠数据
 	res := c.selectOverlappingDirs(dms)
 	if len(res) > 0 {
 		return res, nil
@@ -204,8 +204,9 @@ func (c *LeveledCompactor) plan(dms []dirMeta) ([]string, error) {
 	// No overlapping blocks, do compaction the usual way.
 	// We do not include a recently created block with max(minTime), so the block which was just created from WAL.
 	// This gives users a window of a full block size to piece-wise backup new data without having to care about data overlap.
+	// 剔除最近生成的数据
 	dms = dms[:len(dms)-1]
-
+	// 选择符合时间窗口大小的数据
 	for _, dm := range c.selectDirs(dms) {
 		res = append(res, dm.dir)
 	}
