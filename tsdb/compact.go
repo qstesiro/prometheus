@@ -58,7 +58,7 @@ type Compactor interface {
 	// Plan returns a set of directories that can be compacted concurrently.
 	// The directories can be overlapping.
 	// Results returned when compactions are in progress are undefined.
-	// 不能并行 ???
+	// 不能在压缩进行时同时执行 ???
 	Plan(dir string) ([]string, error)
 
 	// Write persists a Block into a directory.
@@ -77,6 +77,7 @@ type Compactor interface {
 }
 
 // LeveledCompactor implements the Compactor interface.
+// 实现了Compactor接口
 type LeveledCompactor struct {
 	metrics   *compactorMetrics
 	logger    log.Logger

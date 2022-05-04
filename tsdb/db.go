@@ -154,7 +154,7 @@ type DB struct {
 	metrics        *dbMetrics
 	opts           *Options
 	chunkPool      chunkenc.Pool
-	compactor      Compactor
+	compactor      Compactor // NewLeveledCompactor实例
 	blocksToDelete BlocksToDeleteFunc
 
 	// Mutex for that must be held when modifying the general block layout.
@@ -179,7 +179,7 @@ type DB struct {
 	compactCancel context.CancelFunc
 }
 
-// 学习指标好样例 !!!
+// 学习指标好样例 ???
 type dbMetrics struct {
 	loadedBlocks         prometheus.GaugeFunc
 	symbolTableSize      prometheus.GaugeFunc
@@ -755,7 +755,7 @@ func (db *DB) run() {
 		case <-db.stopc:
 			return
 		case <-time.After(backoff):
-			// 这用法 !!!
+			// 这用法 ???
 		}
 
 		select {
@@ -766,9 +766,9 @@ func (db *DB) run() {
 				level.Error(db.logger).Log("msg", "reloadBlocks", "err", err)
 			}
 			db.cmtx.Unlock()
-			// 这用法 !!!
+			// 这用法 ???
 			select {
-			case db.compactc <- struct{}{}:
+			case db.compactc <- struct{}{}: // 触发压缩线逻辑处理(不一定执行压缩只是尝试)
 			default:
 			}
 		case <-db.compactc:
@@ -847,7 +847,7 @@ func (db *DB) Compact() (returnErr error) {
 	start := time.Now()
 	// Check whether we have pending head blocks that are ready to be persisted.
 	// They have the highest priority.
-	// 压缩头
+	// 压缩头数据
 	for {
 		select {
 		case <-db.stopc:
@@ -876,6 +876,7 @@ func (db *DB) Compact() (returnErr error) {
 
 	// Clear some disk space before compacting blocks, especially important
 	// when Head compaction happened over a long time range.
+	// 截断WAL数据
 	if err := db.head.truncateWAL(lastBlockMaxt); err != nil {
 		return errors.Wrap(err, "WAL truncation in Compact")
 	}
