@@ -124,6 +124,7 @@ func newCRC32() hash.Hash32 {
 
 // Writer implements the ChunkWriter interface for the standard
 // serialization format.
+// 实现tsdb.ChunkWriter接口
 type Writer struct {
 	dirFile *os.File
 	files   []*os.File
@@ -459,7 +460,7 @@ func (b realByteSlice) Range(start, end int) []byte {
 	return b[start:end]
 }
 
-// 实现了tsdb.ChunkReader接口
+// 实现tsdb.ChunkReader接口
 // Reader implements a ChunkReader for a serialized byte stream
 // of series data.
 type Reader struct {

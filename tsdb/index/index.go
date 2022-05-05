@@ -112,6 +112,7 @@ type symbolCacheEntry struct {
 
 // Writer implements the IndexWriter interface for the standard
 // serialization format.
+// 实现了tsdb.IndexWriter接口
 type Writer struct {
 	ctx context.Context
 

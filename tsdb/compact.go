@@ -599,7 +599,7 @@ func (c *LeveledCompactor) write(dest string, meta *BlockMeta, blocks ...BlockRe
 		return errors.Wrap(err, "open index writer")
 	}
 	closers = append(closers, indexw)
-
+	// 填充数据
 	if err := c.populateBlock(blocks, meta, indexw, chunkw); err != nil {
 		return errors.Wrap(err, "populate block")
 	}
@@ -627,7 +627,7 @@ func (c *LeveledCompactor) write(dest string, meta *BlockMeta, blocks ...BlockRe
 	if meta.Stats.NumSamples == 0 {
 		return nil
 	}
-
+	// 写入元数据
 	if _, err = writeMetaFile(c.logger, tmp, meta); err != nil {
 		return errors.Wrap(err, "write merged meta")
 	}
