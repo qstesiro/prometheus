@@ -173,19 +173,38 @@ type BlockDesc struct {
 	MaxTime int64     `json:"maxTime"`
 }
 
+/*
+                           +----------------+
+                           |    sources     +-------------------+
+                           +----------------+                   |
+                           |    parents     +--------+          |
+                           +----------------+        |          |
+                                                     |          |
+                  +----------------------------------+          |
+                  |                                  |          |
+            +-----+------+                    +------+------+   |
+            |   block    |                    |    block    |   |
+            +-----+------+                    +------+------+   |
+                  |                                  |          |
+         +--------+-------+-----------------+---------+---------+
+         |                |                 |                   |
+   +-----+-----+    +-----+-----+     +-----+-----+       +-----+-----+
+   |   block   |    |   block   |     |   block   |       |   block   |
+   +-----------+    +-----------+     +-----------+       +-----------+
+*/
 // BlockMetaCompaction holds information about compactions a block went through.
 type BlockMetaCompaction struct {
 	// Maximum number of compaction cycles any source block has
 	// gone through.
 	Level int `json:"level"`
 	// ULIDs of all source head blocks that went into the block.
-	Sources []ulid.ULID `json:"sources,omitempty"`
+	Sources []ulid.ULID `json:"sources,omitempty"` // 最初的blocks
 	// Indicates that during compaction it resulted in a block without any samples
 	// so it should be deleted on the next reloadBlocks.
 	Deletable bool `json:"deletable,omitempty"`
 	// Short descriptions of the direct blocks that were used to create
 	// this block.
-	Parents []BlockDesc `json:"parents,omitempty"`
+	Parents []BlockDesc `json:"parents,omitempty"` // 创建此block的blocks
 	Failed  bool        `json:"failed,omitempty"`
 }
 

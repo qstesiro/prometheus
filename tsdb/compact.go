@@ -362,22 +362,22 @@ func CompactBlockMetas(uid ulid.ULID, blocks ...*BlockMeta) *BlockMeta {
 	maxt := int64(math.MinInt64)
 
 	for _, b := range blocks {
-		if b.MaxTime > maxt {
+		if b.MaxTime > maxt { // 记录最大时间
 			maxt = b.MaxTime
 		}
-		if b.Compaction.Level > res.Compaction.Level {
+		if b.Compaction.Level > res.Compaction.Level { // 记录最大级别
 			res.Compaction.Level = b.Compaction.Level
 		}
-		for _, s := range b.Compaction.Sources {
+		for _, s := range b.Compaction.Sources { // 记录源block
 			sources[s] = struct{}{}
 		}
-		res.Compaction.Parents = append(res.Compaction.Parents, BlockDesc{
+		res.Compaction.Parents = append(res.Compaction.Parents, BlockDesc{ // 记录父block
 			ULID:    b.ULID,
 			MinTime: b.MinTime,
 			MaxTime: b.MaxTime,
 		})
 	}
-	res.Compaction.Level++
+	res.Compaction.Level++ // 增大级别
 
 	for s := range sources {
 		res.Compaction.Sources = append(res.Compaction.Sources, s)
