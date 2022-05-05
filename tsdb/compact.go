@@ -192,6 +192,12 @@ func (c *LeveledCompactor) Plan(dir string) ([]string, error) {
 	return c.plan(dms)
 }
 
+// 执行以步骤:
+// - 按时间排序目录
+// - 选择重叠目录(如果有则返回)
+// - 选择可合并目录(如果有则返回)
+// - 数据范围小于中间窗口数据大小且墓碑数大于序列数(有则返回)
+// - 墓碑数据占总序列数比例大于5%(有则返回)
 func (c *LeveledCompactor) plan(dms []dirMeta) ([]string, error) {
 	sort.Slice(dms, func(i, j int) bool {
 		return dms[i].meta.MinTime < dms[j].meta.MinTime
@@ -235,11 +241,14 @@ func (c *LeveledCompactor) plan(dms []dirMeta) ([]string, error) {
 
 // selectDirs returns the dir metas that should be compacted into a single new block.
 // If only a single block range is configured, the result is always nil.
+// 每次选择从小到大的时间窗口进行筛选(找到则返回)
+// 所以每次执行都是优先处理小时间窗口内的数据
 func (c *LeveledCompactor) selectDirs(ds []dirMeta) []dirMeta {
 	if len(c.ranges) < 2 || len(ds) < 1 {
 		return nil
 	}
-
+	// 在调用前已经剔除了最近生成的block
+	// 不明白此处为什么还要再剔除 ???
 	highTime := ds[len(ds)-1].meta.MinTime
 
 	for _, iv := range c.ranges[1:] {
@@ -431,6 +440,7 @@ func (c *LeveledCompactor) Compact(dest string, dirs []string, open []*Block) (u
 	if err == nil {
 		if meta.Stats.NumSamples == 0 {
 			for _, b := range bs {
+				// 此处只设置可删除标记在reloadBlocks函数中会判定此标记并删除相应的block
 				b.meta.Compaction.Deletable = true
 				n, err := writeMetaFile(c.logger, b.dir, &b.meta)
 				if err != nil {
