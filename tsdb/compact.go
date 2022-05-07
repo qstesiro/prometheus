@@ -698,12 +698,13 @@ func (c *LeveledCompactor) populateBlock(blocks []BlockReader, meta *BlockMeta, 
 
 	globalMaxt := blocks[0].Meta().MaxTime
 	for i, b := range blocks {
+		// 是否需要退出
 		select {
 		case <-c.ctx.Done():
 			return c.ctx.Err()
 		default:
 		}
-
+		// 以下分支似乎没有什么作用其中的overlapping与globalMaxt没有实际的使用 ???
 		if !overlapping {
 			if i > 0 && b.Meta().MinTime < globalMaxt {
 				c.metrics.overlappingBlocks.Inc()
@@ -714,35 +715,37 @@ func (c *LeveledCompactor) populateBlock(blocks []BlockReader, meta *BlockMeta, 
 				globalMaxt = b.Meta().MaxTime
 			}
 		}
-
+		// 索引读
 		indexr, err := b.Index()
 		if err != nil {
 			return errors.Wrapf(err, "open index reader for block %+v", b.Meta())
 		}
 		closers = append(closers, indexr)
-
+		// chunk读
 		chunkr, err := b.Chunks()
 		if err != nil {
 			return errors.Wrapf(err, "open chunk reader for block %+v", b.Meta())
 		}
 		closers = append(closers, chunkr)
-
+		// 墓碑读
 		tombsr, err := b.Tombstones()
 		if err != nil {
 			return errors.Wrapf(err, "open tombstone reader for block %+v", b.Meta())
 		}
 		closers = append(closers, tombsr)
-
+		// 序列处理
 		k, v := index.AllPostingsKey()
+		// 因为使用AllPostings所以实际返回所有序列id
 		all, err := indexr.Postings(k, v)
 		if err != nil {
 			return err
 		}
 		// 按label.name与label.value排序而按series.id排序
-		// 返回index.ListPostings包含排序后series.id
+		// 返回index.ListPostings类型内部包含排序后series.id
 		all = indexr.SortedPostings(all)
 		// Blocks meta is half open: [min, max), so subtract 1 to ensure we don't hold samples with exact meta.MaxTime timestamp.
 		sets = append(sets, newBlockChunkSeriesSet(indexr, chunkr, tombsr, all, meta.MinTime, meta.MaxTime-1))
+		// 符号合并
 		syms := indexr.Symbols()
 		if i == 0 {
 			symbols = syms
@@ -751,9 +754,9 @@ func (c *LeveledCompactor) populateBlock(blocks []BlockReader, meta *BlockMeta, 
 		symbols = NewMergedStringIter(symbols, syms)
 	}
 	// 写符号
-	// idx := 0 // ??? for debug
+	// idx := 0 // for debug ???
 	for symbols.Next() {
-		// fmt.Printf("%d: %+v\n", idx, symbols.At())
+		// fmt.Printf("%d: %+v\n", idx, symbols.At()) // for debug ???
 		// idx += 1
 		if err := indexw.AddSymbol(symbols.At()); err != nil {
 			return errors.Wrap(err, "add symbol")
@@ -777,6 +780,7 @@ func (c *LeveledCompactor) populateBlock(blocks []BlockReader, meta *BlockMeta, 
 	// Iterate over all sorted chunk series.
 	// Next中使用墓碑进行了判定
 	for set.Next() {
+		// 是否需要退出
 		// 多次出现可以封装成函数 ???
 		select {
 		case <-c.ctx.Done():
@@ -801,7 +805,7 @@ func (c *LeveledCompactor) populateBlock(blocks []BlockReader, meta *BlockMeta, 
 		if len(chks) == 0 {
 			continue
 		}
-
+		// 写入Chunk数据
 		if err := chunkw.WriteChunks(chks...); err != nil {
 			return errors.Wrap(err, "write chunks")
 		}
