@@ -740,7 +740,7 @@ func (c *LeveledCompactor) populateBlock(blocks []BlockReader, meta *BlockMeta, 
 		if err != nil {
 			return err
 		}
-		// 按label.name与label.value排序而按series.id排序
+		// 按label.name排序后按label.value排序再按series.id排序
 		// 返回index.ListPostings类型内部包含排序后series.id
 		all = indexr.SortedPostings(all)
 		// Blocks meta is half open: [min, max), so subtract 1 to ensure we don't hold samples with exact meta.MaxTime timestamp.
@@ -813,13 +813,13 @@ func (c *LeveledCompactor) populateBlock(blocks []BlockReader, meta *BlockMeta, 
 		if err := indexw.AddSeries(ref, s.Labels(), chks...); err != nil {
 			return errors.Wrap(err, "add series")
 		}
-
+		// 更新元数据
 		meta.Stats.NumChunks += uint64(len(chks))
 		meta.Stats.NumSeries++
 		for _, chk := range chks {
 			meta.Stats.NumSamples += uint64(chk.Chunk.NumSamples())
 		}
-
+		// 释放chunk
 		for _, chk := range chks {
 			if err := c.chunkPool.Put(chk.Chunk); err != nil {
 				return errors.Wrap(err, "put chunk")
