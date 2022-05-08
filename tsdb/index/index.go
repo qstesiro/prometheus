@@ -340,6 +340,7 @@ func (fw *FileWriter) Remove() error {
 // ensureStage handles transitions between write stages and ensures that IndexWriter
 // methods are called in an order valid for the implementation.
 func (w *Writer) ensureStage(s indexWriterStage) error {
+	// 判定是否退出
 	select {
 	case <-w.ctx.Done():
 		return w.ctx.Err()
@@ -349,6 +350,7 @@ func (w *Writer) ensureStage(s indexWriterStage) error {
 	if w.stage == s {
 		return nil
 	}
+	// 补缺少的阶段(还有这种情况发生) ???
 	if w.stage < s-1 {
 		// A stage has been skipped.
 		if err := w.ensureStage(s - 1); err != nil {
@@ -577,7 +579,7 @@ func (w *Writer) startSymbols() error {
 	// We are at w.toc.Symbols.
 	// Leave 4 bytes of space for the length, and another 4 for the number of symbols
 	// which will both be calculated later.
-	// 占位4字节用于写入长度
+	// 占位4字节用于写入长度,另外4字节写入符号个数
 	return w.write([]byte("alenblen"))
 }
 
@@ -612,16 +614,16 @@ func (w *Writer) AddSymbol(sym string) error {
 func (w *Writer) finishSymbols() error {
 	// Write out the length and symbol count.
 	w.buf1.Reset()
-	w.buf1.PutBE32int(int(w.f.pos - w.toc.Symbols - 4))
-	w.buf1.PutBE32int(int(w.numSymbols))
+	w.buf1.PutBE32int(int(w.f.pos - w.toc.Symbols - 4)) // 符号数据长度
+	w.buf1.PutBE32int(int(w.numSymbols))                // 符号个数
 	if err := w.writeAt(w.buf1.Get(), w.toc.Symbols); err != nil {
 		return err
 	}
 
-	hashPos := w.f.pos
+	hashPos := w.f.pos // 记录crc文件偏移位置
 	// Leave space for the hash. We can only calculate it
 	// now that the number of symbols is known, so mmap and do it from there.
-	// 占位4字节
+	// 占位4字节写入crc
 	if err := w.write([]byte("hash")); err != nil {
 		return err
 	}
@@ -634,6 +636,7 @@ func (w *Writer) finishSymbols() error {
 		return err
 	}
 	w.symbolFile = sf
+	// CRC32只计算符号数据不包含len与symbols
 	hash := crc32.Checksum(w.symbolFile.Bytes()[w.toc.Symbols+4:hashPos], castagnoliTable)
 	w.buf1.Reset()
 	w.buf1.PutBE32(hash)
