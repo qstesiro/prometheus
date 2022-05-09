@@ -609,7 +609,7 @@ func (w *Writer) AddSymbol(sym string) error {
 // │ │ len(str_n) <uvarint> │ str_n <bytes> │ │
 // │ └──────────────────────┴───────────────┘ │
 // ├──────────────────────────────────────────┤
-// │ CRC32 <4b>                               │
+// │ CRC32 <4b> (不包含len与symbols)          |
 // └──────────────────────────────────────────┘
 func (w *Writer) finishSymbols() error {
 	// Write out the length and symbol count.
