@@ -599,7 +599,7 @@ func (w *Writer) AddSymbol(sym string) error {
 }
 
 // ┌────────────────────┬─────────────────────┐
-// │ len <4b>           │ #symbols <4b>       │
+// │ len <4b> (排除len) │ #symbols <4b>       │
 // ├────────────────────┴─────────────────────┤
 // │ ┌──────────────────────┬───────────────┐ │
 // │ │ len(str_1) <uvarint> │ str_1 <bytes> │ │
@@ -614,7 +614,7 @@ func (w *Writer) AddSymbol(sym string) error {
 func (w *Writer) finishSymbols() error {
 	// Write out the length and symbol count.
 	w.buf1.Reset()
-	w.buf1.PutBE32int(int(w.f.pos - w.toc.Symbols - 4)) // 符号数据长度
+	w.buf1.PutBE32int(int(w.f.pos - w.toc.Symbols - 4)) // 符号数据长度(不包含len的空间)
 	w.buf1.PutBE32int(int(w.numSymbols))                // 符号个数
 	if err := w.writeAt(w.buf1.Get(), w.toc.Symbols); err != nil {
 		return err
@@ -1464,8 +1464,8 @@ type Symbols struct {
 	version int
 	off     int
 
-	offsets []int
-	seen    int
+	offsets []int // 存储1/symbolFactor的偏移数(每隔symbolFactor个偏移存储)
+	seen    int   // 符号个数
 }
 
 const symbolFactor = 32
@@ -1483,10 +1483,11 @@ func NewSymbols(bs ByteSlice, version int, off int) (*Symbols, error) {
 		cnt     = d.Be32int()
 		basePos = off + 4
 	)
+	// 填充offsets
 	s.offsets = make([]int, 0, 1+cnt/symbolFactor)
 	for d.Err() == nil && s.seen < cnt {
 		if s.seen%symbolFactor == 0 {
-			s.offsets = append(s.offsets, basePos+origLen-d.Len())
+			s.offsets = append(s.offsets, basePos+origLen-d.Len()) // 每次长度缩短
 		}
 		// 跳过符号具体值
 		d.UvarintBytes() // The symbol.
@@ -1505,10 +1506,16 @@ func (s Symbols) Lookup(o uint32) (string, error) {
 
 	if s.version == FormatV2 {
 		if int(o) >= s.seen {
-			return "", errors.Errorf("unknown symbol offset %d", o)
+			return "", errors.Errorf("unknown symbol offset %d", o) // o参数应该是编号不是偏移 ???
 		}
+		/*
+		                      0     o            1                  2
+		   +------------------+-----+------------+------------------+------>
+		                      32    34           64                 96
+		*/
+		// 直接跳到偏移位置(o=43的情况直接定位到索引0的位置)
 		d.Skip(s.offsets[int(o/symbolFactor)])
-		// Walk until we find the one we want.
+		// Walk until we find the one we want.(向前查找)
 		for i := o - (o / symbolFactor * symbolFactor); i > 0; i-- {
 			d.UvarintBytes()
 		}
@@ -1526,6 +1533,16 @@ func (s Symbols) ReverseLookup(sym string) (uint32, error) {
 	if len(s.offsets) == 0 {
 		return 0, errors.Errorf("unknown symbol %q - no symbols", sym)
 	}
+	/*
+	   执行流程
+	   - 先定位到索引1
+	   - 回退到索引0
+	   - 向前查找
+	                      0 <--------------- 1                  2
+	   +------------------+-----+------------+------------------+------>
+	                      32    sym          64                96
+	*/
+	// 找到第一个大于sym的偏移索引
 	i := sort.Search(len(s.offsets), func(i int) bool {
 		// Any decoding errors here will be lost, however
 		// we already read through all of this at startup.
@@ -1533,18 +1550,21 @@ func (s Symbols) ReverseLookup(sym string) (uint32, error) {
 			B: s.bs.Range(0, s.bs.Len()),
 		}
 		d.Skip(s.offsets[i])
-		return yoloString(d.UvarintBytes()) > sym
+		return yoloString(d.UvarintBytes()) > sym // symbols是有序的
 	})
 	d := encoding.Decbuf{
 		B: s.bs.Range(0, s.bs.Len()),
 	}
+	// 回退一个索引位置
 	if i > 0 {
 		i--
 	}
+	// 直接跳到偏移位置
 	d.Skip(s.offsets[i])
 	res := i * 32
 	var lastLen int
 	var lastSymbol string
+	// 向前查找
 	for d.Err() == nil && res <= s.seen {
 		lastLen = d.Len()
 		lastSymbol = yoloString(d.UvarintBytes())
