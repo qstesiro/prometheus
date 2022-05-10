@@ -137,7 +137,7 @@ type Writer struct {
 	symbols     *Symbols
 	symbolFile  *fileutil.MmapFile
 	lastSymbol  string
-	symbolCache map[string]symbolCacheEntry
+	symbolCache map[string]symbolCacheEntry // 只在AddSeries函数中使用可以按局部变量处理 ???
 
 	labelIndexes []labelIndexHashEntry // Label index offsets.
 	labelNames   map[string]uint64     // Label names, and their usage.
@@ -310,6 +310,7 @@ func (fw *FileWriter) WriteAt(buf []byte, pos uint64) error {
 }
 
 // AddPadding adds zero byte padding until the file size is a multiple size.
+// 实际是根据需要(是否是size的整数倍)来增加padding
 func (fw *FileWriter) AddPadding(size int) error {
 	p := fw.pos % uint64(size)
 	if p == 0 {
@@ -466,19 +467,20 @@ func (w *Writer) AddSeries(ref uint64, lset labels.Labels, chunks ...chunks.Meta
 	if err := w.ensureStage(idxStageSeries); err != nil {
 		return err
 	}
+	// 根据按labels排序
 	if labels.Compare(lset, w.lastSeries) <= 0 {
 		return errors.Errorf("out-of-order series added with label set %q", lset)
 	}
-
+	// 每个block中series.ref都是从0开始
 	if ref < w.lastRef && len(w.lastSeries) != 0 {
 		return errors.Errorf("series with reference greater than %d already added", ref)
 	}
 	// We add padding to 16 bytes to increase the addressable space we get through 4 byte
 	// series references.
+	// 实际是根据需要(是否是16的整数倍)来增加padding
 	if err := w.addPadding(16); err != nil {
 		return errors.Errorf("failed to write padding bytes: %v", err)
 	}
-
 	if w.f.pos%16 != 0 {
 		return errors.Errorf("series write not 16-byte aligned at %d", w.f.pos)
 	}
@@ -504,9 +506,9 @@ func (w *Writer) AddSeries(ref uint64, lset labels.Labels, chunks ...chunks.Meta
 				return errors.Errorf("symbol entry for %q does not exist, %v", l.Name, err)
 			}
 		}
-		w.labelNames[l.Name]++
+		w.labelNames[l.Name]++         // 标签名出现的次数
 		w.buf2.PutUvarint32(nameIndex) // 符号表中的索引
-
+		// 算法设计精巧(根据有序的特性只保存最后出现的值)保证缓存项个数与序列个数相一致节省内存
 		valueIndex := cacheEntry.lastValueIndex
 		if !ok || cacheEntry.lastValue != l.Value {
 			valueIndex, err = w.symbols.ReverseLookup(l.Value)
@@ -1483,7 +1485,7 @@ func NewSymbols(bs ByteSlice, version int, off int) (*Symbols, error) {
 		cnt     = d.Be32int()
 		basePos = off + 4
 	)
-	// 填充offsets
+	// 填充offsets(此处算法设计精巧后续Lookup与ReverseLookup处理方式漂亮)
 	s.offsets = make([]int, 0, 1+cnt/symbolFactor)
 	for d.Err() == nil && s.seen < cnt {
 		if s.seen%symbolFactor == 0 {
@@ -1499,6 +1501,7 @@ func NewSymbols(bs ByteSlice, version int, off int) (*Symbols, error) {
 	return s, nil
 }
 
+// 参数是索引(不是偏移)
 func (s Symbols) Lookup(o uint32) (string, error) {
 	d := encoding.Decbuf{
 		B: s.bs.Range(0, s.bs.Len()),
@@ -1529,6 +1532,7 @@ func (s Symbols) Lookup(o uint32) (string, error) {
 	return sym, nil
 }
 
+// 返回值是索引(不是偏移)
 func (s Symbols) ReverseLookup(sym string) (uint32, error) {
 	if len(s.offsets) == 0 {
 		return 0, errors.Errorf("unknown symbol %q - no symbols", sym)

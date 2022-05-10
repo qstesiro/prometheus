@@ -767,7 +767,7 @@ func (c *LeveledCompactor) populateBlock(blocks []BlockReader, meta *BlockMeta, 
 	}
 
 	var (
-		ref  = uint64(0)
+		ref  = uint64(0) // 每个block中series.ref都是从0开始
 		chks []chunks.Meta
 	)
 
