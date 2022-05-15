@@ -177,6 +177,7 @@ func (d *Decbuf) Crc32(castagnoliTable *crc32.Table) uint32 {
 	return crc32.Checksum(d.B, castagnoliTable)
 }
 
+// 并不是当前索引位置的移动而是从缓冲区中排除掉要跳过的部分(导致整个缓冲区的长度变化)
 func (d *Decbuf) Skip(l int) {
 	if len(d.B) < l {
 		d.E = ErrInvalidSize

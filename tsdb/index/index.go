@@ -376,7 +376,7 @@ func (w *Writer) ensureStage(s indexWriterStage) error {
 		}
 		w.toc.Series = w.f.pos
 
-	case idxStageDone: // Close函数中执行
+	case idxStageDone: // Writer.Close函数中执行
 		w.toc.LabelIndices = w.f.pos
 		// LabelIndices generation depends on the posting offset
 		// table produced at this stage.
@@ -931,7 +931,7 @@ func (w *Writer) writeTOC() error {
 	return w.write(w.buf1.Get())
 }
 
-// 此函数认知复杂度太高了 ???
+// 函数认知复杂度太高了 ???
 // 主要是在 Temporary file for posting offsets table 中记录一些临时数据
 func (w *Writer) writePostingsToTmpFiles() error {
 	names := make([]string, 0, len(w.labelNames))
@@ -943,6 +943,7 @@ func (w *Writer) writePostingsToTmpFiles() error {
 	if err := w.f.Flush(); err != nil {
 		return err
 	}
+	// 当前只包含symbol与series两部分
 	f, err := fileutil.OpenMmapFile(w.f.name)
 	if err != nil {
 		return err
@@ -953,9 +954,10 @@ func (w *Writer) writePostingsToTmpFiles() error {
 	// 获取序列区中的每个序列偏移
 	offsets := []uint32{}
 	d := encoding.NewDecbufRaw(realByteSlice(f.Bytes()), int(w.toc.LabelIndices)) // 解码符号与序列
-	d.Skip(int(w.toc.Series))                                                     // 跳过符号偏移到序列
+	// 跳过符号偏移到序列(从缓冲区中删除了symbol的数据,整个缓冲区中只包含了series部分所以len也就是series部分的长度)
+	d.Skip(int(w.toc.Series))
 	for d.Len() > 0 {
-		d.ConsumePadding()
+		d.ConsumePadding()                               // 跳过padding
 		startPos := w.toc.LabelIndices - uint64(d.Len()) // 计算每个series的起始
 		if startPos%16 != 0 {
 			return errors.Errorf("series not 16-byte aligned at %d", startPos)
