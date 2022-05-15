@@ -130,8 +130,8 @@ type Writer struct {
 	postingsStart uint64 // Due to padding, can differ from TOC entry.
 
 	// Reusable memory.
-	buf1 encoding.Encbuf
-	buf2 encoding.Encbuf
+	buf1 encoding.Encbuf // 处理数据外层(数据长度,CRC等)
+	buf2 encoding.Encbuf // 处理数据内层(具体数据内容)
 
 	numSymbols  int
 	symbols     *Symbols
@@ -376,7 +376,7 @@ func (w *Writer) ensureStage(s indexWriterStage) error {
 		}
 		w.toc.Series = w.f.pos
 
-	case idxStageDone:
+	case idxStageDone: // Close函数中执行
 		w.toc.LabelIndices = w.f.pos
 		// LabelIndices generation depends on the posting offset
 		// table produced at this stage.
@@ -419,7 +419,7 @@ func (w *Writer) writeMeta() error {
 }
 
 // AddSeries adds the series one at a time along with its chunks.
-// 写入Series部分
+// 写入Series部分(labels与chunks)
 // ┌───────────────────────────────────────┐
 // │ ┌───────────────────────────────────┐ │
 // │ │   series_1                        │ │
@@ -467,7 +467,7 @@ func (w *Writer) AddSeries(ref uint64, lset labels.Labels, chunks ...chunks.Meta
 	if err := w.ensureStage(idxStageSeries); err != nil {
 		return err
 	}
-	// 根据按labels排序
+	// 按labels排序
 	if labels.Compare(lset, w.lastSeries) <= 0 {
 		return errors.Errorf("out-of-order series added with label set %q", lset)
 	}
@@ -484,6 +484,7 @@ func (w *Writer) AddSeries(ref uint64, lset labels.Labels, chunks ...chunks.Meta
 	if w.f.pos%16 != 0 {
 		return errors.Errorf("series write not 16-byte aligned at %d", w.f.pos)
 	}
+	// 处理label部分
 	// ┌──────────────────────────────────────────────────────────────────────┐
 	// │                     labels count <uvarint64>                         │
 	// ├──────────────────────────────────────────────────────────────────────┤
@@ -523,6 +524,7 @@ func (w *Writer) AddSeries(ref uint64, lset labels.Labels, chunks ...chunks.Meta
 		}
 		w.buf2.PutUvarint32(valueIndex) // 符号表中的索引
 	}
+	// 处理chunks部分
 	// ┌──────────────────────────────────────────────────────────────────────┐
 	// │                     chunks count <uvarint64>                         │
 	// ├──────────────────────────────────────────────────────────────────────┤
@@ -549,8 +551,8 @@ func (w *Writer) AddSeries(ref uint64, lset labels.Labels, chunks ...chunks.Meta
 		w.buf2.PutUvarint64(uint64(c.MaxTime - c.MinTime))
 		w.buf2.PutUvarint64(c.Ref)
 		t0 := c.MaxTime
-		ref0 := int64(c.Ref)
-
+		ref0 := int64(c.Ref) // 此处使用ref具体细节参见chunks.Meta与chunks.writeChunks
+		// 注意: 除第一项外后续项的数据都是按delta方式处理
 		for _, c := range chunks[1:] {
 			w.buf2.PutUvarint64(uint64(c.MinTime - t0))
 			w.buf2.PutUvarint64(uint64(c.MaxTime - c.MinTime))

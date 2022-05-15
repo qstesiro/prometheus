@@ -68,7 +68,7 @@ type Meta struct {
 	// chunk data or the data itself.
 	// When it is a reference it is the segment offset at which the chunk bytes start.
 	// Generally, only one of them is set.
-	Ref   uint64
+	Ref   uint64 // 高4位是段文件索引,低4位是当前chunk在段文件中的偏移
 	Chunk chunkenc.Chunk
 
 	// Time range the data covers.
@@ -289,7 +289,7 @@ func cutSegmentFile(dirFile *os.File, magicNumber uint32, chunksFormat byte, all
 
 func (w *Writer) write(b []byte) error {
 	n, err := w.wbuf.Write(b)
-	w.n += int64(n)
+	w.n += int64(n) // 每次写数据增大n
 	return err
 }
 
@@ -401,9 +401,9 @@ func (w *Writer) writeChunks(chks []Meta) error {
 		//
 		// The upper 4 bytes are for the segment index and
 		// the lower 4 bytes are for the segment offset where to start reading this chunk.
-		// 低4位是段文件索引,低4位是当前chunk在段文件中的偏移
+		// 高4位是段文件索引,低4位是当前chunk在段文件中的偏移
 		// 此处的修改会对原始数据产生影响,优秀 :)
-		chk.Ref = seq | uint64(w.n)
+		chk.Ref = seq | uint64(w.n) // Writer.write中修改n
 
 		// 长度(按实际大小占用实际空间)
 		n := binary.PutUvarint(w.buf[:], uint64(len(chk.Chunk.Bytes())))
