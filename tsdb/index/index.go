@@ -979,11 +979,11 @@ func (w *Writer) writePostingsToTmpFiles() error {
 	// ├──────────────────────┼──────────────────┤
 	// │ len("") <uvarint>    │ "" <bytes>       │
 	// ├──────────────────────┴──────────────────┤
-	// │ fP <uvarint64>                          │
-	// └─────────────────────────────────────────┘
-	// Temporary file for postings. [fP] 包含当前块中的所有序列引用
-	// ┌────────────────────┬────────────────────┐
-	// │ len <4b>           │ #entries <4b>      │
+	// │ fP <uvarint64>                          |--------------------+
+	// └─────────────────────────────────────────┘                    |
+	// Temporary file for postings. [fP] 包含当前块中的所有序列引用   |
+	// ┌────────────────────┬────────────────────┐                    |
+	// │ len <4b>           │ #entries <4b>      |<-------------------+
 	// ├────────────────────┴────────────────────┤
 	// │ ┌─────────────────────────────────────┐ │
 	// │ │ ref(series_1) <4b>                  │ │
@@ -1136,21 +1136,24 @@ func (w *Writer) writePostingsToTmpFiles() error {
 // └─────────────────────────────────────────┘
 func (w *Writer) writePosting(name, value string, offs []uint32) error {
 	// Align beginning to 4 bytes for more efficient postings list scans.
+	// 根据当前文件偏移位置尝试对齐
+	// 只对齐fP不处理fPO ???
 	if err := w.fP.AddPadding(4); err != nil {
 		return err
 	}
-
+	// 处理Postings Offset
 	// Write out postings offset table to temporary file as we go.
 	w.buf1.Reset()
 	w.buf1.PutUvarint(2)
 	w.buf1.PutUvarintStr(name)
 	w.buf1.PutUvarintStr(value)
+	// 偏移位置暂时写入Posting临时文件的起始偏移
 	w.buf1.PutUvarint64(w.fP.pos) // This is relative to the postings tmp file, not the final index file.
 	if err := w.fPO.Write(w.buf1.Get()); err != nil {
 		return err
 	}
 	w.cntPO++
-
+	// 处理Postings
 	w.buf1.Reset()
 	// offs[i] = series-startpos(每个series启始位置)/16
 	w.buf1.PutBE32int(len(offs)) // entries
