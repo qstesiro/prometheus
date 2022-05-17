@@ -1020,21 +1020,22 @@ func (w *Writer) writePostingsToTmpFiles() error {
 			if err != nil {
 				return err
 			}
-			nameSymbols[sid] = name
+			nameSymbols[sid] = name // 注意是索引不是偏移
 		}
 		// Label name -> label value -> positions.
 		postings := map[uint32]map[uint32][]uint32{}
 
 		d := encoding.NewDecbufRaw(realByteSlice(f.Bytes()), int(w.toc.LabelIndices))
 		d.Skip(int(w.toc.Series))
+		// 外层循环迭代series
 		for d.Len() > 0 {
-			d.ConsumePadding()
-			startPos := w.toc.LabelIndices - uint64(d.Len())
-			l := d.Uvarint() // Length of this series in bytes.
-			startLen := d.Len()
-
+			d.ConsumePadding()                               // 如果有padding则跳过
+			startPos := w.toc.LabelIndices - uint64(d.Len()) // 单个series部分的起始值
+			l := d.Uvarint()                                 // Length of this series in bytes.(单个series数据长度)
+			startLen := d.Len()                              // 单个series部分总数据长度包括len与crc
+			// 内层循环迭代series中的每个lable
 			// See if label names we want are in the series.
-			numLabels := d.Uvarint()
+			numLabels := d.Uvarint() // series的个数(labels count部分)
 			for i := 0; i < numLabels; i++ {
 				lno := uint32(d.Uvarint())
 				lvo := uint32(d.Uvarint())
@@ -1046,7 +1047,7 @@ func (w *Writer) writePostingsToTmpFiles() error {
 					postings[lno][lvo] = append(postings[lno][lvo], uint32(startPos/16))
 				}
 			}
-			// Skip to next series.
+			// Skip to next series.(跳到下一个series的偏移)
 			d.Skip(l - (startLen - d.Len()) + crc32.Size)
 			if err := d.Err(); err != nil {
 				return err
