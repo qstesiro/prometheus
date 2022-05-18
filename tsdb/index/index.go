@@ -1022,7 +1022,8 @@ func (w *Writer) writePostingsToTmpFiles() error {
 			}
 			nameSymbols[sid] = name // 注意是索引不是偏移
 		}
-		// Label name -> label value -> positions.
+		// map[label.name]map[lable.value]offset/16
+		// name/value为索引
 		postings := map[uint32]map[uint32][]uint32{}
 
 		d := encoding.NewDecbufRaw(realByteSlice(f.Bytes()), int(w.toc.LabelIndices))
@@ -1037,8 +1038,8 @@ func (w *Writer) writePostingsToTmpFiles() error {
 			// See if label names we want are in the series.
 			numLabels := d.Uvarint() // series的个数(labels count部分)
 			for i := 0; i < numLabels; i++ {
-				lno := uint32(d.Uvarint())
-				lvo := uint32(d.Uvarint())
+				lno := uint32(d.Uvarint()) // 索引
+				lvo := uint32(d.Uvarint()) // 索引
 
 				if _, ok := nameSymbols[lno]; ok {
 					if _, ok := postings[lno]; !ok {
