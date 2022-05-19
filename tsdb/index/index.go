@@ -951,7 +951,7 @@ func (w *Writer) writePostingsToTmpFiles() error {
 	defer f.Close()
 
 	// Write out the special all posting.
-	// 获取序列区中的每个序列偏移
+	// 获取序列区中的每个序列偏移(为label.name="",lable.value=""准备postings数据)
 	offsets := []uint32{}
 	d := encoding.NewDecbufRaw(realByteSlice(f.Bytes()), int(w.toc.LabelIndices)) // 解码符号与序列
 	// 跳过符号偏移到序列(从缓冲区中删除了symbol的数据,整个缓冲区中只包含了series部分所以len也就是series部分的长度)
@@ -995,16 +995,24 @@ func (w *Writer) writePostingsToTmpFiles() error {
 	// ├─────────────────────────────────────────┤
 	// │ CRC32 <4b>                              │
 	// └─────────────────────────────────────────┘
+	// 写label.name="",lable.value=""对应的postings数据
 	if err := w.writePosting("", "", offsets); err != nil {
 		return err
 	}
 	maxPostings := uint64(len(offsets)) // No label name can have more postings than this.
 
+	// 开始处理每个label.name=label.value的postings数据
+	// - 一种算法就是逐个遍历name处理每对name/value(时间长内存少)
+	// - 另一种算法就完全遍历所有name得到完整的postings数据(时间短内存大)
+	// 此处进行了算法优化就是一次获取部分names数据具体多少的判定标准为一次处理的数据offset个数不超过series总个数
 	for len(names) > 0 {
 		batchNames := []string{}
 		var c uint64
 		// Try to bunch up label names into one loop, but avoid
 		// using more memory than a single label name can.
+		// 通过name出现的次数(也就是value的个数不去重)这代表postings中offset的个数不会超过series总个数
+		// 单个name出现的次数最少出现一次,最多出现series总个数(每个series中都包含)
+		// 以此保证在不超过单个name遍历的最大可能内存使用的情况下尽可能的在一次遍历中多处理name
 		for len(names) > 0 {
 			if w.labelNames[names[0]]+c > maxPostings {
 				break
