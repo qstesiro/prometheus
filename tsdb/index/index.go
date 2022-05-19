@@ -949,7 +949,7 @@ func (w *Writer) writePostingsToTmpFiles() error {
 		return err
 	}
 	defer f.Close()
-
+	// 处理label.name="",lable.value=""的postings数据
 	// Write out the special all posting.
 	// 获取序列区中的每个序列偏移(为label.name="",lable.value=""准备postings数据)
 	offsets := []uint32{}
