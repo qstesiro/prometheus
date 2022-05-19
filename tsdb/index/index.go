@@ -380,6 +380,7 @@ func (w *Writer) ensureStage(s indexWriterStage) error {
 		w.toc.LabelIndices = w.f.pos
 		// LabelIndices generation depends on the posting offset
 		// table produced at this stage.
+		// 填充postings与postings-offset两个临时文件
 		if err := w.writePostingsToTmpFiles(); err != nil {
 			return err
 		}
@@ -1089,11 +1090,11 @@ func (w *Writer) writePostingsToTmpFiles() error {
 				// ├──────────────────────┼──────────────────┤
 				// │ len(value) <uvarint> │ value <bytes>    │
 				// ├──────────────────────┴──────────────────┤
-				// │ fP <uvarint64>                          │
-				// └─────────────────────────────────────────┘
-				// Temporary file for postings. [fP]
-				// ┌────────────────────┬────────────────────┐
-				// │ len <4b>           │ #entries <4b>      │
+				// │ fP <uvarint64>                          │------+
+				// └─────────────────────────────────────────┘      |
+				// Temporary file for postings. [fP]                |
+				// ┌────────────────────┬────────────────────┐      |
+				// │ len <4b>           │ #entries <4b>      │<-----+
 				// ├────────────────────┴────────────────────┤
 				// │ ┌─────────────────────────────────────┐ │
 				// │ │ ref(series_1) <4b>                  │ │
@@ -1192,7 +1193,7 @@ func (w *Writer) writePostings() error {
 	if err := w.fP.Flush(); err != nil {
 		return err
 	}
-	// 第一个Posting包含当前块中所有序列引用 ???
+	// 第一个Posting包含当前块中所有序列引用
 	if _, err := w.fP.f.Seek(0, 0); err != nil {
 		return err
 	}
