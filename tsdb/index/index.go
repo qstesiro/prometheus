@@ -849,7 +849,7 @@ func (w *Writer) writePostingsOffsetTable() error {
 
 	// Copy over the tmp posting offset table, however we need to
 	// adjust the offsets.
-	adjustment := w.postingsStart
+	adjustment := w.postingsStart // writePostings函数中记录(不直接使用toc.Postings是因为可能有padding)
 
 	w.buf1.Reset()
 	w.crc32.Reset()
@@ -871,14 +871,13 @@ func (w *Writer) writePostingsOffsetTable() error {
 	}()
 	d := encoding.NewDecbufRaw(realByteSlice(f.Bytes()), int(w.fPO.pos))
 	cnt := w.cntPO
-	// 第一个项name="",label="" ???
+	// 第一个项name="",label=""
 	for d.Err() == nil && cnt > 0 {
 		w.buf1.Reset()
-		w.buf1.PutUvarint(d.Uvarint())                     // Keycount.
+		w.buf1.PutUvarint(d.Uvarint())                     // Keycount.(读出n=2)
 		w.buf1.PutUvarintStr(yoloString(d.UvarintBytes())) // Label name.
 		w.buf1.PutUvarintStr(yoloString(d.UvarintBytes())) // Label value.
-		// 指向Postings段中对应Posting项的offset
-		w.buf1.PutUvarint64(d.Uvarint64() + adjustment) // Offset.
+		w.buf1.PutUvarint64(d.Uvarint64() + adjustment)    // Offset.(指向Postings段中对应Posting项的offset)
 		w.buf1.WriteToHash(w.crc32)
 		if err := w.write(w.buf1.Get()); err != nil {
 			return err
@@ -904,12 +903,13 @@ func (w *Writer) writePostingsOffsetTable() error {
 
 	// Write out the length.
 	w.buf1.Reset()
-	w.buf1.PutBE32int(int(w.f.pos - startPos - 4)) // 计算出长度[长度本身不在CRC的计算范围]
+	w.buf1.PutBE32int(int(w.f.pos - startPos - 4)) // 计算出长度
 	if err := w.writeAt(w.buf1.Get(), startPos); err != nil {
 		return err
 	}
 
 	// Finally write the hash.
+	// crc32的计算范围包含entries与data部分(不包含len部分)
 	w.buf1.Reset()
 	w.buf1.PutHashSum(w.crc32)
 	return w.write(w.buf1.Get())
@@ -1163,7 +1163,7 @@ func (w *Writer) writePosting(name, value string, offs []uint32) error {
 	if err := w.fPO.Write(w.buf1.Get()); err != nil {
 		return err
 	}
-	w.cntPO++
+	w.cntPO++ // 对应PO(postings offsets)的entries字段
 	// 处理Postings
 	w.buf1.Reset()
 	// offs[i] = series-startpos(每个series启始位置)/16
@@ -1184,6 +1184,7 @@ func (w *Writer) writePosting(name, value string, offs []uint32) error {
 
 func (w *Writer) writePostings() error {
 	// There's padding in the tmp file, make sure it actually works.
+	// 注: 第一项写入是不会填充padding
 	if err := w.f.AddPadding(4); err != nil {
 		return err
 	}
