@@ -1144,7 +1144,7 @@ func (sl *scrapeLoop) scrapeAndReport(interval, timeout time.Duration, last, app
 
 	// A failed scrape is the same as an empty scrape,
 	// we still call sl.append to trigger stale markers.
-	// 将一个抓取目标的数据写入
+	// 将一个抓取目标的数据写入appender
 	total, added, seriesAdded, appErr = sl.append(app, b, contentType, appendTime)
 	if appErr != nil {
 		app.Rollback()
