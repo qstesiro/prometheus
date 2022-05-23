@@ -1214,8 +1214,8 @@ type headAppender struct {
 	minValidTime int64 // No samples below this timestamp are allowed.
 	mint, maxt   int64
 
-	series       []record.RefSeries
-	samples      []record.RefSample
+	series       []record.RefSeries // 序列只有第一次出现才会记录
+	samples      []record.RefSample // 采样持续记录
 	sampleSeries []*memSeries
 
 	appendID, cleanupAppendIDsBelow uint64 // iso相关后续再分析 ???
@@ -1470,6 +1470,7 @@ func (h *Head) gc() int64 {
 	h.numSeries.Sub(uint64(seriesRemoved))
 
 	// Remove deleted series IDs from the postings lists.
+	// 删除所有采样已经落地磁盘的序列
 	h.postings.Delete(deleted)
 
 	if h.wal != nil {
@@ -1482,7 +1483,7 @@ func (h *Head) gc() int64 {
 		// that reads the WAL, wouldn't be able to use those
 		// samples since we would have no labels for that ref ID.
 		for ref := range deleted {
-			h.deleted[ref] = last
+			h.deleted[ref] = last // 创建checkpoint使用
 		}
 		h.deletedMtx.Unlock()
 	}

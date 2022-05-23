@@ -218,16 +218,18 @@ func (e *Encoder) Samples(samples []RefSample, b []byte) []byte {
 	buf := encoding.Encbuf{B: b}
 	buf.PutByte(byte(Samples)) // Samples = 2
 
-	if len(samples) == 0 {
+	if len(samples) == 0 { // 外部调用前已经判定所以不可能执行
 		return buf.Get()
 	}
 
 	// Store base timestamp and base reference number of first sample.
 	// All samples encode their timestamp and ref as delta to those.
+	// 写入第一项基准数据后续以此为基础进行delta运行
 	first := samples[0]
 	buf.PutBE64(first.Ref)
 	buf.PutBE64int64(first.T)
-
+	// 只有Ref与T是delta运算
+	// 第一项也与基准数据进行delta运算所以Ref与T值均为0
 	for _, s := range samples {
 		buf.PutVarint64(int64(s.Ref) - int64(first.Ref))
 		buf.PutVarint64(s.T - first.T)
