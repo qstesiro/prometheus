@@ -1309,7 +1309,7 @@ func (a *headAppender) log() error {
 
 	var rec []byte
 	var enc record.Encoder
-
+	// 写序列
 	if len(a.series) > 0 {
 		rec = enc.Series(a.series, buf)
 		buf = rec[:0]
@@ -1318,6 +1318,7 @@ func (a *headAppender) log() error {
 			return errors.Wrap(err, "log series")
 		}
 	}
+	// 写采样
 	if len(a.samples) > 0 {
 		rec = enc.Samples(a.samples, buf)
 		buf = rec[:0]

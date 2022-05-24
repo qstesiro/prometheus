@@ -660,6 +660,7 @@ func open(dir string, l log.Logger, r prometheus.Registerer, opts *Options, rngs
 		if opts.WALSegmentSize > 0 {
 			segmentSize = opts.WALSegmentSize
 		}
+		// 创建wal指定大小
 		wlog, err = wal.NewSize(l, r, walDir, segmentSize, opts.WALCompression)
 		if err != nil {
 			return nil, err
