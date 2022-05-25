@@ -39,7 +39,7 @@ import (
 
 const (
 	DefaultSegmentSize = 128 * 1024 * 1024 // 128 MB
-	pageSize           = 32 * 1024         // 32KB
+	pageSize           = 32 * 1024         // 32KB(32768)
 	recordHeaderSize   = 7
 )
 
@@ -88,9 +88,9 @@ type SegmentFile interface {
 
 // Segment represents a segment file.
 type Segment struct {
-	SegmentFile
-	dir string
-	i   int
+	SegmentFile // 窄化接口
+	dir         string
+	i           int // 段索引
 }
 
 // Index returns the index of the segment.
@@ -658,7 +658,7 @@ func (w *WAL) log(rec []byte, final bool) error {
 
 		// Find how much of the record we can fit into the page.
 		var (
-			l = min(len(rec), (pageSize-p.alloc)-recordHeaderSize)
+			l = min(len(rec), (pageSize-p.alloc)-recordHeaderSize) // pageSize-p.alloc等价p.remaining()
 			// 这不是低效操作[只会创建一个新slice结构指针指向原内存地址并初始化len与cap]
 			part = rec[:l]
 			buf  = p.buf[p.alloc:]
