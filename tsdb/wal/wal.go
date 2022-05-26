@@ -534,7 +534,6 @@ func (w *WAL) flushPage(clear bool) error {
 	}
 
 	n, err := w.segment.Write(p.buf[p.flushed:p.alloc])
-	// 21/03/15 22:51:10 Mark
 	// 可以合并p.flushed += n
 	if err != nil {
 		p.flushed += n
@@ -544,7 +543,7 @@ func (w *WAL) flushPage(clear bool) error {
 
 	// We flushed an entire page, prepare a new one.
 	if clear {
-		p.reset()
+		p.reset() // 重置页缓冲区
 		w.donePages++
 		w.metrics.pageCompletions.Inc()
 	}
@@ -617,6 +616,10 @@ func (w *WAL) Log(recs ...[]byte) error {
 func (w *WAL) log(rec []byte, final bool) error {
 	// When the last page flush failed the page will remain full.
 	// When the page is full, need to flush it before trying to add more records to it.
+	// 以下情况是bug(函数内后续写循环部分有一句说明允许写入零长度的记录) ???
+	// 注意此处判定页空间是否满的标准是 pageSize-p.alloc < recordHeaderSize
+	// 会存在pageSize-p.alloc == recordHeaderSize的情况
+	// 页面会在最后部分存储一个只包含头但是数据内容为零的fragment
 	if w.page.full() {
 		if err := w.flushPage(true); err != nil {
 			return err
@@ -641,8 +644,8 @@ func (w *WAL) log(rec []byte, final bool) error {
 	// If the record is too big to fit within the active page in the current
 	// segment, terminate the active segment and advance to the next one.
 	// This ensures that records do not cross segment boundaries.
-	left := w.page.remaining() - recordHeaderSize                                   // Free space in the active page. [7字节]
-	left += (pageSize - recordHeaderSize) * (w.pagesPerSegment() - w.donePages - 1) // Free pages in the active segment.
+	left := w.page.remaining() - recordHeaderSize                                   // Free space in the active page.(当前页面剩余空间)
+	left += (pageSize - recordHeaderSize) * (w.pagesPerSegment() - w.donePages - 1) // Free pages in the active segment.(当前段除去当前页的剩余空间)
 
 	// record不跨段
 	if len(rec) > left {
@@ -652,7 +655,7 @@ func (w *WAL) log(rec []byte, final bool) error {
 	}
 
 	// Populate as many pages as necessary to fit the record.
-	// Be careful to always do one pass to ensure we write zero-length records.
+	// Be careful to always do one pass to ensure we write zero-length records.(允许写零长度的记录有什么意义) ???
 	for i := 0; i == 0 || len(rec) > 0; i++ {
 		p := w.page
 
@@ -667,6 +670,11 @@ func (w *WAL) log(rec []byte, final bool) error {
 		// 写入数据时虽然没有使用recPageTerm
 		// 但是因为其值为0当前读取时获取到fragment类型为0
 		// 则可以认为segment已经结束,具体还没有分析读后续再分析 ???
+		//
+		// record的存储存在以下几种情况:
+		// - 一个fragment(full)
+		// - 多个fragment(first,middle,last)
+		// - 两个fragment(first,last)
 		switch {
 		case i == 0 && len(part) == len(rec):
 			typ = recFull
@@ -680,14 +688,14 @@ func (w *WAL) log(rec []byte, final bool) error {
 		// 文档中没有标注 ???
 		// https://github.com/qstesiro/prometheus/blob/main/tsdb/docs/format/wal.md
 		if compressed {
-			// 00001[000|001|010|011|100]
+			// [0000][1][000|001|010|011|100]
 			typ |= snappyMask
 		}
 		// ┌───────────┬──────────┬────────────┬──────────────┐
 		// │ type <1b> │ len <2b> │ CRC32 <4b> │ data <bytes> │
 		// └───────────┴──────────┴────────────┴──────────────┘
-		buf[0] = byte(typ) // 写入类型
-		crc := crc32.Checksum(part, castagnoliTable)
+		buf[0] = byte(typ)                                     // 写入类型
+		crc := crc32.Checksum(part, castagnoliTable)           // part的crc
 		binary.BigEndian.PutUint16(buf[1:], uint16(len(part))) // 写入len
 		binary.BigEndian.PutUint32(buf[3:], crc)               // 写入CRC32
 
@@ -695,6 +703,7 @@ func (w *WAL) log(rec []byte, final bool) error {
 		p.alloc += len(part) + recordHeaderSize
 
 		if w.page.full() {
+			// true代表刷新到磁盘并重置页缓存
 			if err := w.flushPage(true); err != nil {
 				// TODO When the flushing fails at this point and the record has not been
 				// fully written to the buffer, we end up with a corrupted WAL because some part of the
@@ -707,8 +716,9 @@ func (w *WAL) log(rec []byte, final bool) error {
 	}
 
 	// If it's the final record of the batch and the page is not empty, flush it.
-	// 保证一批record一定刷新磁盘
+	// 保证一批(多个)record写完后刷新磁盘(final代表是否是一批的最后一个)
 	if final && w.page.alloc > 0 {
+		// false代表刷新到磁盘并重置页缓存
 		if err := w.flushPage(false); err != nil {
 			return err
 		}
