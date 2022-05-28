@@ -923,7 +923,7 @@ func (h *Head) truncateWAL(mint int64) error {
 	if err := h.wal.NextSegment(); err != nil {
 		return errors.Wrap(err, "next segment")
 	}
-	last-- // Never consider last segment for checkpoint.
+	last-- // Never consider last segment for checkpoint.(只有一个段不处理)
 	if last < 0 {
 		return nil // no segments yet.
 	}
@@ -931,6 +931,7 @@ func (h *Head) truncateWAL(mint int64) error {
 	// If we have less than two segments, it's not worth checkpointing yet.
 	// With the default 2h blocks, this will keeping up to around 3h worth
 	// of WAL segments.
+	// 少于两个段也不处理
 	last = first + (last-first)*2/3
 	if last <= first {
 		return nil

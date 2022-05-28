@@ -95,6 +95,7 @@ const checkpointPrefix = "checkpoint."
 // 依次读取每个文件解码内容
 // 判定三种不类型record遍历每一个并根据mint进行过滤将符合时间的record记录到新的检查点中[临时目录]
 // 将临时目录替换为正常目录并删除
+// 注: 检查点文件与普通的段文件格式一致
 func Checkpoint(logger log.Logger, w *WAL, from, to int, keep func(id uint64) bool, mint int64) (*CheckpointStats, error) {
 	stats := &CheckpointStats{}
 	var sgmReader io.ReadCloser
@@ -104,16 +105,17 @@ func Checkpoint(logger log.Logger, w *WAL, from, to int, keep func(id uint64) bo
 	{
 
 		var sgmRange []SegmentRange
-		dir, idx, err := LastCheckpoint(w.Dir())
+		dir, idx, err := LastCheckpoint(w.Dir()) // 查询上一次检查点
 		if err != nil && err != record.ErrNotFound {
 			return nil, errors.Wrap(err, "find last checkpoint")
 		}
 		last := idx + 1
-		if err == nil {
+		if err == nil { // 存在上一次检查点
 			if from > last {
 				return nil, fmt.Errorf("unexpected gap to last checkpoint. expected:%v, requested:%v", last, from)
 			}
 			// Ignore WAL files below the checkpoint. They shouldn't exist to begin with.
+			// from <= last的情况下忽略小于last的segment文件
 			from = last
 			// 添加上一次检查点的segment文件
 			sgmRange = append(sgmRange, SegmentRange{Dir: dir, Last: math.MaxInt32})
@@ -221,6 +223,7 @@ func Checkpoint(logger log.Logger, w *WAL, from, to int, keep func(id uint64) bo
 			for _, s := range tstones {
 				for _, iv := range s.Intervals {
 					// mint位于区间之内或是整体个区间超过mint
+					// 只有墓碑的整个时间窗口都小于mint才会被剔除
 					if iv.Maxt >= mint {
 						repl = append(repl, s)
 						break
@@ -256,7 +259,7 @@ func Checkpoint(logger log.Logger, w *WAL, from, to int, keep func(id uint64) bo
 		return nil, errors.Wrap(r.Err(), "read segments")
 	}
 
-	// Flush remaining records.
+	// Flush remaining records.(刷新驻留的record数据)
 	if err := cp.Log(recs...); err != nil {
 		return nil, errors.Wrap(err, "flush records")
 	}
@@ -264,6 +267,7 @@ func Checkpoint(logger log.Logger, w *WAL, from, to int, keep func(id uint64) bo
 		return nil, errors.Wrap(err, "close checkpoint")
 	}
 
+	// 修改临时目录目录到正式目录
 	// Sync temporary directory before rename.
 	df, err := fileutil.OpenDir(cpdirtmp)
 	if err != nil {
