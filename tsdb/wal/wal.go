@@ -342,7 +342,7 @@ Loop:
 			break Loop
 		}
 	}
-	// Drain and process any remaining functions.
+	// Drain and process any remaining functions.(排空chan)
 	for f := range w.actorc {
 		f()
 	}
@@ -492,8 +492,8 @@ func (w *WAL) nextSegment() error {
 	}
 
 	// Don't block further writes by fsyncing the last segment.
-	// 21/03/15 22:50:51 Mark
-	// 直接送函数[从来没有这样用过我又进步了:)]
+	// 直接送函数,从来没有这样用过我又进步了:)
+	// 异步处理前一个段文件落地磁盘只是为了不阻断当前处理 ???
 	w.actorc <- func() {
 		if err := w.fsync(prev); err != nil {
 			level.Error(w.logger).Log("msg", "sync previous segment", "err", err)

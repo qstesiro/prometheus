@@ -923,19 +923,20 @@ func (h *Head) truncateWAL(mint int64) error {
 	if err := h.wal.NextSegment(); err != nil {
 		return errors.Wrap(err, "next segment")
 	}
-	last-- // Never consider last segment for checkpoint.(只有一个段不处理)
-	if last < 0 {
+	last--        // Never consider last segment for checkpoint.(不处理最后一个段文件为了避免读写冲突)
+	if last < 0 { // 只有一个段不处理
 		return nil // no segments yet.
 	}
 	// The lower two thirds of segments should contain mostly obsolete samples.
 	// If we have less than two segments, it's not worth checkpointing yet.
 	// With the default 2h blocks, this will keeping up to around 3h worth
 	// of WAL segments.
-	// 少于两个段也不处理
+	// 少于两个段(实际是少于三个段,因为总是排除第一个段)也不处理
 	last = first + (last-first)*2/3
 	if last <= first {
 		return nil
 	}
+	// deleted详情参见Head.gc()函数
 	keep := func(id uint64) bool {
 		if h.series.getByID(id) != nil {
 			return true
@@ -964,9 +965,10 @@ func (h *Head) truncateWAL(mint int64) error {
 
 	// The checkpoint is written and segments before it is truncated, so we no
 	// longer need to track deleted series that are before it.
+	// deleted详情参见Head.gc()函数
 	h.deletedMtx.Lock()
 	for ref, segment := range h.deleted {
-		if segment < first {
+		if segment < first { // 此处算法是否可以 segment <= last 就行了
 			delete(h.deleted, ref)
 		}
 	}
@@ -1484,6 +1486,14 @@ func (h *Head) gc() int64 {
 		// on start up when we replay the WAL, or any other code
 		// that reads the WAL, wouldn't be able to use those
 		// samples since we would have no labels for that ref ID.
+		// 正常情况不需要记录deleted后续生成检查点(合并段文件)直接过滤掉不在series中的序
+		// 但是检查点生成并不合并所有段文件,总是排除最后一个段文件(为了避免同时读写冲突)
+		// 从而导致序列至少要多保留到下一次生成检查点时也就是当前的last段在下一次检查点时被合并
+		// 样例说明
+		// [s1, s2], [s3, s4, s5], [s6, s7], s8, ...
+		// 检查点1 [s1, s2]     first=s1, last=s2, deleted[refid] = s3 > first
+		// 检查点2 [s3, s4, s5] first=s3, last=s5, deleted[refid] = s3 = first (<= last就行, < first会多驻留一轮)
+		// 检查点3 [s6, s7]     first=s6, last=s7, deleted[refid] = s3 < first delete(refid)
 		for ref := range deleted {
 			h.deleted[ref] = last // 创建checkpoint使用
 		}
@@ -2041,7 +2051,7 @@ func (s *stripeSeries) gc(mint int64) (map[uint64]struct{}, int, int64) {
 				// samples again while we are half-way into deleting it.
 				// 怎么搞成int,不是uint64吗 ???
 				j := int(series.ref) & (s.size - 1)
-				// 此处需要设计index因为两个列表使用不同的使用不同算法不同
+				// 此处需要设计index因为两个列表使用的算法不同
 				// - hash & uint64(s.size-1)
 				// - series.ref & uint64(s.size-1)
 				if i != j {
