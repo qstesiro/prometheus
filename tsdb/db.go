@@ -1572,7 +1572,7 @@ func (db *DB) Delete(mint, maxt int64, ms ...*labels.Matcher) error {
 
 	db.mtx.RLock()
 	defer db.mtx.RUnlock()
-
+	// 处理所有block
 	for _, b := range db.blocks {
 		if b.OverlapsClosedInterval(mint, maxt) {
 			g.Go(func(b *Block) func() error {
@@ -1580,6 +1580,7 @@ func (db *DB) Delete(mint, maxt int64, ms ...*labels.Matcher) error {
 			}(b))
 		}
 	}
+	// 处理head
 	g.Go(func() error {
 		return db.head.Delete(mint, maxt, ms...)
 	})

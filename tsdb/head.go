@@ -1442,12 +1442,14 @@ func (h *Head) Delete(mint, maxt int64, ms ...*labels.Matcher) error {
 	if p.Err() != nil {
 		return p.Err()
 	}
+	// 处理wal
 	if h.wal != nil {
 		var enc record.Encoder
 		if err := h.wal.Log(enc.Tombstones(stones, nil)); err != nil {
 			return err
 		}
 	}
+	// 处理head内存
 	for _, s := range stones {
 		h.tombstones.AddInterval(s.Ref, s.Intervals[0])
 	}
