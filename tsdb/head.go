@@ -2235,7 +2235,7 @@ func (s *memSeries) cutNewHeadChunk(mint int64, chunkDiskMapper *chunks.ChunkDis
 	// may be chosen dynamically at a later point.
 	// 设置下一个切割点(chunkRange默认2h)
 	s.nextAt = rangeForTimestamp(mint, s.chunkRange)
-	// chunkenc.xorAppender类型
+	// 初始化appender(chunkenc.xorAppender类型)
 	app, err := s.headChunk.chunk.Appender()
 	if err != nil {
 		panic(err)
