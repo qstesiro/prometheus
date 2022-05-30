@@ -174,7 +174,7 @@ type xorAppender struct {
 // Delta-of-Delta格式
 /*
   +-+
-  |0|
+  |0| DOD = 0
   +-+
   +----+---------+
   |  10| 14位DOD |
@@ -191,27 +191,30 @@ func (a *xorAppender) Append(t int64, v float64) {
 	num := binary.BigEndian.Uint16(a.b.bytes())
 
 	if num == 0 {
+		// 写入T(num=0与num=1相同的写入方式)
 		buf := make([]byte, binary.MaxVarintLen64)
 		for _, b := range buf[:binary.PutVarint(buf, t)] {
 			a.b.writeByte(b)
 		}
+		// 写入V
 		// 浮点数二进制表示
 		// https://www.h-schmidt.net/FloatConverter/IEEE754.html
 		a.b.writeBits(math.Float64bits(v), 64)
 
 	} else if num == 1 {
 		tDelta = uint64(t - a.t)
-
+		// 写入T(num=0与num=1相同的写入方式)
 		buf := make([]byte, binary.MaxVarintLen64)
 		for _, b := range buf[:binary.PutUvarint(buf, tDelta)] {
 			a.b.writeByte(b)
 		}
+		// 写入V
 		a.writeVDelta(v)
 
 	} else {
 		tDelta = uint64(t - a.t)
 		dod := int64(tDelta - a.tDelta)
-
+		// 写入T
 		// Gorilla has a max resolution of seconds, Prometheus milliseconds.
 		// Thus we use higher value range steps with larger bit size.
 		// 扩大了范围gorilla精度是秒而prometheus精度是毫秒
@@ -231,6 +234,7 @@ func (a *xorAppender) Append(t int64, v float64) {
 			a.b.writeBits(0x0f, 4) // '1111'
 			a.b.writeBits(uint64(dod), 64)
 		}
+		// 写入V
 		a.writeVDelta(v)
 	}
 
@@ -251,7 +255,7 @@ func (a *xorAppender) writeTDelta(t int64) {
 // XOR-Delta格式
 /*
    +-+
-   |0|
+   |0| Delta = 0
    +-+
    +-+-+------------------+
    |1|0| 与前顶替相同位数 |
@@ -277,7 +281,7 @@ func (a *xorAppender) writeVDelta(v float64) {
 	if leading >= 32 {
 		leading = 31
 	}
-	// a.leading != 0xff 保证第二个值必须进行差值运算
+	// a.leading != 0xff 保证第二个值必须进行差值运算 (创建appender时初始化a.leading = 0xff)
 	if a.leading != 0xff && leading >= a.leading && trailing >= a.trailing {
 		// +-+-+------------------+
 		// |1|0| 与前顶替相同位数 |
