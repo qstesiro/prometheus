@@ -265,6 +265,12 @@ func (a *xorAppender) writeTDelta(t int64) {
    +-+-+-----------------+-------------------+----------+
 */
 func (a *xorAppender) writeVDelta(v float64) {
+	// 差值运算不是数学差值而是xor运算
+	// 浮点数的数学差值不会减少内存使用(不像整数的数学差值数据大小与内存使用成正比)
+	// 浮点数无论数据大小都点用固定大小所以使用xor
+	// 对于相近值xor运行结果中leading与tailing零占比大有效数据占比小
+	// https://cloud.tencent.com/developer/article/1473541
+	// https://pkg.go.dev/math#pkg-constants
 	vDelta := math.Float64bits(v) ^ math.Float64bits(a.v)
 	// 与前值相等
 	if vDelta == 0 {
@@ -279,6 +285,7 @@ func (a *xorAppender) writeVDelta(v float64) {
 	trailing := uint8(bits.TrailingZeros64(vDelta))
 
 	// Clamp number of leading zeros to avoid overflow when encoding.
+	// 使用5位存储leading不能超过31(如果超过则收窄这会导致有效差值的长度中包含多余的0)
 	if leading >= 32 {
 		leading = 31 // 5位存储无符号数最大31
 	}
