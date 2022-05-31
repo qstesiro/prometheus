@@ -257,11 +257,11 @@ func (a *xorAppender) writeTDelta(t int64) {
    +-+
    |0| Delta = 0
    +-+
-   +-+-+------------------+
-   |1|0| 与前顶替相同位数 |
-   +-+-+------------------+
+   +-+-+----------------------+
+   |1|0| 与之前有效数据位相同 |
+   +-+-+----------------------+
    +-+-+-----------------+-------------------+----------+
-   |1|1| leading长度(5b) |  差值占用位数(6b) | 差值数据 |
+   |1|1| leading长度(5b) |  有效数据位数(6b) | 差值数据 |
    +-+-+-----------------+-------------------+----------+
 */
 func (a *xorAppender) writeVDelta(v float64) {
@@ -273,35 +273,38 @@ func (a *xorAppender) writeVDelta(v float64) {
 	}
 	// 与前值不相等
 	a.b.writeBit(one)
-
+	// +--------------+-------------------------+-----------+
+	//    leading(0)            有效数据          tailing(0)
 	leading := uint8(bits.LeadingZeros64(vDelta))
 	trailing := uint8(bits.TrailingZeros64(vDelta))
 
 	// Clamp number of leading zeros to avoid overflow when encoding.
 	if leading >= 32 {
-		leading = 31
+		leading = 31 // 5位存储无符号数最大31
 	}
-	// a.leading != 0xff 保证第二个值必须进行差值运算 (创建appender时初始化a.leading = 0xff)
+	// a.leading != 0xff 保证之前已经进行过差值运算 (创建appender时初始化a.leading = 0xff)
 	if a.leading != 0xff && leading >= a.leading && trailing >= a.trailing {
-		// +-+-+------------------+
-		// |1|0| 与前顶替相同位数 |
-		// +-+-+------------------+
+		// +-+-+----------------------+
+		// |1|0| 与之前有效数据位相同 |
+		// +-+-+----------------------+
+		// 因leading >= a.leading && trailing >= a.trailing条件
+		// 所以实际保存有效数据盲位的前或后有冗余的0(读时不影响数据还原)
 		a.b.writeBit(zero)
 		a.b.writeBits(vDelta>>a.trailing, 64-int(a.leading)-int(a.trailing))
 	} else {
 		a.leading, a.trailing = leading, trailing
 		// +-+-+-----------------+-------------------+----------+
-		// |1|1| leading长度(5b) |  差值占用位数(6b) | 差值数据 |
+		// |1|1| leading长度(5b) |  有效数据位数(6b) | 差值数据 |
 		// +-+-+-----------------+-------------------+----------+
 		a.b.writeBit(one)
 		// leading/tailing两者必须存储之一不然无法计算原始数据
-		a.b.writeBits(uint64(leading), 5)
+		a.b.writeBits(uint64(leading), 5) // 5位存储无符号数最大31
 
 		// Note that if leading == trailing == 0, then sigbits == 64.  But that value doesn't actually fit into the 6 bits we have.
 		// Luckily, we never need to encode 0 significant bits, since that would put us in the other case (vdelta == 0).
 		// So instead we write out a 0 and adjust it back to 64 on unpacking.
 		sigbits := 64 - leading - trailing
-		a.b.writeBits(uint64(sigbits), 6)
+		a.b.writeBits(uint64(sigbits), 6) // 6位存储无符号数最大63
 		a.b.writeBits(vDelta>>trailing, int(sigbits))
 	}
 }
