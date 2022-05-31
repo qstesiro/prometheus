@@ -401,9 +401,8 @@ func (it *xorIterator) Next() bool {
 
 		return it.readValue()
 	}
-	// 读取TDOD的长度前缀
 	var d byte
-	// read delta-of-delta
+	// read delta-of-delta(读取TDOD的长度前缀)
 	for i := 0; i < 4; i++ {
 		d <<= 1
 		bit, err := it.br.readBitFast()
@@ -414,7 +413,8 @@ func (it *xorIterator) Next() bool {
 			it.err = err
 			return false
 		}
-		// 可能值10/110/1110/1111
+		// 值: 0/10/110/1110/1111
+		// 循环4次或是出现0结束循环
 		if bit == zero {
 			break
 		}
@@ -474,11 +474,9 @@ func (it *xorIterator) readValue() bool {
 		return false
 	}
 
-	if bit == zero {
-		// 与前值相等
+	if bit == zero { // 与前值有效位数相等
 		// it.val = it.val
-	} else {
-		// 与前值不相等
+	} else { // 与前值有效位数不相等
 		bit, err := it.br.readBitFast()
 		if err != nil {
 			bit, err = it.br.readBit()
@@ -487,10 +485,9 @@ func (it *xorIterator) readValue() bool {
 			it.err = err
 			return false
 		}
-		if bit == zero {
+		if bit == zero { // 复用之前有效位长度
 			// reuse leading/trailing zero bits
 			// it.leading, it.trailing = it.leading, it.trailing
-			// 复用前差值长度
 		} else {
 			bits, err := it.br.readBitsFast(5) // leading位序列
 			if err != nil {
@@ -518,8 +515,8 @@ func (it *xorIterator) readValue() bool {
 			it.trailing = 64 - it.leading - mbits // 计算tailing
 		}
 
-		mbits := 64 - it.leading - it.trailing // 差值长度
-		bits, err := it.br.readBitsFast(mbits) // 获取差值
+		mbits := 64 - it.leading - it.trailing // 有效位长度
+		bits, err := it.br.readBitsFast(mbits) // 获取有效位数据
 		if err != nil {
 			bits, err = it.br.readBits(mbits)
 		}
