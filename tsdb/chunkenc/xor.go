@@ -68,7 +68,7 @@ type XORChunk struct {
 
 // NewXORChunk returns a new chunk with XOR encoding of the given size.
 func NewXORChunk() *XORChunk {
-	b := make([]byte, 2, 128)
+	b := make([]byte, 2, 128) // 前两个字节为T/V对个数(这种初始方式思路清奇)
 	return &XORChunk{b: bstream{stream: b, count: 0}}
 }
 
@@ -133,8 +133,8 @@ func (c *XORChunk) iterator(it Iterator) *xorIterator {
 	return &xorIterator{
 		// The first 2 bytes contain chunk headers.
 		// We skip that for actual samples.
-		br:       newBReader(c.b.bytes()[2:]),
-		numTotal: binary.BigEndian.Uint16(c.b.bytes()),
+		br:       newBReader(c.b.bytes()[2:]),          // 跳过2个字节
+		numTotal: binary.BigEndian.Uint16(c.b.bytes()), // 取前两个字节内容
 		t:        math.MinInt64,
 	}
 }
