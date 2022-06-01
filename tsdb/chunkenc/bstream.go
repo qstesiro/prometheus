@@ -64,47 +64,49 @@ const (
 )
 
 func (b *bstream) writeBit(bit bit) {
-	if b.count == 0 {
+	if b.count == 0 { // 当前无可用空间增加一个字节
 		b.stream = append(b.stream, 0)
-		b.count = 8
+		b.count = 8 // 当前可用位数为8
 	}
 
-	i := len(b.stream) - 1
+	i := len(b.stream) - 1 // 定位到新的字节空间
 
-	if bit {
-		b.stream[i] |= 1 << (b.count - 1)
+	if bit { // 只需写入1(0不需要操作)
+		b.stream[i] |= 1 << (b.count - 1) // 写入一位
 	}
 
-	b.count--
+	b.count-- // 减少可用位数
 }
 
+// 按字节写数据时count不会变化(优秀) !!!
 func (b *bstream) writeByte(byt byte) {
-	if b.count == 0 {
+	if b.count == 0 { // 当前无可用空间增加一个字节
 		b.stream = append(b.stream, 0)
-		b.count = 8
+		b.count = 8 // 当前可用位数为8
 	}
 
-	i := len(b.stream) - 1
+	i := len(b.stream) - 1 // 定位到新的字节空间
 
 	// fill up b.b with b.count bits from byt
-	b.stream[i] |= byt >> (8 - b.count)
+	b.stream[i] |= byt >> (8 - b.count) // 填充当前可用位
 
-	b.stream = append(b.stream, 0)
-	i++
-	b.stream[i] = byt << b.count
+	b.stream = append(b.stream, 0) // 增加一个字节空间
+	i++                            // 定位到新的字节空间
+	b.stream[i] = byt << b.count   // 写入剩余数据位
 }
 
 func (b *bstream) writeBits(u uint64, nbits int) {
-	u <<= (64 - uint(nbits))
+	u <<= (64 - uint(nbits)) // 将需要写入的位数右移到启始位置
+	// 按字节写入
 	for nbits >= 8 {
 		byt := byte(u >> 56)
-		b.writeByte(byt)
+		b.writeByte(byt) // 写字节
 		u <<= 8
 		nbits -= 8
 	}
-
+	// 按位数写入
 	for nbits > 0 {
-		b.writeBit((u >> 63) == 1)
+		b.writeBit((u >> 63) == 1) // 写位数
 		u <<= 1
 		nbits--
 	}
