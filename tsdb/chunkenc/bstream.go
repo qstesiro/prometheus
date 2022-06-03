@@ -113,11 +113,12 @@ func (b *bstream) writeBits(u uint64, nbits int) {
 }
 
 type bstreamReader struct {
+	// 基础数据
 	stream       []byte
-	streamOffset int // The offset from which read the next byte from the stream.
-
+	streamOffset int // The offset from which read the next byte from the stream.(可读数据的索引偏移)
+	// 缓冲区
 	buffer uint64 // The current buffer, filled from the stream, containing up to 8 bytes from which read bits.
-	valid  uint8  // The number of bits valid to read (from left) in the current buffer.
+	valid  uint8  // The number of bits valid to read (from left) in the current buffer.(当前可用比特位)
 }
 
 func newBReader(b []byte) bstreamReader {
@@ -127,7 +128,7 @@ func newBReader(b []byte) bstreamReader {
 }
 
 func (b *bstreamReader) readBit() (bit, error) {
-	if b.valid == 0 {
+	if b.valid == 0 { // 缓冲区数据不够
 		if !b.loadNextBuffer(1) {
 			return false, io.EOF
 		}
@@ -141,37 +142,38 @@ func (b *bstreamReader) readBit() (bit, error) {
 // This function must be kept small and a leaf in order to help the compiler inlining it
 // and further improve performances.
 func (b *bstreamReader) readBitFast() (bit, error) {
-	if b.valid == 0 {
+	if b.valid == 0 { // 缓冲区数据不够
 		return false, io.EOF
 	}
 
-	b.valid--
-	bitmask := uint64(1) << b.valid
+	b.valid--                       // 先减少可用位数
+	bitmask := uint64(1) << b.valid // 左移数据位
 	return (b.buffer & bitmask) != 0, nil
 }
 
 func (b *bstreamReader) readBits(nbits uint8) (uint64, error) {
-	if b.valid == 0 {
+	if b.valid == 0 { // 缓冲区数据不够
 		if !b.loadNextBuffer(nbits) {
 			return 0, io.EOF
 		}
 	}
 
-	if nbits <= b.valid {
+	if nbits <= b.valid { // 缓冲区数据足够
 		return b.readBitsFast(nbits)
 	}
 
 	// We have to read all remaining valid bits from the current buffer and a part from the next one.
-	bitmask := (uint64(1) << b.valid) - 1
+	// 从当前缓冲区中获取部分数据
+	bitmask := (uint64(1) << b.valid) - 1 // 长度为b.valid且位全为1
 	nbits -= b.valid
 	v := (b.buffer & bitmask) << nbits
 	b.valid = 0
-
+	// 再读数据填充缓冲区
 	if !b.loadNextBuffer(nbits) {
 		return 0, io.EOF
 	}
-
-	bitmask = (uint64(1) << nbits) - 1
+	// 从缓冲区中读剩余的数据
+	bitmask = (uint64(1) << nbits) - 1 // 长度为b.valid且位全为1
 	v = v | ((b.buffer >> (b.valid - nbits)) & bitmask)
 	b.valid -= nbits
 
@@ -187,7 +189,7 @@ func (b *bstreamReader) readBitsFast(nbits uint8) (uint64, error) {
 		return 0, io.EOF
 	}
 
-	bitmask := (uint64(1) << nbits) - 1
+	bitmask := (uint64(1) << nbits) - 1 // 长度为b.valid且位全为1
 	b.valid -= nbits
 
 	return (b.buffer >> b.valid) & bitmask, nil
@@ -224,6 +226,7 @@ func (b *bstreamReader) loadNextBuffer(nbits uint8) bool {
 	// to handle race conditions with concurrent writes happening on the very last byte
 	// we make sure to never over more than the minimum requested bits (rounded up to
 	// the next byte). The following code is slower but called less frequently.
+	// 不明白为什么不直接计算nbytes = len(b.stream) - b.streamOffset ???
 	nbytes := int((nbits / 8) + 1)
 	if b.streamOffset+nbytes > len(b.stream) {
 		nbytes = len(b.stream) - b.streamOffset
