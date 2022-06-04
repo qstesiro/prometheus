@@ -58,6 +58,7 @@ func (b *bstream) bytes() []byte {
 
 type bit bool
 
+// 代码风格(未使用大写) ???
 const (
 	zero bit = false
 	one  bit = true
@@ -215,6 +216,8 @@ func (b *bstreamReader) loadNextBuffer(nbits uint8) bool {
 	// in a optimized way. It's guaranteed that this branch will never read from the
 	// very last byte of the stream (which suffers race conditions due to concurrent
 	// writes).
+	// 当前可用数据大于8字节,也就是stream中至少保留了一个字节
+	// 因为写bit实际操作的是一个byte所以保留一个byte可以避免并发读写问题
 	if b.streamOffset+8 < len(b.stream) {
 		b.buffer = binary.BigEndian.Uint64(b.stream[b.streamOffset:])
 		b.streamOffset += 8
@@ -226,7 +229,9 @@ func (b *bstreamReader) loadNextBuffer(nbits uint8) bool {
 	// to handle race conditions with concurrent writes happening on the very last byte
 	// we make sure to never over more than the minimum requested bits (rounded up to
 	// the next byte). The following code is slower but called less frequently.
-	// 不明白为什么不直接计算nbytes = len(b.stream) - b.streamOffset ???
+	// 不明白有以下疑问 ???
+	// - 为什么计算nbytes要多一个byte
+	// - b.streamOffset+nbytes >= len(b.stream)的情况读的所有可用数据不保留最后byte如何保证并发
 	nbytes := int((nbits / 8) + 1)
 	if b.streamOffset+nbytes > len(b.stream) {
 		nbytes = len(b.stream) - b.streamOffset
