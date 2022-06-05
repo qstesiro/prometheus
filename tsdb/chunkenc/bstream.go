@@ -232,6 +232,16 @@ func (b *bstreamReader) loadNextBuffer(nbits uint8) bool {
 	// 不明白有以下疑问 ???
 	// - 为什么计算nbytes要多一个byte
 	// - b.streamOffset+nbytes >= len(b.stream)的情况读的所有可用数据不保留最后byte如何保证并发
+	//
+	// 以下代码没有生产并发问题因为以下设置
+	// +----------+--------------------------------+-----------+
+	// | 总数(2b) |          已写入数据            |  新数据   |
+	// +----------+--------------------------------+-----------+
+	// bstreamReader只会读取"已写入数据"部分
+	// 新数据写入只会操作"新数据"部分
+	// 所以并发读写的是缓冲区中不同的部分也就没有并发问题
+	// 有效解决了并发读写值得借鉴 !!!
+	//
 	nbytes := int((nbits / 8) + 1)
 	if b.streamOffset+nbytes > len(b.stream) {
 		nbytes = len(b.stream) - b.streamOffset

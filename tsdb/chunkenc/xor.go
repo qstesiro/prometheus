@@ -130,6 +130,14 @@ func (c *XORChunk) iterator(it Iterator) *xorIterator {
 		xorIter.Reset(c.b.bytes())
 		return xorIter
 	}
+	// +----------+--------------------------------+-----------+
+	// | 总数(2b) |          已写入数据            |  新数据   |
+	// +----------+--------------------------------+-----------+
+	// 在获取迭代器的外部会锁定数据阻止并发写入
+	// Iter通过记录总数限定迭代数据不会超过"已写入数据"部分
+	// 后续解锁后新数据写入只会操作"新数据"部分
+	// 所以并发读写的缓冲区中不同的部分也就没有并发问题
+	// 有效解决了并发读写值得借鉴 !!!
 	return &xorIterator{
 		// The first 2 bytes contain chunk headers.
 		// We skip that for actual samples.

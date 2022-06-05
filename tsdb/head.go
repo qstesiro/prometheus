@@ -1363,6 +1363,7 @@ func (a *headAppender) Commit() (err error) {
 	for i, s := range a.samples {
 		series = a.sampleSeries[i]
 		// 写入采样对应序列的chunk中
+		// 序列加锁处理(读数据操作也会加锁保证获取迭代器操作没有并发读写)
 		series.Lock()
 		ok, chunkCreated := series.append(s.T, s.V, a.appendID, a.head.chunkDiskMapper)
 		series.cleanupAppendIDsBelow(a.cleanupAppendIDsBelow)
@@ -1694,6 +1695,14 @@ type safeChunk struct {
 }
 
 func (c *safeChunk) Iterator(reuseIter chunkenc.Iterator) chunkenc.Iterator {
+	// +----------+--------------------------------+-----------+
+	// | 总数(2b) |          已写入数据            |  新数据   |
+	// +----------+--------------------------------+-----------+
+	// 数据锁定后不会再有数据写入
+	// Iter通过记录总数限定迭代数据不会超过"已写入数据"部分
+	// 后续解锁后新数据写入只会操作"新数据"部分
+	// 所以并发读写的缓冲区中不同的部分也就没有并发问题
+	// 有效解决了并发读写值得借鉴 !!!
 	c.s.Lock()
 	it := c.s.iterator(c.cid, c.isoState, c.chunkDiskMapper, reuseIter)
 	c.s.Unlock()
