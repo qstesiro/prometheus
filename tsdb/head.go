@@ -1686,7 +1686,7 @@ func (h *headChunkReader) Chunk(ref uint64) (chunkenc.Chunk, error) {
 
 // headChunk压缩时不是并发安全(具体细节后续再研究) ???
 type safeChunk struct {
-	chunkenc.Chunk
+	chunkenc.Chunk  // tsdb.memChunk
 	s               *memSeries
 	cid             int
 	isoState        *isolationState
