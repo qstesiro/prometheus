@@ -259,10 +259,11 @@ func cutSegmentFile(dirFile *os.File, magicNumber uint32, chunksFormat byte, all
 		return 0, nil, 0, errors.Wrap(err, "sync directory")
 	}
 
-	// Write header metadata for new file.
-	metab := make([]byte, SegmentHeaderSize)
-	binary.BigEndian.PutUint32(metab[:MagicChunksSize], magicNumber)
-	metab[4] = chunksFormat
+	// Write header metadata for new file.(写元数据)
+	metab := make([]byte, SegmentHeaderSize)                         // SegmentHeaderSize = 8byte
+	binary.BigEndian.PutUint32(metab[:MagicChunksSize], magicNumber) // 幻数
+	metab[4] = chunksFormat                                          // 格式版本
+	// metab[5:8] = padding(0)
 
 	n, err := f.Write(metab)
 	if err != nil {

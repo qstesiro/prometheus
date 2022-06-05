@@ -2555,7 +2555,7 @@ func (s *memSeries) head() *memChunk {
 }
 
 type memChunk struct {
-	chunk            chunkenc.Chunk
+	chunk            chunkenc.Chunk // chunkenc.XORChunk类型
 	minTime, maxTime int64
 }
 

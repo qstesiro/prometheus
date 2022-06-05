@@ -275,7 +275,7 @@ func (a *xorAppender) writeTDelta(t int64) {
 func (a *xorAppender) writeVDelta(v float64) {
 	// 差值运算不是数学差值而是xor运算
 	// 浮点数的数学差值不会减少内存使用(不像整数的数学差值数据大小与内存使用成正比)
-	// 浮点数无论数据大小都点用固定大小所以使用xor
+	// 浮点数无论数据大小都占用固定大小内存所以使用xor
 	// 对于相近值xor运行结果中leading与tailing零占比大有效数据占比小
 	// https://cloud.tencent.com/developer/article/1473541
 	// https://pkg.go.dev/math#pkg-constants

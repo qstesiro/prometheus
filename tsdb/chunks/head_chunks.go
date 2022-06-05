@@ -363,25 +363,25 @@ func (cdm *ChunkDiskMapper) WriteChunk(seriesRef uint64, mint, maxt int64, chk c
 	// the lower 4 bytes are for the head chunk file offset where to start reading this chunk.
 	chkRef = chunkRef(uint64(cdm.curFileSequence), uint64(cdm.curFileSize()))
 
-	binary.BigEndian.PutUint64(cdm.byteBuf[bytesWritten:], seriesRef)
+	binary.BigEndian.PutUint64(cdm.byteBuf[bytesWritten:], seriesRef) // 序列ID
 	bytesWritten += SeriesRefSize
-	binary.BigEndian.PutUint64(cdm.byteBuf[bytesWritten:], uint64(mint))
+	binary.BigEndian.PutUint64(cdm.byteBuf[bytesWritten:], uint64(mint)) // 时间左边界
 	bytesWritten += MintMaxtSize
-	binary.BigEndian.PutUint64(cdm.byteBuf[bytesWritten:], uint64(maxt))
+	binary.BigEndian.PutUint64(cdm.byteBuf[bytesWritten:], uint64(maxt)) // 时间右边界
 	bytesWritten += MintMaxtSize
-	cdm.byteBuf[bytesWritten] = byte(chk.Encoding())
+	cdm.byteBuf[bytesWritten] = byte(chk.Encoding()) // Chunk编码类型(XOR)
 	bytesWritten += ChunkEncodingSize
-	n := binary.PutUvarint(cdm.byteBuf[bytesWritten:], uint64(len(chk.Bytes())))
+	n := binary.PutUvarint(cdm.byteBuf[bytesWritten:], uint64(len(chk.Bytes()))) // 数据长度
 	bytesWritten += n
 	// 将byteBuf中缓存数据(非data部分)写入文件与crc计算缓冲
 	if err := cdm.writeAndAppendToCRC32(cdm.byteBuf[:bytesWritten]); err != nil {
 		return 0, err
 	}
 	// 将具体head-chunk数据写入文件与crc计算缓冲
-	if err := cdm.writeAndAppendToCRC32(chk.Bytes()); err != nil {
+	if err := cdm.writeAndAppendToCRC32(chk.Bytes()); err != nil { // 数据
 		return 0, err
 	}
-	if err := cdm.writeCRC32(); err != nil {
+	if err := cdm.writeCRC32(); err != nil { // 计算CRC(包含元信息与数据)
 		return 0, err
 	}
 	// 更新最大时间
