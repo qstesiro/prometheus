@@ -182,16 +182,19 @@ type xorAppender struct {
 // Delta-of-Delta格式
 /*
   +-+
-  |0| DOD = 0
+  |0| DOD = 0      1b
   +-+
+  +--+---------+
+  |10| 14位DOD |   16b
+  +--+---------+
+  +---+---------+
+  |110| 17位DOD |  20b
+  +---+---------+
   +----+---------+
-  |  10| 14位DOD |
+  |1110| 20位DOD | 24b
   +----+---------+
-  | 110| 17位DOD |
   +----+---------+
-  |1110| 20位DOD |
-  +---+----------+
-  |1111| 64位DOD |
+  |1111| 64位DOD | 24b
   +---+----------+
 */
 func (a *xorAppender) Append(t int64, v float64) {
@@ -287,8 +290,9 @@ func (a *xorAppender) writeVDelta(v float64) {
 	}
 	// 与前值不相等
 	a.b.writeBit(one)
-	// +--------------+-------------------------+-----------+
-	//    leading(0)            有效数据          tailing(0)
+	// +--------------+--------------------+--------------+
+	// |  leading(0)  |      有效数据      |  tailing(0)  |
+	// +--------------+--------------------+--------------+
 	leading := uint8(bits.LeadingZeros64(vDelta))
 	trailing := uint8(bits.TrailingZeros64(vDelta))
 
