@@ -194,7 +194,7 @@ type xorAppender struct {
   |1110| 20位DOD | 24b
   +----+---------+
   +----+---------+
-  |1111| 64位DOD | 24b
+  |1111| 64位DOD | 68b
   +---+----------+
 */
 func (a *xorAppender) Append(t int64, v float64) {
