@@ -131,9 +131,23 @@ func main() {
 	analyzeBlockID := tsdbAnalyzeCmd.Arg("block id", "Block to analyze (default is the last block).").String()
 	analyzeLimit := tsdbAnalyzeCmd.Flag("limit", "How many items to show in each list.").Default("20").Int()
 
-	tsdbListCmd := tsdbCmd.Command("list", "List tsdb blocks.")
-	listHumanReadable := tsdbListCmd.Flag("human-readable", "Print human readable values.").Short('r').Bool()
-	listPath := tsdbListCmd.Arg("db path", "Database path (default is "+defaultDBPath+").").Default(defaultDBPath).String()
+	tsdbListCmd := tsdbCmd.Command("list", "list somekind file")
+	// block
+	tsdbListBlockCmd := tsdbListCmd.Command("block", "List tsdb blocks.")
+	listBlockHumanReadable := tsdbListBlockCmd.Flag("human-readable", "Print human readable values.").Short('r').Bool()
+	listBlockPath := tsdbListBlockCmd.Arg("db path", "Database path (default is "+defaultDBPath+").").Default(defaultDBPath).String()
+	// chunk
+	tsdbListChunkCmd := tsdbListCmd.Command("chunk", "List tsdb head chunks (mmapped-chunks).")
+	listChunkHumanReadable := tsdbListChunkCmd.Flag("human-readable", "Print human readable values.").Short('r').Bool()
+	listChunkPath := tsdbListChunkCmd.Arg("db path", "Database path (default is "+defaultDBPath+").").Default(defaultDBPath).String()
+	// segment
+	tsdbListSegmentCmd := tsdbListCmd.Command("segment", "List tsdb wal segments.")
+	listSegmentHumanReadable := tsdbListSegmentCmd.Flag("human-readable", "Print human readable values.").Short('r').Bool()
+	listSegmentPath := tsdbListSegmentCmd.Arg("db path", "Database path (default is "+defaultDBPath+").").Default(defaultDBPath).String()
+	// checkpoint
+	tsdbListCheckpointCmd := tsdbListCmd.Command("checkpoint", "List tsdb wal checkpoints.")
+	listCheckpointHumanReadable := tsdbListCheckpointCmd.Flag("human-readable", "Print human readable values.").Short('r').Bool()
+	listCheckpointPath := tsdbListCheckpointCmd.Arg("db path", "Database path (default is "+defaultDBPath+").").Default(defaultDBPath).String()
 
 	tsdbDumpCmd := tsdbCmd.Command("dump", "Dump samples from a TSDB.")
 	dumpPath := tsdbDumpCmd.Arg("db path", "Database path (default is "+defaultDBPath+").").Default(defaultDBPath).String()
@@ -200,8 +214,14 @@ func main() {
 	case tsdbAnalyzeCmd.FullCommand():
 		os.Exit(checkErr(analyzeBlock(*analyzePath, *analyzeBlockID, *analyzeLimit)))
 
-	case tsdbListCmd.FullCommand():
-		os.Exit(checkErr(listBlocks(*listPath, *listHumanReadable)))
+	case tsdbListBlockCmd.FullCommand():
+		os.Exit(checkErr(listBlocks(*listBlockPath, *listBlockHumanReadable)))
+	case tsdbListChunkCmd.FullCommand():
+		os.Exit(checkErr(listChunks(*listChunkPath, *listChunkHumanReadable)))
+	case tsdbListSegmentCmd.FullCommand():
+		os.Exit(checkErr(listSegments(*listSegmentPath, *listSegmentHumanReadable)))
+	case tsdbListCheckpointCmd.FullCommand():
+		os.Exit(checkErr(listCheckpoints(*listCheckpointPath, *listCheckpointHumanReadable)))
 
 	case tsdbDumpCmd.FullCommand():
 		os.Exit(checkErr(dumpSamples(*dumpPath, *dumpMinTime, *dumpMaxTime)))

@@ -376,6 +376,18 @@ func printBlocks(blocks []tsdb.BlockReader, writeHeader, humanReadable bool) {
 	}
 }
 
+func listChunks(path string, humanReadable bool) error {
+	return nil
+}
+
+func listSegments(path string, humanReadable bool) error {
+	return nil
+}
+
+func listCheckpoints(path string, humanReadable bool) error {
+	return nil
+}
+
 func getFormatedTime(timestamp int64, humanReadable bool) string {
 	if humanReadable {
 		return time.Unix(timestamp/1000, 0).UTC().String()
