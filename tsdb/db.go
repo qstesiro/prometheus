@@ -298,7 +298,7 @@ var ErrClosed = errors.New("db already closed")
 // DBReadOnly provides APIs for read only operations on a database.
 // Current implementation doesn't support concurrency so
 // all API calls should happen in the same go routine.
-// ./cmd/promtool/tsdb.go:339 ???
+// 提供给promtool使用
 type DBReadOnly struct {
 	logger  log.Logger
 	dir     string
