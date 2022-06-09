@@ -299,6 +299,7 @@ var ErrClosed = errors.New("db already closed")
 // Current implementation doesn't support concurrency so
 // all API calls should happen in the same go routine.
 // 提供给promtool使用
+// 与可读写数据同时运行时存在资源竞争所以最好是在promethus停止后再进行promtool
 type DBReadOnly struct {
 	logger  log.Logger
 	dir     string
