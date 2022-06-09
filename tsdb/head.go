@@ -691,7 +691,7 @@ func (h *Head) Init(minValidTime int64) error {
 
 	level.Info(h.logger).Log("msg", "Replaying on-disk memory mappable chunks if any")
 	start := time.Now()
-
+	// 装载head_chunks文件
 	mmappedChunks, err := h.loadMmappedChunks()
 	if err != nil {
 		level.Error(h.logger).Log("msg", "Loading on-disk chunks failed", "err", err)
@@ -709,10 +709,10 @@ func (h *Head) Init(minValidTime int64) error {
 		return nil
 	}
 
-	level.Info(h.logger).Log("msg", "Replaying WAL, this may take a while")
-
+	level.Info(h.logger).Log("msg", "Replaying WAL, this may take a while") // 回放wal数据
+	// 先回填检查点文件,再回填普通段文件(检查点数据时间早于普通段数据)
 	checkpointReplayStart := time.Now()
-	// Backfill the checkpoint first if it exists.
+	// Backfill the checkpoint first if it exists.(回填检查点数据)
 	dir, startFrom, err := wal.LastCheckpoint(h.wal.Dir())
 	if err != nil && err != record.ErrNotFound {
 		return errors.Wrap(err, "find last checkpoint")
@@ -734,7 +734,7 @@ func (h *Head) Init(minValidTime int64) error {
 		if err := h.loadWAL(wal.NewReader(sr), multiRef, mmappedChunks); err != nil {
 			return errors.Wrap(err, "backfill checkpoint")
 		}
-		startFrom++
+		startFrom++ // 索引加一
 		level.Info(h.logger).Log("msg", "WAL checkpoint loaded")
 	}
 	checkpointReplayDuration := time.Since(checkpointReplayStart)
@@ -746,7 +746,7 @@ func (h *Head) Init(minValidTime int64) error {
 		return errors.Wrap(err, "finding WAL segments")
 	}
 
-	// Backfill segments from the most recent checkpoint onwards.
+	// Backfill segments from the most recent checkpoint onwards.(回填普通段文件数据)
 	for i := startFrom; i <= last; i++ {
 		s, err := wal.OpenReadSegment(wal.SegmentName(h.wal.Dir(), i))
 		if err != nil {
@@ -783,30 +783,33 @@ func (h *Head) SetMinValidTime(minValidTime int64) {
 }
 
 func (h *Head) loadMmappedChunks() (map[uint64][]*mmappedChunk, error) {
-	mmappedChunks := map[uint64][]*mmappedChunk{}
-	if err := h.chunkDiskMapper.IterateAllChunks(func(seriesRef, chunkRef uint64, mint, maxt int64, numSamples uint16) error {
-		if maxt < h.minValidTime.Load() {
-			return nil
-		}
-
-		slice := mmappedChunks[seriesRef]
-		if len(slice) > 0 {
-			if slice[len(slice)-1].maxTime >= mint {
-				return &chunks.CorruptionErr{
-					Err: errors.Errorf("out of sequence m-mapped chunk for series ref %d", seriesRef),
+	mmappedChunks := map[uint64][]*mmappedChunk{} // map[seriesRef][]*mmappedChunk{}
+	if err := h.chunkDiskMapper.IterateAllChunks(
+		func(seriesRef, chunkRef uint64, mint, maxt int64, numSamples uint16) error {
+			if maxt < h.minValidTime.Load() {
+				return nil
+			}
+			slice := mmappedChunks[seriesRef] // 一个序列可对应多个mmappedChunk
+			if len(slice) > 0 {
+				if slice[len(slice)-1].maxTime >= mint {
+					return &chunks.CorruptionErr{
+						Err: errors.Errorf("out of sequence m-mapped chunk for series ref %d", seriesRef),
+					}
 				}
 			}
-		}
-
-		slice = append(slice, &mmappedChunk{
-			ref:        chunkRef,
-			minTime:    mint,
-			maxTime:    maxt,
-			numSamples: numSamples,
-		})
-		mmappedChunks[seriesRef] = slice
-		return nil
-	}); err != nil {
+			slice = append(
+				slice,
+				&mmappedChunk{
+					ref:        chunkRef,
+					minTime:    mint,
+					maxTime:    maxt,
+					numSamples: numSamples,
+				},
+			)
+			mmappedChunks[seriesRef] = slice
+			return nil
+		},
+	); err != nil {
 		return nil, errors.Wrap(err, "iterate on on-disk chunks")
 	}
 	return mmappedChunks, nil

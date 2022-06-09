@@ -204,7 +204,7 @@ func (cdm *ChunkDiskMapper) openMMapFiles() (returnErr error) {
 			cdm.closers = nil
 		}
 	}()
-
+	// map[seq]path
 	files, err := listChunkFiles(cdm.dir.Name())
 	if err != nil {
 		return err
