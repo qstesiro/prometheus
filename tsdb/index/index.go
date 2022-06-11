@@ -1324,7 +1324,7 @@ func NewReader(b ByteSlice) (*Reader, error) {
 
 // NewFileReader returns a new index reader against the given index file.
 func NewFileReader(path string) (*Reader, error) {
-	f, err := fileutil.OpenMmapFile(path)
+	f, err := fileutil.OpenMmapFile(path) // 内存映射方式打开文件
 	if err != nil {
 		return nil, err
 	}

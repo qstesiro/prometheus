@@ -510,7 +510,7 @@ func NewDirReader(dir string, pool chunkenc.Pool) (*Reader, error) {
 		cs []io.Closer
 	)
 	for _, fn := range files {
-		f, err := fileutil.OpenMmapFile(fn)
+		f, err := fileutil.OpenMmapFile(fn) // 内存映射方式打开文件
 		if err != nil {
 			return nil, tsdb_errors.NewMulti(
 				errors.Wrap(err, "mmap files"),

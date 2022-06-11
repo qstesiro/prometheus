@@ -450,7 +450,7 @@ func (h *Head) updateMinMaxTime(mint, maxt int64) {
 	}
 }
 
-// 装载一个wal文件(检查点或普通段)
+// 装载单个wal文件并不是装载整个wal相关文件(检查点或普通段)
 // 函数这么多代码应该进一步拆分 ???
 // 内部调用updateMinMaxTime更新区间
 func (h *Head) loadWAL(r *wal.Reader, multiRef map[uint64]uint64, mmappedChunks map[uint64][]*mmappedChunk) (err error) {

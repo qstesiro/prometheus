@@ -537,7 +537,7 @@ func (db *DBReadOnly) Close() error {
 }
 
 // Open returns a new DB in the given directory. If options are empty, DefaultOptions will be used.
-func Open(dir string, l log.Logger, r prometheus.Registerer, opts *Options) (db *DB, err error) {
+func Open(sdir string, l log.Logger, r prometheus.Registerer, opts *Options) (db *DB, err error) {
 	var rngs []int64
 	opts, rngs = validateOpts(opts, nil)
 	return open(dir, l, r, opts, rngs)
@@ -973,6 +973,7 @@ func (db *DB) compactBlocks() (err error) {
 
 // getBlock iterates a given block range to find a block by a given id.
 // If found it returns the block itself and a boolean to indicate that it was found.
+// 就是判定一下
 func getBlock(allBlocks []*Block, id ulid.ULID) (*Block, bool) {
 	for _, b := range allBlocks {
 		if b.Meta().ULID == id {
