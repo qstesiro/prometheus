@@ -537,7 +537,7 @@ func (db *DBReadOnly) Close() error {
 }
 
 // Open returns a new DB in the given directory. If options are empty, DefaultOptions will be used.
-func Open(sdir string, l log.Logger, r prometheus.Registerer, opts *Options) (db *DB, err error) {
+func Open(dir string, l log.Logger, r prometheus.Registerer, opts *Options) (db *DB, err error) {
 	var rngs []int64
 	opts, rngs = validateOpts(opts, nil)
 	return open(dir, l, r, opts, rngs)
@@ -1130,7 +1130,7 @@ func openBlocks(l log.Logger, dir string, loaded []*Block, chunkPool chunkenc.Po
 		}
 
 		// See if we already have the block in memory or open it otherwise.
-		block, open := getBlock(loaded, meta.ULID)
+		block, open := getBlock(loaded, meta.ULID) // getBlock只是判定block是否已经被打开
 		if !open {
 			block, err = OpenBlock(l, bDir, chunkPool)
 			if err != nil {

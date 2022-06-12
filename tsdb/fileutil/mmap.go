@@ -55,7 +55,7 @@ func OpenMmapFileWithSize(path string, size int) (mf *MmapFile, retErr error) {
 }
 
 func (f *MmapFile) Close() error {
-	err0 := munmap(f.b)
+	err0 := munmap(f.b) // 关闭映射
 	err1 := f.f.Close()
 
 	if err0 != nil {
