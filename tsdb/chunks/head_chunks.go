@@ -659,7 +659,7 @@ func (cdm *ChunkDiskMapper) IterateAllChunks(f func(seriesRef, chunkRef uint64, 
 	for seg := range cdm.mmappedChunkFiles {
 		segIDs = append(segIDs, seg)
 	}
-	sort.Ints(segIDs)
+	sort.Ints(segIDs) // 排序
 	for _, segID := range segIDs {
 		mmapFile := cdm.mmappedChunkFiles[segID]
 		fileEnd := mmapFile.byteSlice.Len()
@@ -669,7 +669,7 @@ func (cdm *ChunkDiskMapper) IterateAllChunks(f func(seriesRef, chunkRef uint64, 
 		idx := HeadChunkFileHeaderSize
 		for idx < fileEnd {
 			if fileEnd-idx < MaxHeadChunkMetaSize {
-				// Check for all 0s which marks the end of the file.
+				// Check for all 0s which marks the end of the file.(文件尾部分可能有padding)
 				allZeros := true
 				for _, b := range mmapFile.byteSlice.Range(idx, fileEnd) {
 					if b != byte(0) {
@@ -692,11 +692,11 @@ func (cdm *ChunkDiskMapper) IterateAllChunks(f func(seriesRef, chunkRef uint64, 
 			chunkRef := chunkRef(uint64(segID), uint64(idx))
 
 			startIdx := idx
-			seriesRef := binary.BigEndian.Uint64(mmapFile.byteSlice.Range(idx, idx+SeriesRefSize))
+			seriesRef := binary.BigEndian.Uint64(mmapFile.byteSlice.Range(idx, idx+SeriesRefSize)) /// seriesRef
 			idx += SeriesRefSize
-			mint := int64(binary.BigEndian.Uint64(mmapFile.byteSlice.Range(idx, idx+MintMaxtSize)))
+			mint := int64(binary.BigEndian.Uint64(mmapFile.byteSlice.Range(idx, idx+MintMaxtSize))) // mint
 			idx += MintMaxtSize
-			maxt := int64(binary.BigEndian.Uint64(mmapFile.byteSlice.Range(idx, idx+MintMaxtSize)))
+			maxt := int64(binary.BigEndian.Uint64(mmapFile.byteSlice.Range(idx, idx+MintMaxtSize))) // maxt
 			idx += MintMaxtSize
 
 			// We preallocate file to help with m-mapping (especially windows systems).
@@ -707,12 +707,12 @@ func (cdm *ChunkDiskMapper) IterateAllChunks(f func(seriesRef, chunkRef uint64, 
 				break
 			}
 
-			idx += ChunkEncodingSize // Skip encoding.
-			dataLen, n := binary.Uvarint(mmapFile.byteSlice.Range(idx, idx+MaxChunkLengthFieldSize))
+			idx += ChunkEncodingSize                                                                 // Skip encoding. // encoding
+			dataLen, n := binary.Uvarint(mmapFile.byteSlice.Range(idx, idx+MaxChunkLengthFieldSize)) // len
 			idx += n
 
-			numSamples := binary.BigEndian.Uint16(mmapFile.byteSlice.Range(idx, idx+2))
-			idx += int(dataLen) // Skip the data.
+			numSamples := binary.BigEndian.Uint16(mmapFile.byteSlice.Range(idx, idx+2)) // T/V个数(此数据属于XORChunk文件部分)
+			idx += int(dataLen)                                                         // Skip the data.
 
 			// In the beginning we only checked for the chunk meta size.
 			// Now that we have added the chunk data length, we check for sufficient bytes again.
