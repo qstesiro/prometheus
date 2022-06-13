@@ -222,7 +222,7 @@ func (cdm *ChunkDiskMapper) openMMapFiles() (returnErr error) {
 			return errors.Wrapf(err, "mmap files, file: %s", fn)
 		}
 		cdm.closers[seq] = f
-		cdm.mmappedChunkFiles[seq] = &mmappedChunkFile{byteSlice: realByteSlice(f.Bytes())}
+		cdm.mmappedChunkFiles[seq] = &mmappedChunkFile{byteSlice: realByteSlice(f.Bytes())} // IterateAllChunks中设置maxt
 		chkFileIndices = append(chkFileIndices, seq)
 	}
 
@@ -741,7 +741,7 @@ func (cdm *ChunkDiskMapper) IterateAllChunks(f func(seriesRef, chunkRef uint64, 
 			idx += CRCSize
 
 			if maxt > mmapFile.maxt {
-				mmapFile.maxt = maxt
+				mmapFile.maxt = maxt // 设置maxt(多个Chunks中最大时间)
 			}
 
 			if err := f(seriesRef, chunkRef, mint, maxt, numSamples); err != nil {
