@@ -380,12 +380,24 @@ func listChunks(path string, humanReadable bool) error {
 	return nil
 }
 
+func printChunks(hunmanReadable bool) {
+
+}
+
 func listSegments(path string, humanReadable bool) error {
 	return nil
 }
 
+func printSegments(hunmanReadable bool) {
+
+}
+
 func listCheckpoints(path string, humanReadable bool) error {
 	return nil
+}
+
+func printCheckpoints(humanReadable bool) {
+
 }
 
 func getFormatedTime(timestamp int64, humanReadable bool) string {
