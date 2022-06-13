@@ -786,6 +786,7 @@ func (h *Head) SetMinValidTime(minValidTime int64) {
 	h.minValidTime.Store(minValidTime)
 }
 
+// 装载chunks_head目录文件
 func (h *Head) loadMmappedChunks() (map[uint64][]*mmappedChunk, error) {
 	mmappedChunks := map[uint64][]*mmappedChunk{} // map[seriesRef][]*mmappedChunk{}
 	if err := h.chunkDiskMapper.IterateAllChunks(
@@ -2191,7 +2192,6 @@ type memSeries struct {
 	           +-----+   chunk2   |                      |
 	                 +------------+                     -+
 	*/
-
 	headChunk    *memChunk
 	chunkRange   int64
 	firstChunkID int // 每次截断会增加被删除的chunk个数,所以是单调递增
@@ -2273,7 +2273,7 @@ func (s *memSeries) mmapCurrentHeadChunk(chunkDiskMapper *chunks.ChunkDiskMapper
 		}
 	}
 	s.mmappedChunks = append(s.mmappedChunks, &mmappedChunk{
-		ref:        chunkRef,
+		ref:        chunkRef, // 高4位为文件编号,低4位为文件内偏移
 		numSamples: uint16(s.headChunk.chunk.NumSamples()),
 		minTime:    s.headChunk.minTime,
 		maxTime:    s.headChunk.maxTime,

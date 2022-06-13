@@ -153,7 +153,7 @@ type ChunkDiskMapper struct {
 }
 
 type mmappedChunkFile struct {
-	byteSlice ByteSlice
+	byteSlice ByteSlice // realByteSliceo类型
 	maxt      int64
 }
 
@@ -307,6 +307,7 @@ func repairLastChunkFile(files map[int]string) (_ map[int]string, returnErr erro
 	return files, nil
 }
 
+// 与IterateAllChunks函数对应
 // WriteChunk writes the chunk to the disk.
 // The returned chunk ref is the reference from where the chunk encoding starts for the chunk.
 // 文件格式(在chunks_head目录)
@@ -410,7 +411,7 @@ func (cdm *ChunkDiskMapper) WriteChunk(seriesRef uint64, mint, maxt int64, chk c
 }
 
 func chunkRef(seq, offset uint64) (chunkRef uint64) {
-	return (seq << 32) | offset
+	return (seq << 32) | offset // 高4位为文件编号,低4位为文件内偏移
 }
 
 // shouldCutNewFile decides the cutting of a new file based on time and size retention.
@@ -640,6 +641,7 @@ func (cdm *ChunkDiskMapper) Chunk(ref uint64) (chunkenc.Chunk, error) {
 	return chk, nil
 }
 
+// 与WriteChunk对应
 // IterateAllChunks iterates on all the chunks in its byte slices in the order of the head chunk file sequence
 // and runs the provided function on each chunk. It returns on the first error encountered.
 // NOTE: This method needs to be called at least once after creating ChunkDiskMapper
@@ -692,11 +694,11 @@ func (cdm *ChunkDiskMapper) IterateAllChunks(f func(seriesRef, chunkRef uint64, 
 			chunkRef := chunkRef(uint64(segID), uint64(idx))
 
 			startIdx := idx
-			seriesRef := binary.BigEndian.Uint64(mmapFile.byteSlice.Range(idx, idx+SeriesRefSize)) /// seriesRef
+			seriesRef := binary.BigEndian.Uint64(mmapFile.byteSlice.Range(idx, idx+SeriesRefSize)) // 序列ID
 			idx += SeriesRefSize
-			mint := int64(binary.BigEndian.Uint64(mmapFile.byteSlice.Range(idx, idx+MintMaxtSize))) // mint
+			mint := int64(binary.BigEndian.Uint64(mmapFile.byteSlice.Range(idx, idx+MintMaxtSize))) // 时间左边界
 			idx += MintMaxtSize
-			maxt := int64(binary.BigEndian.Uint64(mmapFile.byteSlice.Range(idx, idx+MintMaxtSize))) // maxt
+			maxt := int64(binary.BigEndian.Uint64(mmapFile.byteSlice.Range(idx, idx+MintMaxtSize))) // 时间右边界
 			idx += MintMaxtSize
 
 			// We preallocate file to help with m-mapping (especially windows systems).
@@ -707,12 +709,12 @@ func (cdm *ChunkDiskMapper) IterateAllChunks(f func(seriesRef, chunkRef uint64, 
 				break
 			}
 
-			idx += ChunkEncodingSize                                                                 // Skip encoding. // encoding
-			dataLen, n := binary.Uvarint(mmapFile.byteSlice.Range(idx, idx+MaxChunkLengthFieldSize)) // len
+			idx += ChunkEncodingSize                                                                 // Skip encoding.(Chunk编码类型)
+			dataLen, n := binary.Uvarint(mmapFile.byteSlice.Range(idx, idx+MaxChunkLengthFieldSize)) // 数据长度
 			idx += n
 
 			numSamples := binary.BigEndian.Uint16(mmapFile.byteSlice.Range(idx, idx+2)) // T/V个数(此数据属于XORChunk文件部分)
-			idx += int(dataLen)                                                         // Skip the data.
+			idx += int(dataLen)                                                         // Skip the data.(跳过数据)
 
 			// In the beginning we only checked for the chunk meta size.
 			// Now that we have added the chunk data length, we check for sufficient bytes again.

@@ -117,7 +117,7 @@ func NewPool() Pool {
 	return &pool{
 		xor: sync.Pool{
 			New: func() interface{} {
-				return &XORChunk{b: bstream{}}
+				return &XORChunk{b: bstream{}} // 此处并没有调用NewChunk
 			},
 		},
 	}
