@@ -609,7 +609,7 @@ func open(dir string, l log.Logger, r prometheus.Registerer, opts *Options, rngs
 		donec:          make(chan struct{}),
 		stopc:          make(chan struct{}),
 		autoCompact:    true,
-		chunkPool:      chunkenc.NewPool(), // 基于sync.Pool
+		chunkPool:      chunkenc.NewPool(), // 基于sync.Pool实现
 		blocksToDelete: opts.BlocksToDelete,
 	}
 	// 失败情况进行清理
@@ -757,7 +757,8 @@ func (db *DB) run() {
 		case <-db.stopc:
 			return
 		case <-time.After(backoff):
-			// 这用法 ???
+			// 如果Compact失败的情况下会调整backoff的大小
+			// 指数级增长但保证数值范围区间(1s, 1m)
 		}
 
 		select {
@@ -775,13 +776,13 @@ func (db *DB) run() {
 			}
 		case <-db.compactc:
 			// 两种情况会触发压缩线处理逻辑(尝试处理)
-			// - 每次采样被提交
-			// - 分钟周期触发
+			// - 每次采样被提交(dbAppender.Commit中判断head是否到达可压缩时间)
+			// - 分钟周期(实际还要增加backoff等待时间)触发
 			db.metrics.compactionsTriggered.Inc()
 
 			db.autoCompactMtx.Lock()
 			if db.autoCompact { // 当前恒定为true
-				level.Info(db.logger).Log("msg", "---------------------------- start compact ???") // debug ???
+				level.Info(db.logger).Log("msg", "---------------------------- start compact ???") // for debug ???
 				if err := db.Compact(); err != nil {
 					level.Error(db.logger).Log("msg", "compaction failed", "err", err)
 					backoff = exponential(backoff, 1*time.Second, 1*time.Minute)
