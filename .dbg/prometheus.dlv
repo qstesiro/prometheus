@@ -1,0 +1,276 @@
+# b main.main
+# b cmd/prometheus/main.go:382
+
+# web handler
+# b prometheus/main.go:156
+# b prometheus/main.go:458
+# b prometheus/main.go:565
+# b web.New
+# b web.go:331
+# b web.go:339
+# b web.go:347
+# b web.(*Handler).alerts
+# b web.(*Handler).graph
+# b web.(*Handler).status
+# b web.(*Handler).flags
+# b web.(*Handler).serveConfig
+# b web.(*Handler).rules
+# b web.(*Handler).targets
+# b web.(*Handler).serviceDiscovery
+# b web.go:360
+# b web.(*Handler).version
+# b web.go:378
+# b web.go:419
+# b web.(*Handler).consoles
+# b web.(*Handler).quit
+# b web.(*Handler).reload
+# b web.serveDebug
+# b web.go:458
+# b web.go:462
+# b web.go:384
+# b web.go:175
+# b web.(*metrics).instrumentHandler
+
+# v1.API
+# b v1.NewAPI
+# b v1.(*API).Register
+
+# b v1.(*API).query
+# b promql.(*Engine).NewInstantQuery
+# b parser.ParseExpr
+# b parser.(*parser).parseGenerated
+# b promql.setOffsetForAtModifier
+# b engine.go:2435
+# b engine.go:2450
+# b v1.(*API).queryRange
+# b v1.(*API).series
+# b v1/api.go:698
+# b v1.(*API).labelNames
+# b v1/api.go:520
+# b v1.parseMatchersParam
+# b parser.ParseMetricSelector
+# b v1.(*API).labelValues
+# b v1/api.go:602
+# b v1.(*API).respond
+# 编译器会自己生成github.com/prometheus/prometheus/pkg/labels.(*Labels).MarshalJSON使用全路径设置断点
+# b github.com/prometheus/prometheus/pkg/labels.(*Labels).MarshalJSON
+# b github.com/prometheus/prometheus/pkg/labels.Labels.MarshalJSON
+# 编译器会自己生成github.com/prometheus/prometheus/pkg/labels.(*Labels).Map使用全路径设置断点
+# b github.com/prometheus/prometheus/pkg/labels.(*Labels).Map
+# b github.com/prometheus/prometheus/pkg/labels.Labels.Map
+# b generated_parser.y.go:1208
+# b parser.(*yyParserImpl).Parse
+# b parser.(*parser).assembleVectorSelector
+
+# b remote.(*Storage).ApplyConfig
+# b promql.(*Engine).execEvalStmt
+# b promql/engine.go:754
+# b storage.(*mergeGenericQuerier).Select
+# b storage/merge.go:141
+# b storage/merge.go:145
+# b promql/engine.go:559
+# b promql/engine.go:803
+# b promql.(*evaluator).Eval
+# b promql.(*evaluator).eval
+# b promql/engine.go:1206
+# b promql/engine.go:1305
+# b promql/engine.go:1335
+# b promql/engine.go:1223
+# b promql.funcTimestamp
+# b promql.funcAbs
+# b promql.(*evaluator).aggregation
+# b engine.go:2263
+# b engine.go:2337
+# b engine.go:2430
+# b engine.go:2441
+# b promql.(*evaluator).VectorscalarBinop
+# b promql.(*evaluator).VectorBinop
+# b engine.go:1936
+# b promql.setOffsetForAtModifier
+# b engine.go:1571
+# b promql.(*evaluator).rangeEval
+# b promql.(*evaluator).vectorSelectorSingle
+# b promql.checkAndExpandSeriesSet
+# b promql.expandSeriesSet
+# b storage.(BufferedSeriesIterator).Seek
+# b promql.(*Engine).populateSeries
+# b storage.(*querierAdapter).Select
+# b storage.(*mergeGenericQuerier).Select
+# b storage.(*secondaryQuerier).Select
+# b storage/remote/read.go:165
+# b remote.(*Client).Read
+# b promql.PreprocessExpr
+# b promql.preprocessExprHelper
+# b promql.newStepInvariantExpr
+
+# remote storage
+# b remote.NewStorage
+# b remote.NewWriteStorage
+# b remote.(*Storage).ApplyConfig
+# b remote.(*WriteStorage).ApplyConfig
+# b storage.(*fanout).Appender
+# b main.(*readyStorage).Appender
+# b scrape.(*scrapeLoop).append
+# b remote.NewStorage
+# b remote.(*Storage).ApplyConfig
+# b remote.NewWriteStorage
+# b remote.(*WriteStorage).ApplyConfig
+# b remote.(*QueueManager).Append
+# b remote.(*Client).Store
+# 作为远程读对象
+# b remote.NewReadHandler
+# b remote.remoteReadSamples
+# b remote.remoteReadStreamedXORChunks
+
+# wal
+# b wal.NewWatcher
+# b wal.(*Watcher).Start
+# b wal.(*Watcher).loop
+# b wal.(*Watcher).Run
+# b wal.(*Watcher).watch
+# b wal.(*LiveReader).Next
+# b wal.(*LiveReader).buildRecord
+# b wal.(*LiveReader).readRecord
+# b wal.(*LiveReader).fillBuffer
+
+# db
+# b storage.(*fanout).Querier
+# b tsdb.Open
+# b tsdb.open
+# b tsdb.(*DB).reload
+b tsdb.(*DB).reloadBlocks
+b tsdb.openBlocks
+b tsdb.OpenBlock
+b chunks.NewDirReader
+b chunks.newReader
+b fileutil.OpenMmapFileWithSize
+# b tsdb.newStripeSeries
+# b tsdb.(*DB).Compact
+# b tsdb/db.go:853
+# b tsdb.(*DB).compactHead
+# b tsdb.(*DB).compactBlocks
+# b tsdb.(*DB).CompactHead
+# b tsdb.(*noopSeriesLifecycleCallback).PreCreation
+# b tsdb.(*noopSeriesLifecycleCallback).PostCreation
+# b tsdb.(*noopSeriesLifecycleCallback).PostDeletion
+# b tsdb.(dbAppender).Commit
+# b db.go:810
+
+# head
+# b tsdb.NewHead
+# b tsdb.(*Head).Appender
+# b tsdb.(*Head).initTime
+# b tsdb.(*Head).getOrCreateWithID
+# b tsdb.(*Head).Truncate
+# b tsdb.(*Head).truncateMemory
+# b tsdb.(*Head).truncateWAL
+# b tsdb.(*Head).gc
+
+# b tsdb.(*RangeHead).Chunks
+# b tsdb.(*safeChunk).Iterator
+
+# b tsdb.(*initAppender).Append
+# b tsdb.(*initAppender).Commit
+# b tsdb.(*initAppender).Rollback
+
+# b tsdb.NewHead
+# b head.go:356
+# b scrape.go:1317
+# b scrape.go:1349
+# b tsdb.(*headAppender).Append
+# b tsdb.(*headAppender).Commit
+# b tsdb.(*headAppender).Rollback
+# b tsdb.(*headAppender).log
+# b tsdb/head.go:1314
+
+# b tsdb.newMemSeries
+# b tsdb.(*memSeries).append
+# b tsdb.(*memSeries).cutNewHeadChunk
+# b tsdb.computeChunkEndTime
+# b head.go:2356
+
+# b chunks.(*ChunkDiskMapper).cut
+
+# b tsdb.TestPostingsForMatchers
+# b tsdb.PostingsForMatchers
+# b tsdb/querier.go:259
+# b tsdb/querier.go:275
+
+# b tsdb.(*headChunkReader).Chunk
+# b tsdb.(*chunkenc).Appender
+# b tsdb/head.go:2476
+
+# b tsdb.OpenBlock
+
+# b chunks.(*ChunkDiskMapper).Truncate
+# b tsdb.NewBlockQuerier
+# b tsdb.newBlockBaseQuerier
+# b tsdb.(*blockQuerier).Select
+# b tsdb.(*blockBaseQuerier).LabelValues
+# b tsdb.(*blockBaseQuerier).LabelNames
+# b tsdb.(*blockQuerier).Close
+
+# b remote.(*querier).Select
+# b remote.(*querier).LabelValues
+# b remote.(*querier).LabelNames
+# b remote.(*querier).Close
+
+# b scrape.(*scrapeLoop).scrapeAndReport
+# b scrape.go:1118
+# b scrape.go:1086
+# b scrape.go:1312
+# b scrape.go:1357
+# b scrape.(*targetScraper).scrape
+# b scrape.(*scrapeLoop).append
+# b scrape.go:1341
+
+# b scrape.(*scrapeCache).get
+# b scrape.(*scrapeCache).addRef
+
+# b chunkenc.(*xorAppender).Append
+
+# b storage.(*fanoutAppender).Commit
+# b scrape.go:635
+# b wal.NewSize
+# b wal.(*WAL).Log
+# b wal.(*WAL).log
+# b record.(*Encoder).Series
+# b record.(*Encoder).Samples
+# b record.(*Encoder).Tombstones
+
+# b index.NewMemPostings
+# b index.NewUnorderedMemPostings
+# b index.(*MemPostings).Add
+
+# b index.(*Writer).startSymbols
+# b index.(*Writer).AddSymbol
+# b index.(*Writer).finishSymbols
+# b index.(*Writer).AddSeries
+# b tsdb/index/index.go:438
+# b tsdb/index/index.go:486
+# b index.(*Writer).writePostingsToTmpFiles
+# b index.(*Writer).writeLabelIndices
+# b index.(*Writer).writePostings
+# b index.(*Writer).writeLabelIndexesOffsetTable
+# b index.(*Writer).writePostingsOffsetTable
+# b index.(*Writer).writeTOC
+
+# b tsdb/compact.go:727
+# b tsdb/compact.go:735
+# b tsdb/compact.go:737
+# b tsdb/compact.go:745
+# b tsdb/compact.go:752
+# b tsdb/compact.go:760
+# b tsdb/compact.go:782
+
+# b tsdb.(*headChunkReader).Chunk
+
+# b tsdb.(*blockBaseSeriesSet).Next
+# b tsdb.(*blockChunkSeriesSet).At
+
+# b chunks.(*ChunkDiskMapper).WriteChunk
+# b chunks.(*ChunkDiskMapper).flushBuffer
+
+# b tsdb.ExponentialBlockRanges
+
+g
