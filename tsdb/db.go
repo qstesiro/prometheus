@@ -158,7 +158,20 @@ type DB struct {
 	blocksToDelete BlocksToDeleteFunc
 
 	// Mutex for that must be held when modifying the general block layout.
-	mtx    sync.RWMutex
+	// 查询与写操作互斥
+	// 查询操作(使用读锁)
+	// Querier
+	// ChunkQuerier
+	// StartTime
+	// Blocks
+	// Snapshot
+	// newDBMetrics
+	// 写操作(使用写锁)
+	// reloadBlocks
+	// Delete
+	// CleanTombstones
+	// Close
+	mtx    sync.RWMutex // 读写锁
 	blocks []*Block
 
 	head *Head
@@ -168,10 +181,18 @@ type DB struct {
 	stopc    chan struct{}
 
 	// cmtx ensures that compactions and deletions don't run simultaneously.
+	// 写操作之间互斥
+	// - Delete(删除序列)
+	// - CleanTombstones
+	// - CompactHead
+	// - Compact
+	// - Snapshot
+	// - reloadBlocks(run函数中)
 	cmtx sync.Mutex
 
 	// autoCompactMtx ensures that no compaction gets triggered while
 	// changing the autoCompact var.
+	// 保护autoCompact并发(但是为什么不使用go.uber.org/atomic库) ???
 	autoCompactMtx sync.Mutex
 	autoCompact    bool
 
@@ -783,6 +804,7 @@ func (db *DB) run() {
 			db.autoCompactMtx.Lock()
 			if db.autoCompact { // 当前恒定为true
 				level.Info(db.logger).Log("msg", "---------------------------- start compact ???") // for debug ???
+				// 注意Compact函数中会锁定cmtx
 				if err := db.Compact(); err != nil {
 					level.Error(db.logger).Log("msg", "compaction failed", "err", err)
 					backoff = exponential(backoff, 1*time.Second, 1*time.Minute)
