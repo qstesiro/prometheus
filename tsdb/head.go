@@ -104,6 +104,9 @@ type Head struct {
 	// 是多个memSeries共用(单实例)
 	chunkDiskMapper *chunks.ChunkDiskMapper
 
+	// 保护closed并保持关闭与读操作之间互斥
+	// - chunkRange(Chunks中被调用)
+	// - Close
 	closedMtx sync.Mutex
 	closed    bool
 }

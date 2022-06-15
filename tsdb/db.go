@@ -160,17 +160,17 @@ type DB struct {
 	// Mutex for that must be held when modifying the general block layout.
 	// 查询与写操作互斥
 	// 查询操作(使用读锁)
-	// Querier
-	// ChunkQuerier
-	// StartTime
-	// Blocks
-	// Snapshot
-	// newDBMetrics
+	// - Querier
+	// - ChunkQuerier
+	// - StartTime
+	// - Blocks
+	// - Snapshot
+	// - newDBMetrics
 	// 写操作(使用写锁)
-	// reloadBlocks
-	// Delete
-	// CleanTombstones
-	// Close
+	// - reloadBlocks
+	// - Delete
+	// - CleanTombstones
+	// - Close
 	mtx    sync.RWMutex // 读写锁
 	blocks []*Block
 
