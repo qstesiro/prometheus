@@ -187,7 +187,7 @@ type DB struct {
 	// - CompactHead
 	// - Compact
 	// - Snapshot
-	// - reloadBlocks(run函数中)
+	// - run函数中执行reloadBlocks前
 	cmtx sync.Mutex
 
 	// autoCompactMtx ensures that no compaction gets triggered while

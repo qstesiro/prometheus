@@ -75,14 +75,27 @@ type Head struct {
 	// All series addressable by their ID or hash.
 	series *stripeSeries
 
+	// 并发读写symbols互斥
+	// 写操作
+	// - head.getOrCreateWithID
+	// - head.gc
+	// 读操作
+	// - headIndexReader.Symbols
+	// - headIndexReader.LabelNames
+	// - headIndexReader.LabelValues
 	symMtx sync.RWMutex
 	// 记录Symbols为headIndexReader所用
 	// 记录有sample还驻留在内存中(包括普通chunk与headChunk)的series所有标签名与标签值(通过map去重)
 	// 数据map[label.name/label.value]struct{}
 	symbols map[string]struct{}
 
+	// 并发读写deleted互斥
+	// 写操作
+	// - head.truncateWAL
+	// 读操作
+	// - head.truncateWAL中的keep
+	// - head.gc
 	deletedMtx sync.Mutex
-
 	// 记录compactHead过程中从headChunk中删除的series(因为对应的samples数据都已经落地磁盘)
 	// WAL创建Checkpoint用于判定是否需要保留series
 	deleted map[uint64]int // Deleted series, and what WAL segment they must be kept until.
@@ -96,6 +109,7 @@ type Head struct {
 
 	iso *isolation
 
+	// 并发读写cardinalityCache互斥
 	cardinalityMutex      sync.Mutex
 	cardinalityCache      *index.PostingsStats // Posting stats cache which will expire after 30sec.
 	lastPostingsStatsCall time.Duration        // Last posting stats call (PostingsCardinalityStats()) time for caching.
@@ -1500,7 +1514,7 @@ func (h *Head) gc() int64 {
 		// on start up when we replay the WAL, or any other code
 		// that reads the WAL, wouldn't be able to use those
 		// samples since we would have no labels for that ref ID.
-		// 正常情况不需要记录deleted后续生成检查点(合并段文件)直接过滤掉不在series中的序
+		// 正常情况不需要记录deleted,后续生成检查点(合并段文件)直接过滤掉不在内存中的序列
 		// 但是检查点生成并不合并所有段文件,总是排除最后一个段文件(为了避免同时读写冲突)
 		// 从而导致序列至少要多保留到下一次生成检查点时也就是当前的last段在下一次检查点时被合并
 		// 样例说明
