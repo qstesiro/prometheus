@@ -1019,11 +1019,14 @@ func (h *Head) truncateWAL(mint int64) error {
 // for a completely fresh head with an empty WAL.
 // 设置设置[mint,maxt] mint == maxt
 func (h *Head) initTime(t int64) {
+	// NewHead中设置minTime=math.MaxInt64,maxTime=math.MinIn64
+	// 如果minTime==math.MaxInt64才设置minTime
 	if !h.minTime.CAS(math.MaxInt64, t) {
 		return
 	}
 	// Ensure that max time is initialized to at least the min time we just set.
 	// Concurrent appenders may already have set it to a higher value.
+	// 如果maxTime==math.MinInt64才设置maxTime
 	h.maxTime.CAS(math.MinInt64, t)
 }
 
@@ -1116,6 +1119,33 @@ func (h *RangeHead) String() string {
 	return fmt.Sprintf("range head (mint: %d, maxt: %d)", h.MinTime(), h.MaxTime())
 }
 
+/*
+   # minValidTime = MinInt64
+   [ minTime = MaxInt64
+   ] maxTime = MinInt64
+   + 原点(零)
+
+   初始没有任何数据
+   <#]-~~~---+-----------------------------------------------------[> head时间窗口
+   <#--~~~---+--------[-----------]---------------------------------> appender.Append一批数据后appender时间容器
+   <#--~~~---+--------[-----------]---------------------------------> appender.Comment后head空间窗口
+
+   初始有数据
+   <---~~~---+---#----[------------------------]---------------------> head时间窗口
+   <---~~~---+---#---------------------------------[-------]---------> appender.Append一批数据后appender时间容器
+   <---~~~---+---#----[------------------------------------]---------> appender.Comment后head空间窗口
+
+   执行一次压缩后Head中有mappedchunk或headchunk被保留
+   <---~~~---+-------#[------------------------]---------------------> head时间窗口
+   <---~~~---+-------#-----------------------------[-------]---------> appender.Append一批数据后appender时间容器
+   <---~~~---+-------#[------------------------------------]---------> appender.Comment后head空间窗口
+
+   执行一次压缩后且所有Head数据都被写入Block中
+   <---~~~---+---]---#[----------------------------------------------> head时间窗口
+   <---~~~---+-------#-----------------------------[-------]---------> appender.Append一批数据后appender时间容器
+   <---~~~---+-------#[------------------------------------]---------> appender.Comment后head空间窗口
+*/
+
 // 实现了storage.Appender接口
 // 只有当data下没有任何历史数据时才会创建initAppender
 // initAppender is a helper to initialize the time bounds of the head
@@ -1130,8 +1160,8 @@ func (a *initAppender) Append(ref uint64, lset labels.Labels, t int64, v float64
 		return a.app.Append(ref, lset, t, v)
 	}
 
-	a.head.initTime(t)
-	a.app = a.head.appender()
+	a.head.initTime(t)        // 初始化时间
+	a.app = a.head.appender() // 设置app
 	return a.app.Append(ref, lset, t, v)
 }
 
@@ -2072,7 +2102,7 @@ func (s *stripeSeries) gc(mint int64) (map[uint64]struct{}, int, int64) {
 				// 还有chunk数据大(等)于mint的series保留
 				if len(series.mmappedChunks) > 0 || series.headChunk != nil || series.pendingCommit {
 					seriesMint := series.minTime()
-					if seriesMint < actualMint {
+					if seriesMint < actualMint { // 查找所有序列中的最小左边界
 						actualMint = seriesMint
 					}
 					series.Unlock()
@@ -2361,7 +2391,7 @@ func (s *memSeries) chunkID(pos int) int {
 func (s *memSeries) truncateChunksBefore(mint int64) (removed int) {
 	// 在压缩处理时如果headChunk有重叠会对headChunk进行压缩
 	// 有可能出现headChunk与压缩区间完全重叠且被压缩的情况
-	// 如: 某series数据抓取到某时刻后没有数据了(网络不通/程序崩溃)
+	// 如: 某series数据抓取到某时刻后没有数据了(网络不通/抓取目标程序崩溃)
 	if s.headChunk != nil && s.headChunk.maxTime < mint {
 		// If head chunk is truncated, we can truncate all mmapped chunks.
 		removed = 1 + len(s.mmappedChunks)

@@ -138,12 +138,12 @@
 # b tsdb.Open
 # b tsdb.open
 # b tsdb.(*DB).reload
-b tsdb.(*DB).reloadBlocks
-b tsdb.openBlocks
-b tsdb.OpenBlock
-b chunks.NewDirReader
-b chunks.newReader
-b fileutil.OpenMmapFileWithSize
+# b tsdb.(*DB).reloadBlocks
+# b tsdb.openBlocks
+# b tsdb.OpenBlock
+# b chunks.NewDirReader
+# b chunks.newReader
+# b fileutil.OpenMmapFileWithSize
 # b tsdb.newStripeSeries
 # b tsdb.(*DB).Compact
 # b tsdb/db.go:853
@@ -153,6 +153,7 @@ b fileutil.OpenMmapFileWithSize
 # b tsdb.(*noopSeriesLifecycleCallback).PreCreation
 # b tsdb.(*noopSeriesLifecycleCallback).PostCreation
 # b tsdb.(*noopSeriesLifecycleCallback).PostDeletion
+b tsdb.(*DB).Appender
 # b tsdb.(dbAppender).Commit
 # b db.go:810
 

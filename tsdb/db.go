@@ -833,6 +833,7 @@ type dbAppender struct {
 	db *DB
 }
 
+// Hook了headAppdender.Commit
 func (a dbAppender) Commit() error {
 	err := a.Appender.Commit()
 	level.Info(a.db.logger).Log("msg", "---------------------------- commit sample ???")

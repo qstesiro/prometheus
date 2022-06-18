@@ -706,8 +706,8 @@ type scrapeLoop struct {
 	sampleMutator       labelsMutator
 	reportSampleMutator labelsMutator
 
-	parentCtx context.Context
-	ctx       context.Context
+	parentCtx context.Context // context作为结构字段 ???
+	ctx       context.Context // context作为结构字段 ???
 	cancel    func()
 	stopped   chan struct{}
 
@@ -1350,7 +1350,7 @@ loop:
 				break loop
 			}
 		}
-
+		// 添加数据
 		ref, err = app.Append(ref, lset, t, v)
 		sampleAdded, err = sl.checkAddError(ce, met, tp, err, &sampleLimitErr, &appErrs)
 		if err != nil {
