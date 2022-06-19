@@ -828,6 +828,7 @@ func (db *DB) Appender(ctx context.Context) storage.Appender {
 
 // dbAppender wraps the DB's head appender and triggers compactions on commit
 // if necessary.
+// 实现了storage.Appender接口
 type dbAppender struct {
 	storage.Appender
 	db *DB
