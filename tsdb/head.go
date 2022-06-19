@@ -1160,7 +1160,7 @@ func (a *initAppender) Append(ref uint64, lset labels.Labels, t int64, v float64
 		return a.app.Append(ref, lset, t, v)
 	}
 
-	a.head.initTime(t)        // 初始化时间
+	a.head.initTime(t)        // 初始化head时间窗口[minTime, maxTime]
 	a.app = a.head.appender() // 设置app
 	return a.app.Append(ref, lset, t, v)
 }
