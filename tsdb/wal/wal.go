@@ -53,7 +53,7 @@ var castagnoliTable = crc32.MakeTable(crc32.Castagnoli)
 // A flush is triggered when a single records doesn't fit the page size or
 // when the next record can't fit in the remaining free page space.
 type page struct {
-	alloc   int
+	alloc   int // 已使用
 	flushed int
 	buf     [pageSize]byte
 }
@@ -119,6 +119,7 @@ func (e *CorruptionErr) Error() string {
 }
 
 // OpenWriteSegment opens segment k in dir. The returned segment is ready for new appends.
+// 打开已存在段文件可写
 func OpenWriteSegment(logger log.Logger, dir string, k int) (*Segment, error) {
 	segName := SegmentName(dir, k)
 	f, err := os.OpenFile(segName, os.O_WRONLY|os.O_APPEND, 0666)
@@ -146,6 +147,7 @@ func OpenWriteSegment(logger log.Logger, dir string, k int) (*Segment, error) {
 }
 
 // CreateSegment creates a new segment k in dir.
+// 创建新的文件可写
 func CreateSegment(dir string, k int) (*Segment, error) {
 	f, err := os.OpenFile(SegmentName(dir, k), os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
@@ -155,6 +157,7 @@ func CreateSegment(dir string, k int) (*Segment, error) {
 }
 
 // OpenReadSegment opens the segment with the given filename.
+// 打开已存在段文件可读
 func OpenReadSegment(fn string) (*Segment, error) {
 	k, err := strconv.Atoi(filepath.Base(fn))
 	if err != nil {
@@ -181,13 +184,13 @@ type WAL struct {
 	dir         string
 	logger      log.Logger
 	segmentSize int
-	mtx         sync.RWMutex
-	segment     *Segment // Active segment.(当前段文件)
-	donePages   int      // Pages written to the segment.(已写入文件中的页数)
-	page        *page    // Active page.(当前页)
+	mtx         sync.RWMutex // 保护并发写操作
+	segment     *Segment     // Active segment.(当前段文件)
+	donePages   int          // Pages written to the segment.(已写入文件中的页数)
+	page        *page        // Active page.(当前页)
 	stopc       chan chan struct{}
-	actorc      chan func()
-	closed      bool // To allow calling Close() more than once without blocking.
+	actorc      chan func() // 异步刷新与关闭已经写满的段文件
+	closed      bool        // To allow calling Close() more than once without blocking.
 	compress    bool
 	snappyBuf   []byte
 
