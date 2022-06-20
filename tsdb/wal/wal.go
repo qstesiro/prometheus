@@ -88,7 +88,7 @@ type SegmentFile interface {
 
 // Segment represents a segment file.
 type Segment struct {
-	SegmentFile // 窄化接口
+	SegmentFile // 窄化接口(实际引用os.File对象)
 	dir         string
 	i           int // 段索引
 }
@@ -182,9 +182,9 @@ type WAL struct {
 	logger      log.Logger
 	segmentSize int
 	mtx         sync.RWMutex
-	segment     *Segment // Active segment.
-	donePages   int      // Pages written to the segment.
-	page        *page    // Active page.
+	segment     *Segment // Active segment.(当前段文件)
+	donePages   int      // Pages written to the segment.(已写入文件中的页数)
+	page        *page    // Active page.(当前页)
 	stopc       chan chan struct{}
 	actorc      chan func()
 	closed      bool // To allow calling Close() more than once without blocking.
@@ -254,12 +254,14 @@ func newWALMetrics(r prometheus.Registerer) *walMetrics {
 }
 
 // New returns a new WAL over the given directory.
+// 使用DefaultSegmentSize创建段
 func New(logger log.Logger, reg prometheus.Registerer, dir string, compress bool) (*WAL, error) {
 	return NewSize(logger, reg, dir, DefaultSegmentSize, compress)
 }
 
 // NewSize returns a new WAL over the given directory.
 // New segments are created with the specified size.
+// 指定SegmentSize创建段
 func NewSize(logger log.Logger, reg prometheus.Registerer, dir string, segmentSize int, compress bool) (*WAL, error) {
 	if segmentSize%pageSize != 0 {
 		return nil, errors.New("invalid segment size")
@@ -307,7 +309,7 @@ func NewSize(logger log.Logger, reg prometheus.Registerer, dir string, segmentSi
 	return w, nil
 }
 
-// Open an existing WAL.
+// Open an existing WAL.(只读使用)
 func Open(logger log.Logger, dir string) (*WAL, error) {
 	if logger == nil {
 		logger = log.NewNopLogger()
@@ -794,8 +796,13 @@ func (w *WAL) Close() (err error) {
 	return nil
 }
 
+// 以上部分为写相关操作
+// ----------------------------------------------------------------------------------------
+// 以下部分为读相关操作
+
 // Segments returns the range [first, n] of currently existing segments.
 // If no segments are found, first and n are -1.
+// 段文件索引范围
 func Segments(walDir string) (first, last int, err error) {
 	refs, err := listSegments(walDir)
 	if err != nil {
