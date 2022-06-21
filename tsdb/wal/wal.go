@@ -650,7 +650,9 @@ func (w *WAL) log(rec []byte, final bool) error {
 	// If the record is too big to fit within the active page in the current
 	// segment, terminate the active segment and advance to the next one.
 	// This ensures that records do not cross segment boundaries.
-	left := w.page.remaining() - recordHeaderSize                                   // Free space in the active page.(当前页面剩余空间)
+	left := w.page.remaining() - recordHeaderSize // Free space in the active page.(当前页面剩余空间)
+	// pageSize-recordHeaderSize 单页可用数据空间
+	// w.pagesPerSegment()-w.donePages-1 剩余页空闲页数(不包含当前页)
 	left += (pageSize - recordHeaderSize) * (w.pagesPerSegment() - w.donePages - 1) // Free pages in the active segment.(当前段除去当前页的剩余空间)
 
 	// record不跨段
@@ -704,8 +706,7 @@ func (w *WAL) log(rec []byte, final bool) error {
 		crc := crc32.Checksum(part, castagnoliTable)           // part的crc
 		binary.BigEndian.PutUint16(buf[1:], uint16(len(part))) // 写入len
 		binary.BigEndian.PutUint32(buf[3:], crc)               // 写入CRC32
-
-		copy(buf[recordHeaderSize:], part) // 写入data
+		copy(buf[recordHeaderSize:], part)                     // 写入part
 		p.alloc += len(part) + recordHeaderSize
 
 		if w.page.full() {
