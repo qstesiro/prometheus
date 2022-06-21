@@ -54,11 +54,11 @@ var castagnoliTable = crc32.MakeTable(crc32.Castagnoli)
 // when the next record can't fit in the remaining free page space.
 type page struct {
 	alloc   int // 已使用
-	flushed int
+	flushed int // 已落地磁盘
 	buf     [pageSize]byte
 }
 
-func (p *page) remaining() int {
+func (p *page) remaining() int { // 空闲
 	return pageSize - p.alloc
 }
 
@@ -266,6 +266,7 @@ func New(logger log.Logger, reg prometheus.Registerer, dir string, compress bool
 // New segments are created with the specified size.
 // 指定SegmentSize创建段
 func NewSize(logger log.Logger, reg prometheus.Registerer, dir string, segmentSize int, compress bool) (*WAL, error) {
+	// 段大小必须是页大小位数
 	if segmentSize%pageSize != 0 {
 		return nil, errors.New("invalid segment size")
 	}
@@ -292,7 +293,7 @@ func NewSize(logger log.Logger, reg prometheus.Registerer, dir string, segmentSi
 	}
 
 	// Index of the Segment we want to open and write to.
-	writeSegmentIndex := 0
+	writeSegmentIndex := 0 // 段索引从0开始
 	// If some segments already exist create one with a higher index than the last segment.
 	if last != -1 {
 		writeSegmentIndex = last + 1
@@ -640,7 +641,7 @@ func (w *WAL) log(rec []byte, final bool) error {
 		// equal to the capacity.
 		w.snappyBuf = w.snappyBuf[:cap(w.snappyBuf)]
 		w.snappyBuf = snappy.Encode(w.snappyBuf, rec)
-		if len(w.snappyBuf) < len(rec) {
+		if len(w.snappyBuf) < len(rec) { // 如果压缩后数据大小必须小于原数据大小才使用压缩数据
 			rec = w.snappyBuf
 			compressed = true
 		}
