@@ -669,8 +669,7 @@ func (w *WAL) log(rec []byte, final bool) error {
 
 		// Find how much of the record we can fit into the page.
 		var (
-			l = min(len(rec), (pageSize-p.alloc)-recordHeaderSize) // pageSize-p.alloc等价p.remaining()
-			// 这不是低效操作[只会创建一个新slice结构指针指向原内存地址并初始化len与cap]
+			l    = min(len(rec), (pageSize-p.alloc)-recordHeaderSize) // pageSize-p.alloc等价p.remaining()
 			part = rec[:l]
 			buf  = p.buf[p.alloc:]
 			typ  recType
@@ -718,7 +717,6 @@ func (w *WAL) log(rec []byte, final bool) error {
 				return err
 			}
 		}
-		// 这不是低效操作[只会创建一个新slice结构指针指向原内存地址并初始化len与cap]
 		rec = rec[l:]
 	}
 
