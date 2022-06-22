@@ -949,15 +949,15 @@ func (h *Head) truncateWAL(mint int64) error {
 		return errors.Wrap(err, "next segment")
 	}
 	last--        // Never consider last segment for checkpoint.(不处理最后一个段文件为了避免读写冲突)
-	if last < 0 { // 只有一个段不处理
+	if last < 0 { // 当前没有段文件
 		return nil // no segments yet.
 	}
 	// The lower two thirds of segments should contain mostly obsolete samples.
 	// If we have less than two segments, it's not worth checkpointing yet.
 	// With the default 2h blocks, this will keeping up to around 3h worth
 	// of WAL segments.
-	// 少于两个段(实际是少于三个段,因为总是排除第一个段)也不处理
-	last = first + (last-first)*2/3
+	// 少于三个段(实际是少于四个段,因为总是排除最后一个段)也不处理
+	last = first + (last-first)*2/3 // 只处理当前所有段的前2/3个
 	if last <= first {
 		return nil
 	}

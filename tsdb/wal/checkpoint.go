@@ -288,7 +288,7 @@ func Checkpoint(logger log.Logger, w *WAL, from, to int, keep func(id uint64) bo
 	return stats, nil
 }
 
-// 创建检查点子目录全路径[index8位十进制]
+// 创建检查点子目录全路径[index是8位十进制]
 func checkpointDir(dir string, i int) string {
 	return filepath.Join(dir, fmt.Sprintf(checkpointPrefix+"%08d", i))
 }
