@@ -945,10 +945,12 @@ func (h *Head) truncateWAL(mint int64) error {
 	}
 	// Start a new segment, so low ingestion volume TSDB don't have more WAL than
 	// needed.
+	// 创建一个新的段文件
 	if err := h.wal.NextSegment(); err != nil {
 		return errors.Wrap(err, "next segment")
 	}
-	last--        // Never consider last segment for checkpoint.(不处理最后一个段文件为了避免读写冲突)
+	// 不处理最后一个段文件(也就是新创建的)为了避免读写冲突
+	last--        // Never consider last segment for checkpoint.
 	if last < 0 { // 当前没有段文件
 		return nil // no segments yet.
 	}
