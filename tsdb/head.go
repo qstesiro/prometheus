@@ -405,7 +405,7 @@ func (h *Head) processWALSamples(
 	minValidTime int64,
 	input <-chan []record.RefSample, output chan<- []record.RefSample,
 ) (unknownRefs uint64) {
-	defer close(output)
+	defer close(output) // 竟然在此关闭outputs ???
 
 	// Mitigate lock contention in getByID.
 	refSeries := map[uint64]*memSeries{}
@@ -414,13 +414,13 @@ func (h *Head) processWALSamples(
 
 	for samples := range input {
 		for _, s := range samples {
-			if s.T < minValidTime {
+			if s.T < minValidTime { // 丢弃时间过小的采样
 				continue
 			}
 			ms := refSeries[s.Ref]
 			if ms == nil {
 				ms = h.series.getByID(s.Ref)
-				if ms == nil {
+				if ms == nil { // 丢弃未找到对应refid的采样
 					unknownRefs++
 					continue
 				}
@@ -512,7 +512,7 @@ func (h *Head) loadWAL(r *wal.Reader, multiRef map[uint64]uint64, mmappedChunks 
 		if ok || seriesCreationErr != nil {
 			for i := 0; i < n; i++ {
 				close(inputs[i])
-				for range outputs[i] {
+				for range outputs[i] { // 竟然在processWALSamples中关闭outputs ???
 				}
 			}
 			wg.Wait()
@@ -535,7 +535,7 @@ func (h *Head) loadWAL(r *wal.Reader, multiRef map[uint64]uint64, mmappedChunks 
 	go func() {
 		defer close(decoded)
 		for r.Next() {
-			rec := r.Record()
+			rec := r.Record() // 每次读取一个record
 			switch dec.Type(rec) {
 			case record.Series:
 				// 代码中多次使用此种处理方式节省空间且高效 !!!
@@ -594,11 +594,14 @@ Outer:
 				if created {
 					// If this series gets a duplicate record, we don't restore its mmapped chunks,
 					// and instead restore everything from WAL records.
+					// 对于checkpoint中遗留的series不会找到对应的map-check
 					series.mmappedChunks = mmappedChunks[series.ref]
 
 					h.metrics.chunks.Add(float64(len(series.mmappedChunks)))
 					h.metrics.chunksCreated.Add(float64(len(series.mmappedChunks)))
-
+					// 对于checkpoint中遗留的series不会找到对应的map-check
+					// 所以遗留的series只会保留一个空的memSeries
+					// 后续切割逻辑触发时会把series清理出内存
 					if len(series.mmappedChunks) > 0 {
 						h.updateMinMaxTime(series.minTime(), series.maxTime())
 					}
@@ -606,7 +609,7 @@ Outer:
 					// TODO(codesome) Discard old samples and mmapped chunks and use mmap chunks for the new series ID.
 
 					// There's already a different ref for this series.
-					multiRef[s.Ref] = series.ref
+					multiRef[s.Ref] = series.ref // 记录refid映射
 				}
 
 				if h.lastSeriesID.Load() < s.Ref {
@@ -622,7 +625,7 @@ Outer:
 			// cause thousands of very large in flight buffers occupying large amounts
 			// of unused memory.
 			for len(samples) > 0 {
-				m := 5000
+				m := 5000 // 感觉5000与300应该没有什么特殊的含义吧:) ???
 				if len(samples) < m {
 					m = len(samples)
 				}
@@ -635,7 +638,7 @@ Outer:
 					shards[i] = buf[:0]
 				}
 				for _, sam := range samples[:m] {
-					if r, ok := multiRef[sam.Ref]; ok {
+					if r, ok := multiRef[sam.Ref]; ok { // 转换refid
 						sam.Ref = r
 					}
 					mod := sam.Ref % uint64(n)
@@ -683,7 +686,7 @@ Outer:
 	// Signal termination to each worker and wait for it to close its output channel.
 	for i := 0; i < n; i++ {
 		close(inputs[i])
-		for range outputs[i] {
+		for range outputs[i] { // 竟然在processWALSamples中关闭outputs ???
 		}
 	}
 	wg.Wait()
@@ -958,8 +961,7 @@ func (h *Head) truncateWAL(mint int64) error {
 	// If we have less than two segments, it's not worth checkpointing yet.
 	// With the default 2h blocks, this will keeping up to around 3h worth
 	// of WAL segments.
-	// 少于三个段(实际是少于四个段,因为总是排除最后一个段)也不处理
-	last = first + (last-first)*2/3 // 只处理当前所有段的前2/3个
+	last = first + (last-first)*2/3 // 只处理当前段的前2/3个(至少三个段)
 	if last <= first {
 		return nil
 	}
