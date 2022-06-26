@@ -2412,7 +2412,7 @@ func (s *memSeries) truncateChunksBefore(mint int64) (removed int) {
 			if c.maxTime >= mint {
 				break
 			}
-			removed = i + 1
+			removed = i + 1 // c.maxTime < mint
 		}
 		s.mmappedChunks = append(s.mmappedChunks[:0], s.mmappedChunks[removed:]...)
 		s.firstChunkID += removed

@@ -153,7 +153,7 @@
 # b tsdb.(*noopSeriesLifecycleCallback).PreCreation
 # b tsdb.(*noopSeriesLifecycleCallback).PostCreation
 # b tsdb.(*noopSeriesLifecycleCallback).PostDeletion
-b tsdb.(*DB).Appender
+# b tsdb.(*DB).Appender
 # b tsdb.(dbAppender).Commit
 # b db.go:810
 
@@ -262,7 +262,7 @@ b tsdb.(*DB).Appender
 # b tsdb/compact.go:745
 # b tsdb/compact.go:752
 # b tsdb/compact.go:760
-# b tsdb/compact.go:782
+b tsdb/compact.go:782
 
 # b tsdb.(*headChunkReader).Chunk
 
