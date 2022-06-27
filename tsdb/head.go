@@ -961,7 +961,12 @@ func (h *Head) truncateWAL(mint int64) error {
 	// If we have less than two segments, it's not worth checkpointing yet.
 	// With the default 2h blocks, this will keeping up to around 3h worth
 	// of WAL segments.
-	last = first + (last-first)*2/3 // 只处理当前段的前2/3个(至少三个段)
+	// 只处理当前段的前2/3个(至少三个段)
+	// 如果取当前wal中所有的段文件能保证处理所有数据但是实际上范围过大因为会多处理最近一小时的数据
+	// 取前2/3是与压缩逻辑保持一致(正常情况下wal的前2/3与被压缩的head中的2/3数据量比较接近但并不一致)
+	// 所以取前2/3会导致会导致实际处理的wal数据与压缩head数据范围不一致所以引入deleted记录被删除的序列
+	// 关于deleted处理的详情参数gc()函数
+	last = first + (last-first)*2/3
 	if last <= first {
 		return nil
 	}
@@ -997,7 +1002,7 @@ func (h *Head) truncateWAL(mint int64) error {
 	// deleted详情参见Head.gc()函数
 	h.deletedMtx.Lock()
 	for ref, segment := range h.deleted {
-		if segment < first { // 此处算法是否可以 segment <= last 就行了
+		if segment < first { // 此处算法是否可以 segment <= last 就行了 ???
 			delete(h.deleted, ref)
 		}
 	}
@@ -1372,6 +1377,10 @@ func (a *headAppender) log() error {
 	var rec []byte
 	var enc record.Encoder
 	// 写序列
+	// 注: 只有新采集的序列才会写入wal
+	//     已经采集过的在head与wal中有记录不会再次写入
+	//     除非是序列在压缩时被删除(head与wal都清理了)
+	//     后续再被采集到才会被记录
 	if len(a.series) > 0 {
 		rec = enc.Series(a.series, buf)
 		buf = rec[:0]
@@ -1548,14 +1557,24 @@ func (h *Head) gc() int64 {
 		// on start up when we replay the WAL, or any other code
 		// that reads the WAL, wouldn't be able to use those
 		// samples since we would have no labels for that ref ID.
-		// 正常情况不需要记录deleted,后续生成检查点(合并段文件)直接过滤掉不在内存中的序列
-		// 但是检查点生成并不合并所有段文件,总是排除最后一个段文件(为了避免同时读写冲突)
-		// 从而导致序列至少要多保留到下一次生成检查点时也就是当前的last段在下一次检查点时被合并
-		// 样例说明
-		// [s1, s2], [s3, s4, s5], [s6, s7], s8, ...
-		// 检查点1 [s1, s2]     first=s1, last=s2, deleted[refid] = s3 > first
-		// 检查点2 [s3, s4, s5] first=s3, last=s5, deleted[refid] = s3 = first (<= last就行, < first会多驻留一轮)
-		// 检查点3 [s6, s7]     first=s6, last=s7, deleted[refid] = s3 < first delete(refid)
+		//
+		// 每次执行压缩操作时如果某个序列的所有数据(map-chunk与head-chunk)都被压缩入block文件
+		// 那么此序列会被清理出内存,在同一次压缩操作中的后续checkpoint生成过程中可以删除wal中的序列
+		// 但是每次生成checkpoint只会取前2/3的段文件所以导致驻留的段文件中可能会被删除序列对应的采样数据
+		// 如果直接删除序列且prometheus重启(异常崩溃或人工重启)在回放wal的过程导致采样无法找到对应的序列
+		// 所以使用deleted记录被删除的序列保证不会出现采样无法对应序列的情况,但是序列什么时候删除呢?
+		// 就是在当前最后一个驻留的段文件被处理完后再删除deleted中的序列,因为被保存的采样不会直接最后一个段文件
+		// 样例:
+		// [s1, s2, s3], s4, s5     first=s1, last=s3, deleted[refid] = s5
+		// [c, s4, s5], s6, s7      first=s4, last=s5, deleted[refid] = s7  (s5被压缩,可以删除refid<=s5的序列)
+		// [c, s6, s7, s8], s9, s10 first=s4, last=s5, deleted[refid] = s10 (s7被压缩,可以删除refid<=s7的序列)
+		// 疑问: ???
+		// 标签与采样保持逻辑同步没有问题但是没有实际意义,因为当压缩数据已经写入到block中后,wal中遗留的采样
+		// 在重放数据时不应该再重新被写入了,如果再写入head中是错误的,而在数据重放的逻辑也确实时过滤了采样
+		// 但是会将序列写入(但是对应的采样为空),而这个无效的序列会在下一次压缩时被清理掉
+		// 但是如果不做deleted记录而是在压缩数据时对于被清理也内存的序列在创建checkpoint时直接将其同步删除
+		// (也就是不保持标签与采样的逻辑同步)根据当前重放wal的代码逻辑也不会有问题,采样会根据minValidTime
+		// 被过滤掉(参见head.processWALSamples)
 		for ref := range deleted {
 			h.deleted[ref] = last // 创建checkpoint使用
 		}
@@ -2393,7 +2412,9 @@ func (s *memSeries) chunkID(pos int) int {
 // have no timestamp at or after mint.
 // Chunk IDs remain unchanged.
 func (s *memSeries) truncateChunksBefore(mint int64) (removed int) {
-	// 在压缩处理时如果headChunk有重叠会对headChunk进行压缩
+	// 只有整个head-chunk小于压缩时间才会将其清理出内存
+	// 但在压缩处理时如果head-chunk有重叠会对head-chunk进行压缩(通过tombstones处理)
+	// 并调整head的mint与minValidTime为压缩时间(保证已被压缩的数据从head查询不到)
 	// 有可能出现headChunk与压缩区间完全重叠且被压缩的情况
 	// 如: 某series数据抓取到某时刻后没有数据了(网络不通/抓取目标程序崩溃)
 	if s.headChunk != nil && s.headChunk.maxTime < mint {
@@ -2406,8 +2427,9 @@ func (s *memSeries) truncateChunksBefore(mint int64) (removed int) {
 	}
 	if len(s.mmappedChunks) > 0 {
 		for i, c := range s.mmappedChunks {
-			// chunk.maxt >= head.mint
-			// 保证重叠情况会保留这个chunk(在压缩时只处理重叠部分)
+			// 只有整个map-chunk小于压缩时间才会将其清理出内存
+			// 但在压缩处理时如果map-chunk有重叠会对map-chunk进行压缩(通过tombstones处理)
+			// 并调整head的mint与minValidTime为压缩时间(保证已被压缩的数据从head查询不到)
 			// 未重叠部分会在下次压缩被处理
 			if c.maxTime >= mint {
 				break
