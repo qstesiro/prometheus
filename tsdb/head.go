@@ -2314,7 +2314,7 @@ func (s *memSeries) cutNewHeadChunk(mint int64, chunkDiskMapper *chunks.ChunkDis
 	s.headChunk = &memChunk{
 		chunk:   chunkenc.NewXORChunk(),
 		minTime: mint,
-		maxTime: math.MinInt64, // append中会设置
+		maxTime: math.MinInt64, // append中会调整
 	}
 
 	// Set upper bound on when the next chunk must be started. An earlier timestamp
@@ -2451,18 +2451,20 @@ func (s *memSeries) append(t int64, v float64, appendID uint64, chunkDiskMapper 
 	// Based on Gorilla white papers this offers near-optimal compression ratio
 	// so anything bigger that this has diminishing returns and increases
 	// the time range within which we have to decompress all samples.
-	// 假定一分采样一次
+	// 假定每分钟采样一次2小时采样120次
 	const samplesPerChunk = 120
 
-	c := s.head()
+	c := s.head() // 获取head-chunk
 
-	// 第一批序列
+	// head-chunk为nil
 	if c == nil {
+		// 如果有map-chunk代表是应用重启后序列的首批采样
 		if len(s.mmappedChunks) > 0 && s.mmappedChunks[len(s.mmappedChunks)-1].maxTime >= t {
 			// Out of order sample. Sample timestamp is already in the mmaped chunks, so ignore it.
 			return false, false
 		}
 		// There is no chunk in this series yet, create the first chunk for the sample.
+		// 如果没有map-chunk代表是应用首次启动的首批采样
 		c = s.cutNewHeadChunk(t, chunkDiskMapper)
 		chunkCreated = true
 	}
@@ -2477,7 +2479,7 @@ func (s *memSeries) append(t int64, v float64, appendID uint64, chunkDiskMapper 
 	// at which to start the next chunk.
 	// At latest it must happen at the timestamp set when the chunk was cut.
 	/*
-	   根据采样频率动态调整切割线位置频率越高切割越频繁反之切割频率越低
+	   根据采样频率动态调整切割线位置,采样频率越高切割越频繁反之切割频率越低
 	   但是切割最大时间窗口不会大于chunkRange(当前硬编码2h)
 	   按此逻辑来看我们实际生产中所使用的采样频率来计算实际的切割触发都会少于2h
 	   例如: 采样频率5s来计算切割频率大约为10m
