@@ -2451,7 +2451,7 @@ func (s *memSeries) append(t int64, v float64, appendID uint64, chunkDiskMapper 
 	// Based on Gorilla white papers this offers near-optimal compression ratio
 	// so anything bigger that this has diminishing returns and increases
 	// the time range within which we have to decompress all samples.
-	// 假定每分钟采样一次2小时采样120次
+	// 假定每分钟采样一次,2小时采样120次
 	const samplesPerChunk = 120
 
 	c := s.head() // 获取head-chunk
