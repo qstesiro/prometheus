@@ -2479,10 +2479,12 @@ func (s *memSeries) append(t int64, v float64, appendID uint64, chunkDiskMapper 
 	// at which to start the next chunk.
 	// At latest it must happen at the timestamp set when the chunk was cut.
 	//
-	// 根据采样频率动态调整切割线位置(1/4),采样频率越高切割越频繁反之切割频率越低
+	// 根据采样频率动态调整切割线位置(1/4)
+	// 采样频率越高切割越频繁反之切割频率越低
 	// 但是切割最大时间窗口不会大于chunkRange(当前硬编码2h)
 	// 按此逻辑来看我们实际生产中所使用的采样频率来计算实际的切割触发都会少于2h
 	// 时间窗口区间 [mint, mint+2h] 相当于只能等比缩小不能等比放大
+	//
 	// 例如:
 	// 采样频率5s来计算切割频率大约为10m
 	// t1 = 5s * 30 = 150 = 2.5m
@@ -2494,10 +2496,14 @@ func (s *memSeries) append(t int64, v float64, appendID uint64, chunkDiskMapper 
 	// t1 = 90s * 30 = 2700 = 45m
 	// t2 = t1 * 4 = 45m * 4 = 2h (不能大于2h)
 	//
+	// 采用此算法可以保证每次切割有相同的采样个数(120个采样),无论采样周期是多少
+	// 而每个map-chunk中保存120个采样在后续(解)压缩时有更好高的效率(具体细节看论文)
+	//
 	if numSamples == samplesPerChunk/4 {
 		s.nextAt = computeChunkEndTime(c.minTime, c.maxTime, s.nextAt)
 	}
 	if t >= s.nextAt {
+		// 每次cut会重新设置s.nextAt=rangeForTimestamp(mint, s.chunkRange)
 		c = s.cutNewHeadChunk(t, chunkDiskMapper)
 		chunkCreated = true
 	}

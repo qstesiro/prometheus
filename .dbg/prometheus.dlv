@@ -188,7 +188,7 @@
 # b tsdb.(*memSeries).append
 # b tsdb.(*memSeries).cutNewHeadChunk
 # b tsdb.computeChunkEndTime
-# b head.go:2356
+b head.go:2498
 
 # b chunks.(*ChunkDiskMapper).cut
 
@@ -262,7 +262,7 @@
 # b tsdb/compact.go:745
 # b tsdb/compact.go:752
 # b tsdb/compact.go:760
-b tsdb/compact.go:782
+# b tsdb/compact.go:782
 
 # b tsdb.(*headChunkReader).Chunk
 
