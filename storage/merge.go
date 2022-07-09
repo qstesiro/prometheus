@@ -62,11 +62,13 @@ func NewMergeQuerier(primaries []Querier, secondaries []Querier, mergeFn Vertica
 	if len(secondaries) > 0 {
 		concurrentSelect = true
 	}
-	return &querierAdapter{&mergeGenericQuerier{
-		mergeFn:          (&seriesMergerAdapter{VerticalSeriesMergeFunc: mergeFn}).Merge,
-		queriers:         queriers,
-		concurrentSelect: concurrentSelect,
-	}}
+	return &querierAdapter{
+		&mergeGenericQuerier{
+			mergeFn:          (&seriesMergerAdapter{VerticalSeriesMergeFunc: mergeFn}).Merge,
+			queriers:         queriers,
+			concurrentSelect: concurrentSelect,
+		},
+	}
 }
 
 // NewMergeChunkQuerier returns a new Chunk Querier that merges results of given primary and secondary chunk queriers.

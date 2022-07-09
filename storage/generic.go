@@ -62,6 +62,7 @@ type genericQuerierAdapter struct {
 	LabelQuerier
 
 	// One-of. If both are set, Querier will be used.
+	// 二选一,同时设置只使用Querier
 	q  Querier
 	cq ChunkQuerier
 }
