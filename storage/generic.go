@@ -20,6 +20,34 @@ import (
 	"github.com/prometheus/prometheus/pkg/labels"
 )
 
+// 实现了storage.Querier接口
+type querierAdapter struct {
+	// 结构继承接口(新用法) ???
+	// 细想一下这种用法会产生复杂的问题,值得深入研究
+	// - 继承多个接口,接口函数有重叠(如: genericQuerierAdapter)
+	// - 创建对象实例时(如果只需要部分功能)是否可以只实现部分(个别)接口的方法
+	genericQuerier
+}
+
+func (q *querierAdapter) Select(sortSeries bool, hints *SelectHints, matchers ...*labels.Matcher) SeriesSet {
+	return &seriesSetAdapter{q.genericQuerier.Select(sortSeries, hints, matchers...)}
+}
+
+// 实现了storage.ChunkQuerier接口
+type chunkQuerierAdapter struct {
+	// 结构继承接口(新用法) ???
+	// 细想一下这种用法会产生复杂的问题,值得深入研究
+	// - 继承多个接口,接口函数有重叠(如: genericQuerierAdapter)
+	// - 创建对象实例时(如果只需要部分功能)是否可以只实现部分(个别)接口的方法
+	genericQuerier
+}
+
+func (q *chunkQuerierAdapter) Select(sortSeries bool, hints *SelectHints, matchers ...*labels.Matcher) ChunkSeriesSet {
+	return &chunkSeriesSetAdapter{q.genericQuerier.Select(sortSeries, hints, matchers...)}
+}
+
+// ------------------------------------------------------------------
+
 // 注意与storage.Querier接口的不相同
 // Select函数返回的是genericSeriesSet ???
 type genericQuerier interface {
@@ -36,6 +64,33 @@ type genericSeriesSet interface {
 }
 
 type genericSeriesMergeFunc func(...Labels) Labels
+
+// ------------------------------------------------------------------
+
+// 实现了genericQuerier接口
+type genericQuerierAdapter struct {
+	LabelQuerier
+
+	// One-of. If both are set, Querier will be used.
+	// 二选一,同时设置只使用Querier
+	q  Querier
+	cq ChunkQuerier
+}
+
+func newGenericQuerierFrom(q Querier) genericQuerier {
+	return &genericQuerierAdapter{LabelQuerier: q, q: q}
+}
+
+func newGenericQuerierFromChunk(cq ChunkQuerier) genericQuerier {
+	return &genericQuerierAdapter{LabelQuerier: cq, cq: cq}
+}
+
+func (q *genericQuerierAdapter) Select(sortSeries bool, hints *SelectHints, matchers ...*labels.Matcher) genericSeriesSet {
+	if q.q != nil {
+		return &genericSeriesSetAdapter{q.q.Select(sortSeries, hints, matchers...)}
+	}
+	return &genericChunkSeriesSetAdapter{q.cq.Select(sortSeries, hints, matchers...)}
+}
 
 // ------------------------------------------------------------------
 
@@ -57,46 +112,7 @@ func (a *genericSeriesSetAdapter) At() Labels {
 	return a.SeriesSet.At()
 }
 
-// 实现了genericQuerier接口
-type genericQuerierAdapter struct {
-	LabelQuerier
-
-	// One-of. If both are set, Querier will be used.
-	// 二选一,同时设置只使用Querier
-	q  Querier
-	cq ChunkQuerier
-}
-
-func (q *genericQuerierAdapter) Select(sortSeries bool, hints *SelectHints, matchers ...*labels.Matcher) genericSeriesSet {
-	if q.q != nil {
-		return &genericSeriesSetAdapter{q.q.Select(sortSeries, hints, matchers...)}
-	}
-	return &genericChunkSeriesSetAdapter{q.cq.Select(sortSeries, hints, matchers...)}
-}
-
-func newGenericQuerierFrom(q Querier) genericQuerier {
-	return &genericQuerierAdapter{LabelQuerier: q, q: q}
-}
-
-// 实现了storage.Querier接口
-type querierAdapter struct {
-	// 结构继承接口(新用法) ???
-	// 细想一下这种用法会产生复杂的问题,值得深入研究
-	// - 继承多个接口,接口函数有重叠(如: genericQuerierAdapter)
-	// - 创建对象实例时(如果只需要部分功能)是否可以只实现部分(个别)接口的方法
-	genericQuerier
-}
-
-func (q *querierAdapter) Select(sortSeries bool, hints *SelectHints, matchers ...*labels.Matcher) SeriesSet {
-	return &seriesSetAdapter{q.genericQuerier.Select(sortSeries, hints, matchers...)}
-}
-
 // -------------------------------------------------------------
-
-// 实现了storage.ChunkQuerier接口
-type chunkQuerierAdapter struct {
-	genericQuerier
-}
 
 // 实现了storage.ChunkSeriesSet接口
 type chunkSeriesSetAdapter struct {
@@ -114,14 +130,6 @@ type genericChunkSeriesSetAdapter struct {
 
 func (a *genericChunkSeriesSetAdapter) At() Labels {
 	return a.ChunkSeriesSet.At()
-}
-
-func (q *chunkQuerierAdapter) Select(sortSeries bool, hints *SelectHints, matchers ...*labels.Matcher) ChunkSeriesSet {
-	return &chunkSeriesSetAdapter{q.genericQuerier.Select(sortSeries, hints, matchers...)}
-}
-
-func newGenericQuerierFromChunk(cq ChunkQuerier) genericQuerier {
-	return &genericQuerierAdapter{LabelQuerier: cq, cq: cq}
 }
 
 // ------------------------------------------------------------
