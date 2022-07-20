@@ -93,11 +93,13 @@ func NewMergeChunkQuerier(primaries []ChunkQuerier, secondaries []ChunkQuerier, 
 	if len(secondaries) > 0 {
 		concurrentSelect = true
 	}
-	return &chunkQuerierAdapter{&mergeGenericQuerier{
-		mergeFn:          (&chunkSeriesMergerAdapter{VerticalChunkSeriesMergeFunc: mergeFn}).Merge,
-		queriers:         queriers,
-		concurrentSelect: concurrentSelect,
-	}}
+	return &chunkQuerierAdapter{
+		&mergeGenericQuerier{
+			mergeFn:          (&chunkSeriesMergerAdapter{VerticalChunkSeriesMergeFunc: mergeFn}).Merge,
+			queriers:         queriers,
+			concurrentSelect: concurrentSelect,
+		},
+	}
 }
 
 // Select returns a set of series that matches the given label matchers.
@@ -143,10 +145,12 @@ func (q *mergeGenericQuerier) Select(sortSeries bool, hints *SelectHints, matche
 	for r := range seriesSetChan {
 		seriesSets = append(seriesSets, r)
 	}
-	return &lazyGenericSeriesSet{init: func() (genericSeriesSet, bool) {
-		s := newGenericMergeSeriesSet(seriesSets, q.mergeFn)
-		return s, s.Next()
-	}}
+	return &lazyGenericSeriesSet{
+		init: func() (genericSeriesSet, bool) {
+			s := newGenericMergeSeriesSet(seriesSets, q.mergeFn)
+			return s, s.Next()
+		},
+	}
 }
 
 type labelGenericQueriers []genericQuerier
@@ -274,7 +278,12 @@ func NewMergeSeriesSet(sets []SeriesSet, mergeFunc VerticalSeriesMergeFunc) Seri
 		genericSets = append(genericSets, &genericSeriesSetAdapter{s})
 
 	}
-	return &seriesSetAdapter{newGenericMergeSeriesSet(genericSets, (&seriesMergerAdapter{VerticalSeriesMergeFunc: mergeFunc}).Merge)}
+	return &seriesSetAdapter{
+		newGenericMergeSeriesSet(
+			genericSets,
+			(&seriesMergerAdapter{VerticalSeriesMergeFunc: mergeFunc}).Merge,
+		),
+	}
 }
 
 // VerticalChunkSeriesMergeFunc returns merged chunk series implementation that merges potentially time-overlapping
@@ -290,7 +299,12 @@ func NewMergeChunkSeriesSet(sets []ChunkSeriesSet, mergeFunc VerticalChunkSeries
 		genericSets = append(genericSets, &genericChunkSeriesSetAdapter{s})
 
 	}
-	return &chunkSeriesSetAdapter{newGenericMergeSeriesSet(genericSets, (&chunkSeriesMergerAdapter{VerticalChunkSeriesMergeFunc: mergeFunc}).Merge)}
+	return &chunkSeriesSetAdapter{
+		newGenericMergeSeriesSet(
+			genericSets,
+			(&chunkSeriesMergerAdapter{VerticalChunkSeriesMergeFunc: mergeFunc}).Merge,
+		),
+	}
 }
 
 // 实现了storage.genericSeriesSet
@@ -671,7 +685,14 @@ func (c *compactChunkIterator) Next() bool {
 	}
 
 	// Add last as it's not yet included in overlap. We operate on same series, so labels does not matter here.
-	iter = (&seriesToChunkEncoder{Series: c.mergeFunc(append(overlapping, newChunkToSeriesDecoder(nil, c.curr))...)}).Iterator()
+	iter = (&seriesToChunkEncoder{
+		Series: c.mergeFunc(
+			append(
+				overlapping,
+				newChunkToSeriesDecoder(nil, c.curr),
+			)...,
+		),
+	}).Iterator()
 	if !iter.Next() {
 		if c.err = iter.Err(); c.err != nil {
 			return false
