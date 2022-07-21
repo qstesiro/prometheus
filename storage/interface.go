@@ -157,6 +157,7 @@ type Appender interface {
 	Rollback() error
 }
 
+// 实际就是迭代器
 // SeriesSet contains a set of series.
 type SeriesSet interface {
 	Next() bool
@@ -218,6 +219,7 @@ type Series interface {
 	SampleIteratable
 }
 
+// 实际就是迭代器
 // ChunkSeriesSet contains a set of chunked series.
 type ChunkSeriesSet interface {
 	Next() bool

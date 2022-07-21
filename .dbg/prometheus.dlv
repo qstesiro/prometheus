@@ -274,4 +274,7 @@
 
 # b tsdb.ExponentialBlockRanges
 
+# b tsdb.(*DB).Querier
+b storage.(*querierAdapter).Select
+
 g
