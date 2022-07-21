@@ -26,20 +26,20 @@ func (c *lazyGenericSeriesSet) Next() bool {
 		return c.set.Next()
 	}
 	var ok bool
-	c.set, ok = c.init()
+	c.set, ok = c.init() // 执行init
 	return ok
-}
-
-func (c *lazyGenericSeriesSet) Err() error {
-	if c.set != nil {
-		return c.set.Err()
-	}
-	return nil
 }
 
 func (c *lazyGenericSeriesSet) At() Labels {
 	if c.set != nil {
 		return c.set.At()
+	}
+	return nil
+}
+
+func (c *lazyGenericSeriesSet) Err() error {
+	if c.set != nil {
+		return c.set.Err()
 	}
 	return nil
 }

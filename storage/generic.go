@@ -26,7 +26,7 @@ type querierAdapter struct {
 	// 细想一下这种用法会产生复杂的问题,值得深入研究
 	// - 继承多个接口,接口函数有重叠(如: genericQuerierAdapter)
 	// - 创建对象实例时(如果只需要部分功能)是否可以只实现部分(个别)接口的方法
-	genericQuerier
+	genericQuerier // mergeGenericQuerier
 }
 
 func (q *querierAdapter) Select(sortSeries bool, hints *SelectHints, matchers ...*labels.Matcher) SeriesSet {
@@ -39,7 +39,7 @@ type chunkQuerierAdapter struct {
 	// 细想一下这种用法会产生复杂的问题,值得深入研究
 	// - 继承多个接口,接口函数有重叠(如: genericQuerierAdapter)
 	// - 创建对象实例时(如果只需要部分功能)是否可以只实现部分(个别)接口的方法
-	genericQuerier
+	genericQuerier // mergeGenericQuerier
 }
 
 func (q *chunkQuerierAdapter) Select(sortSeries bool, hints *SelectHints, matchers ...*labels.Matcher) ChunkSeriesSet {
@@ -73,8 +73,8 @@ type genericQuerierAdapter struct {
 
 	// One-of. If both are set, Querier will be used.
 	// 二选一,同时设置只使用Querier
-	q  Querier
-	cq ChunkQuerier
+	q  Querier      // blockQuerier
+	cq ChunkQuerier // blockChunkQuerier
 }
 
 func newGenericQuerierFrom(q Querier) genericQuerier {
@@ -85,7 +85,9 @@ func newGenericQuerierFromChunk(cq ChunkQuerier) genericQuerier {
 	return &genericQuerierAdapter{LabelQuerier: cq, cq: cq}
 }
 
-func (q *genericQuerierAdapter) Select(sortSeries bool, hints *SelectHints, matchers ...*labels.Matcher) genericSeriesSet {
+func (q *genericQuerierAdapter) Select(
+	sortSeries bool, hints *SelectHints, matchers ...*labels.Matcher,
+) genericSeriesSet {
 	if q.q != nil {
 		return &genericSeriesSetAdapter{q.q.Select(sortSeries, hints, matchers...)}
 	}
@@ -96,7 +98,7 @@ func (q *genericQuerierAdapter) Select(sortSeries bool, hints *SelectHints, matc
 
 // 实现了storage.SeriesSet接口
 type seriesSetAdapter struct {
-	genericSeriesSet
+	genericSeriesSet // lazyGenericSeriesSet
 }
 
 func (a *seriesSetAdapter) At() Series {

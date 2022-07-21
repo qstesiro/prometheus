@@ -31,7 +31,7 @@ import (
 
 // 实现了genericQuerier接口
 type mergeGenericQuerier struct {
-	queriers []genericQuerier // 内部保存genericQuerier接口列表
+	queriers []genericQuerier // []genericQuerierAdapter
 
 	// mergeFn is used when we see series from different queriers Selects with the same labels.
 	mergeFn genericSeriesMergeFunc
@@ -116,7 +116,7 @@ func (q *mergeGenericQuerier) Select(sortSeries bool, hints *SelectHints, matche
 	var seriesSets = make([]genericSeriesSet, 0, len(q.queriers))
 	if !q.concurrentSelect {
 		for _, querier := range q.queriers {
-			// We need to sort for merge  to work.
+			// We need to sort for merge to work.
 			seriesSets = append(seriesSets, querier.Select(true, hints, matchers...))
 		}
 		return &lazyGenericSeriesSet{init: func() (genericSeriesSet, bool) {
