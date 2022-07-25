@@ -23,6 +23,7 @@ import (
 	"github.com/prometheus/prometheus/tsdb/tsdbutil"
 )
 
+// 实现storage.Series接口
 type SeriesEntry struct {
 	Lset             labels.Labels
 	SampleIteratorFn func() chunkenc.Iterator

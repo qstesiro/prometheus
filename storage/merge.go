@@ -119,10 +119,12 @@ func (q *mergeGenericQuerier) Select(sortSeries bool, hints *SelectHints, matche
 			// We need to sort for merge to work.
 			seriesSets = append(seriesSets, querier.Select(true, hints, matchers...))
 		}
-		return &lazyGenericSeriesSet{init: func() (genericSeriesSet, bool) {
-			s := newGenericMergeSeriesSet(seriesSets, q.mergeFn)
-			return s, s.Next()
-		}}
+		return &lazyGenericSeriesSet{
+			init: func() (genericSeriesSet, bool) {
+				s := newGenericMergeSeriesSet(seriesSets, q.mergeFn)
+				return s, s.Next()
+			},
+		}
 	}
 
 	var (
