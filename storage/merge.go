@@ -114,6 +114,7 @@ func (q *mergeGenericQuerier) Select(sortSeries bool, hints *SelectHints, matche
 	}
 
 	var seriesSets = make([]genericSeriesSet, 0, len(q.queriers))
+	// 非并发
 	if !q.concurrentSelect {
 		for _, querier := range q.queriers {
 			// We need to sort for merge to work.
@@ -126,7 +127,7 @@ func (q *mergeGenericQuerier) Select(sortSeries bool, hints *SelectHints, matche
 			},
 		}
 	}
-
+	// 并发
 	var (
 		wg            sync.WaitGroup
 		seriesSetChan = make(chan genericSeriesSet)

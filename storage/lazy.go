@@ -30,6 +30,8 @@ func (c *lazyGenericSeriesSet) Next() bool {
 	return ok
 }
 
+// storage.genericSeriesSet.At返回是storage.Labels而不是storage.Series
+// storage.Series继承自storage.Labels
 func (c *lazyGenericSeriesSet) At() Labels {
 	if c.set != nil {
 		return c.set.At()

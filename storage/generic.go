@@ -58,6 +58,7 @@ type genericQuerier interface {
 // 与SeriesSet只有At() Series不同
 type genericSeriesSet interface {
 	Next() bool
+	// storage.Series继承自storage.Labels
 	At() Labels // SeriesSet.At() Series
 	Err() error
 	Warnings() Warnings
