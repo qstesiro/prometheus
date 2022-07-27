@@ -108,7 +108,7 @@ func (a *seriesSetAdapter) At() Series {
 
 // 实现了genericSeriesSet接口
 type genericSeriesSetAdapter struct {
-	SeriesSet
+	SeriesSet // blockSeriesSet
 }
 
 func (a *genericSeriesSetAdapter) At() Labels {
@@ -128,7 +128,7 @@ func (a *chunkSeriesSetAdapter) At() ChunkSeries {
 
 // 实现了genericSeriesSet接口
 type genericChunkSeriesSetAdapter struct {
-	ChunkSeriesSet
+	ChunkSeriesSet // blockChunkSeriesSet
 }
 
 func (a *genericChunkSeriesSetAdapter) At() Labels {
@@ -141,6 +141,7 @@ type seriesMergerAdapter struct {
 	VerticalSeriesMergeFunc
 }
 
+// 只是为了做类型转换 ???
 func (a *seriesMergerAdapter) Merge(s ...Labels) Labels {
 	buf := make([]Series, 0, len(s))
 	for _, ser := range s {
@@ -153,6 +154,7 @@ type chunkSeriesMergerAdapter struct {
 	VerticalChunkSeriesMergeFunc
 }
 
+// 只是为了做类型转换 ???
 func (a *chunkSeriesMergerAdapter) Merge(s ...Labels) Labels {
 	buf := make([]ChunkSeries, 0, len(s))
 	for _, ser := range s {

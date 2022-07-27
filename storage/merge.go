@@ -319,8 +319,8 @@ type genericMergeSeriesSet struct {
 	mergeFunc     genericSeriesMergeFunc
 
 	heap        genericSeriesSetHeap
-	sets        []genericSeriesSet
-	currentSets []genericSeriesSet
+	sets        []genericSeriesSet // genericSeriesSetAdapter/genericChunkSeriesSetAdapter
+	currentSets []genericSeriesSet // genericSeriesSetAdapter/genericChunkSeriesSetAdapter
 }
 
 // newGenericMergeSeriesSet returns a new genericSeriesSet that merges (and deduplicates)
@@ -394,6 +394,7 @@ func (c *genericMergeSeriesSet) At() Labels {
 	}
 	series := make([]Labels, 0, len(c.currentSets))
 	for _, seriesSet := range c.currentSets {
+		// genericSeriesSetAdapter/genericChunkSeriesSetAdapter.At返回storage.Labels接口
 		series = append(series, seriesSet.At())
 	}
 	return c.mergeFunc(series...)
@@ -438,6 +439,7 @@ func (h *genericSeriesSetHeap) Pop() interface{} {
 	return x
 }
 
+// 合并标签完全相同的序列
 // ChainedSeriesMerge returns single series from many same, potentially overlapping series by chaining samples together.
 // If one or more samples overlap, one sample from random overlapped ones is kept and all others with the same
 // timestamp are dropped.
