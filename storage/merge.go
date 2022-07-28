@@ -15,7 +15,7 @@ package storage
 
 import (
 	"bytes"
-	"container/heap"
+	"container/heap" // 标准库的(不知后续是否会通过泛型扩展) !!!
 	"math"
 	"sort"
 	"strings"
@@ -427,10 +427,12 @@ func (h genericSeriesSetHeap) Less(i, j int) bool {
 	return labels.Compare(a, b) < 0
 }
 
+// 必须使用指针才能修改原始堆对象
 func (h *genericSeriesSetHeap) Push(x interface{}) {
 	*h = append(*h, x.(genericSeriesSet))
 }
 
+// 必须使用指针才能修改原始堆对象
 func (h *genericSeriesSetHeap) Pop() interface{} {
 	old := *h
 	n := len(old)
