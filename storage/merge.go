@@ -467,6 +467,7 @@ func ChainedSeriesMerge(series ...Series) Series {
 	}
 }
 
+// 实现chunkenc.Iterator接口
 // chainSampleIterator is responsible to iterate over samples from different iterators of the same time series in timestamps
 // order. If one or more samples overlap, one sample from random overlapped ones is kept and all others with the same
 // timestamp are dropped. It's optimized for non-overlap cases as well.
