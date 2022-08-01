@@ -215,7 +215,7 @@ func NewAPI(
 ) *API {
 	a := &API{
 		QueryEngine: qe,
-		Queryable:   q,
+		Queryable:   q, // 实际根本没有使用ChunkQueryable接口
 
 		targetRetriever:       tr,
 		alertmanagerRetriever: ar,
