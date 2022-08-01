@@ -68,7 +68,7 @@ type Meta struct {
 	// chunk data or the data itself.
 	// When it is a reference it is the segment offset at which the chunk bytes start.
 	// Generally, only one of them is set.
-	// Ref与Chunk两者只能有一个是数据数据
+	// Ref与Chunk两者只能有一个是有效数据
 	Ref   uint64         // 高4位是段文件索引,低4位是当前chunk在段文件中的偏移
 	Chunk chunkenc.Chunk // 具体的数据内容
 

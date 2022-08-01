@@ -32,6 +32,7 @@ type SeriesEntry struct {
 func (s *SeriesEntry) Labels() labels.Labels       { return s.Lset }
 func (s *SeriesEntry) Iterator() chunkenc.Iterator { return s.SampleIteratorFn() }
 
+// 实现storage.ChunkSeries接口
 type ChunkSeriesEntry struct {
 	Lset            labels.Labels
 	ChunkIteratorFn func() chunks.Iterator

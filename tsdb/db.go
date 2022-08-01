@@ -1543,7 +1543,11 @@ func (db *DB) Querier(_ context.Context, mint, maxt int64) (storage.Querier, err
 		}
 		return nil, errors.Wrapf(err, "open querier for block %s", b)
 	}
-	return storage.NewMergeQuerier(blockQueriers, nil, storage.ChainedSeriesMerge), nil
+	return storage.NewMergeQuerier(
+		blockQueriers,
+		nil,
+		storage.ChainedSeriesMerge,
+	), nil
 }
 
 // ChunkQuerier returns a new chunk querier over the data partition for the given time range.
@@ -1579,7 +1583,11 @@ func (db *DB) ChunkQuerier(_ context.Context, mint, maxt int64) (storage.ChunkQu
 		return nil, errors.Wrapf(err, "open querier for block %s", b)
 	}
 
-	return storage.NewMergeChunkQuerier(blockQueriers, nil, storage.NewCompactingChunkSeriesMerger(storage.ChainedSeriesMerge)), nil
+	return storage.NewMergeChunkQuerier(
+		blockQueriers,
+		nil,
+		storage.NewCompactingChunkSeriesMerger(storage.ChainedSeriesMerge),
+	), nil
 }
 
 func rangeForTimestamp(t int64, width int64) (maxt int64) {

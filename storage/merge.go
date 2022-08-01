@@ -397,7 +397,7 @@ func (c *genericMergeSeriesSet) At() Labels {
 		// genericSeriesSetAdapter/genericChunkSeriesSetAdapter.At返回storage.Labels接口
 		series = append(series, seriesSet.At())
 	}
-	return c.mergeFunc(series...)
+	return c.mergeFunc(series...) // storage.SeriesEntry/storage.ChunkSeriesEntry
 }
 
 func (c *genericMergeSeriesSet) Err() error {
