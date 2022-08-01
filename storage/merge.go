@@ -395,9 +395,10 @@ func (c *genericMergeSeriesSet) At() Labels {
 	series := make([]Labels, 0, len(c.currentSets))
 	for _, seriesSet := range c.currentSets {
 		// genericSeriesSetAdapter/genericChunkSeriesSetAdapter.At返回storage.Labels接口
+		// series实例storage.SeriesEntry/storage.ChunkSeriesEntry
 		series = append(series, seriesSet.At())
 	}
-	return c.mergeFunc(series...) // storage.SeriesEntry/storage.ChunkSeriesEntry
+	return c.mergeFunc(series...)
 }
 
 func (c *genericMergeSeriesSet) Err() error {
@@ -458,6 +459,7 @@ func ChainedSeriesMerge(series ...Series) Series {
 	return &SeriesEntry{
 		Lset: series[0].Labels(),
 		SampleIteratorFn: func() chunkenc.Iterator {
+			// iterator实例tsdb.populateWithDelSeriesIterator
 			iterators := make([]chunkenc.Iterator, 0, len(series))
 			for _, s := range series {
 				iterators = append(iterators, s.Iterator())
@@ -603,6 +605,7 @@ func (h *samplesIteratorHeap) Pop() interface{} {
 // NOTE: Use the returned merge function only when you see potentially overlapping series, as this introduces small a overhead
 // to handle overlaps between series.
 func NewCompactingChunkSeriesMerger(mergeFunc VerticalSeriesMergeFunc) VerticalChunkSeriesMergeFunc {
+	// ChunkSeries实例storage.ChunkSeriesEntry
 	return func(series ...ChunkSeries) ChunkSeries {
 		if len(series) == 0 {
 			return nil
@@ -610,6 +613,7 @@ func NewCompactingChunkSeriesMerger(mergeFunc VerticalSeriesMergeFunc) VerticalC
 		return &ChunkSeriesEntry{
 			Lset: series[0].Labels(),
 			ChunkIteratorFn: func() chunks.Iterator {
+				// iterator实例tsdb.populateWithDelChunkSeriesIterator
 				iterators := make([]chunks.Iterator, 0, len(series))
 				for _, s := range series {
 					iterators = append(iterators, s.Iterator())
@@ -628,7 +632,7 @@ func NewCompactingChunkSeriesMerger(mergeFunc VerticalSeriesMergeFunc) VerticalC
 // TODO(bwplotka): Currently merge will compact overlapping chunks with bigger chunk, without limit. Split it: https://github.com/prometheus/tsdb/issues/670
 type compactChunkIterator struct {
 	mergeFunc VerticalSeriesMergeFunc
-	iterators []chunks.Iterator
+	iterators []chunks.Iterator // tsdb.populateWithDelChunkSeriesIterator
 
 	h chunkIteratorHeap
 
@@ -725,7 +729,7 @@ func (c *compactChunkIterator) Err() error {
 	return errs.Err()
 }
 
-type chunkIteratorHeap []chunks.Iterator
+type chunkIteratorHeap []chunks.Iterator // 小顶堆
 
 func (h chunkIteratorHeap) Len() int      { return len(h) }
 func (h chunkIteratorHeap) Swap(i, j int) { h[i], h[j] = h[j], h[i] }
