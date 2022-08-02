@@ -121,7 +121,7 @@ type Query interface {
 // query implements the Query interface.
 type query struct {
 	// Underlying data provider.
-	queryable storage.Queryable
+	queryable storage.Queryable // 实际根本没有使用ChunkQueryable接口
 	// The original query string.
 	q string
 	// Statement of the parsed query.

@@ -1094,7 +1094,8 @@ func (s *readyStorage) Querier(ctx context.Context, mint, maxt int64) (storage.Q
 // ChunkQuerier implements the Storage interface.
 func (s *readyStorage) ChunkQuerier(ctx context.Context, mint, maxt int64) (storage.ChunkQuerier, error) {
 	if x := s.get(); x != nil {
-		return x.ChunkQuerier(ctx, mint, maxt)
+		return x
+        .ChunkQuerier(ctx, mint, maxt)
 	}
 	return nil, tsdb.ErrNotReady
 }

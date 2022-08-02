@@ -275,6 +275,10 @@
 # b tsdb.ExponentialBlockRanges
 
 # b tsdb.(*DB).Querier
-b storage.(*querierAdapter).Select
+# b storage.(*querierAdapter).Select
+
+b tsdb.TestDBReadOnly
+b tsdb.(*DB).ChunkQuerier
+b tsdb.queryChunks
 
 g

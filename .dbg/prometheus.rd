@@ -31,7 +31,7 @@
     alias dlv='gob && rm -rf data/ && dlv exec ./prometheus --init .dbg/prometheus.dlv -- --config.file=documentation/examples/prometheus.yml --enable-feature=promql-at-modifier --query.timeout=1h'
 
     # 测试
-    alias dlv='CGO_ENABLED=0 dlv test github.com/prometheus/prometheus/tsdb --init .dbg/prometheus.dlv -- -test.run TestPostingsForMatchers'
+    alias dlv='CGO_ENABLED=0 dlv test github.com/prometheus/prometheus/tsdb --init .dbg/prometheus.dlv -- -test.run TestDBReadOnly'
 }
 
 # 文档
