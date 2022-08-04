@@ -136,6 +136,31 @@
          -X POST | jq
 }
 
+# chunk_query_range
+{
+    # go_gc_duration_seconds_sum 0.00172159
+
+    curl localhost:9090/api/v1/chunk_query_range \
+         --data-urlencode 'query={__name__="go_gc_duration_seconds_count"}' \
+         --data-urlencode 'start=2022-08-04T13:28:00.000Z' \
+         --data-urlencode 'end=2022-08-04T13:29:00.000Z' \
+         --data-urlencode 'step=10s' \
+         -g -G | jq
+
+    # go_gc_duration_seconds{quantile="0"} 3.5846e-05
+    # go_gc_duration_seconds{quantile="0.25"} 4.4759e-05
+    # go_gc_duration_seconds{quantile="0.5"} 0.000318079
+    # go_gc_duration_seconds{quantile="0.75"} 0.000370028
+    # go_gc_duration_seconds{quantile="1"} 0.000383886
+
+    curl localhost:9090/api/v1/chunk_query_range \
+         --data-urlencode 'query={__name__="go_gc_duration_seconds"}' \
+         --data-urlencode 'start=2022-08-04T13:28:00.000Z' \
+         --data-urlencode 'end=2022-08-04T13:29:00.000Z' \
+         --data-urlencode 'step=10s' \
+         -g -G | jq
+}
+
 # label
 {
     curl localhost:9090/api/v1/labels \

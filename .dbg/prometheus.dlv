@@ -277,8 +277,7 @@
 # b tsdb.(*DB).Querier
 # b storage.(*querierAdapter).Select
 
-b tsdb.TestDBReadOnly
-b tsdb.(*DB).ChunkQuerier
-b tsdb.queryChunks
+b v1.(*API).chunkQueryRange
+# b tsdb.(*DB).ChunkQuerier
 
 g

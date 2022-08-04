@@ -215,7 +215,7 @@ func NewAPI(
 ) *API {
 	a := &API{
 		QueryEngine: qe,
-		Queryable:   q, // 实际根本没有使用ChunkQueryable接口
+		Queryable:   q,
 
 		targetRetriever:       tr,
 		alertmanagerRetriever: ar,
@@ -283,6 +283,11 @@ func (api *API) Register(r *route.Router) {
 	r.Post("/query", wrap(api.query))
 	r.Get("/query_range", wrap(api.queryRange))
 	r.Post("/query_range", wrap(api.queryRange))
+	// 为分析ChunkQuerier增加 ???
+	{
+		r.Get("/chunk_query_range", wrap(api.chunkQueryRange))
+		r.Post("/chunk_query_range", wrap(api.chunkQueryRange))
+	}
 
 	r.Get("/labels", wrap(api.labelNames))
 	r.Post("/labels", wrap(api.labelNames))
@@ -467,6 +472,40 @@ func (api *API) queryRange(r *http.Request) (result apiFuncResult) {
 		Result:     res.Value,
 		Stats:      qs,
 	}, nil, res.Warnings, qry.Close}
+}
+
+// 为分析ChunkQuerier增加 ???
+func (api *API) chunkQueryRange(r *http.Request) (result apiFuncResult) {
+	start, _ := parseTime(r.FormValue("start"))
+	end, _ := parseTime(r.FormValue("end"))
+	qry, err := api.Queryable.ChunkQuerier(r.Context(), start.UnixMilli(), end.UnixMilli())
+	if err != nil {
+		return invalidParamError(err, "query")
+	}
+	// matcher, err := labels.NewMatcher(labels.MatchEqual, "__name__", "go_gc_duration_seconds_count")
+	matcher, err := labels.NewMatcher(labels.MatchEqual, "__name__", "go_gc_duration_seconds")
+	if err != nil {
+		return invalidParamError(err, "query")
+	}
+	set := qry.Select(true, nil, matcher)
+	for set.Next() {
+		series := set.At()
+		fmt.Printf("--------------------------------- %+v\n", series.Labels().String())
+		iter := series.Iterator()
+		for iter.Next() {
+			meta := iter.At()
+			fmt.Printf("--------------------------------- %+v\n", meta)
+		}
+	}
+	// From now on, we must only return with a finalizer in the result (to
+	// be called by the caller) or call qry.Close ourselves (which is
+	// required in the case of a panic).
+	defer func() {
+		if result.finalizer == nil {
+			qry.Close()
+		}
+	}()
+	return apiFuncResult{}
 }
 
 func returnAPIError(err error) *apiError {
