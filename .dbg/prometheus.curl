@@ -143,7 +143,7 @@
     curl localhost:9090/api/v1/chunk_query_range \
          --data-urlencode 'query={__name__="go_gc_duration_seconds_count"}' \
          --data-urlencode 'start=2022-08-04T13:28:00.000Z' \
-         --data-urlencode 'end=2022-08-04T13:29:00.000Z' \
+         --data-urlencode 'end=2022-08-05T20:28:00.000Z' \
          --data-urlencode 'step=10s' \
          -g -G | jq
 
@@ -156,7 +156,7 @@
     curl localhost:9090/api/v1/chunk_query_range \
          --data-urlencode 'query={__name__="go_gc_duration_seconds"}' \
          --data-urlencode 'start=2022-08-04T13:28:00.000Z' \
-         --data-urlencode 'end=2022-08-04T13:29:00.000Z' \
+         --data-urlencode 'end=2022-08-05T20:28:00.000Z' \
          --data-urlencode 'step=10s' \
          -g -G | jq
 }

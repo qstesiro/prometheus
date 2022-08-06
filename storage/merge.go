@@ -16,7 +16,6 @@ package storage
 import (
 	"bytes"
 	"container/heap" // 标准库的(不知后续是否会通过泛型扩展) !!!
-	"fmt"
 	"math"
 	"sort"
 	"strings"
@@ -128,7 +127,8 @@ func (q *mergeGenericQuerier) Select(sortSeries bool, hints *SelectHints, matche
 			},
 		}
 	}
-	// 并发
+	// 并发查询每个blockQuerier
+	// blockQuerier与tsdb.Block是一对一关系
 	var (
 		wg            sync.WaitGroup
 		seriesSetChan = make(chan genericSeriesSet)
@@ -614,7 +614,7 @@ func NewCompactingChunkSeriesMerger(mergeFunc VerticalSeriesMergeFunc) VerticalC
 		return &ChunkSeriesEntry{
 			Lset: series[0].Labels(),
 			ChunkIteratorFn: func() chunks.Iterator {
-				fmt.Printf("+++++++++++++++++++++++++++++++++++++++++\n")
+				// fmt.Printf("________________________________________________\n")
 				// iterator实例tsdb.populateWithDelChunkSeriesIterator
 				iterators := make([]chunks.Iterator, 0, len(series))
 				for _, s := range series {
