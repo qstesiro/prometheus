@@ -278,6 +278,14 @@
 # b storage.(*querierAdapter).Select
 
 b v1.(*API).chunkQueryRange
+b tsdb.(*DB).ChunkQuerier
+b storage.NewMergeChunkQuerier
+b storage.(*mergeGenericQuerier).Select
+# b storage.newGenericMergeSeriesSet
+# b storage.(*genericMergeSeriesSet).Next
+# b storage.(*lazyGenericSeriesSet).Next
 # b tsdb.(*DB).ChunkQuerier
+# b storage.(*ChunkSeriesEntry).Iterator
+# b storage/merge.go:618
 
 g

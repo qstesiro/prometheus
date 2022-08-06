@@ -86,6 +86,7 @@ type Iterator interface {
 	Next() bool
 	// Err returns optional error if Next is false.
 	Err() error
+	// 没有Warning()
 }
 
 // writeHash writes the chunk encoding and raw data into the provided hash.

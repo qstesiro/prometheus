@@ -16,6 +16,7 @@ package storage
 import (
 	"bytes"
 	"container/heap" // 标准库的(不知后续是否会通过泛型扩展) !!!
+	"fmt"
 	"math"
 	"sort"
 	"strings"
@@ -613,6 +614,7 @@ func NewCompactingChunkSeriesMerger(mergeFunc VerticalSeriesMergeFunc) VerticalC
 		return &ChunkSeriesEntry{
 			Lset: series[0].Labels(),
 			ChunkIteratorFn: func() chunks.Iterator {
+				fmt.Printf("+++++++++++++++++++++++++++++++++++++++++\n")
 				// iterator实例tsdb.populateWithDelChunkSeriesIterator
 				iterators := make([]chunks.Iterator, 0, len(series))
 				for _, s := range series {
@@ -627,6 +629,7 @@ func NewCompactingChunkSeriesMerger(mergeFunc VerticalSeriesMergeFunc) VerticalC
 	}
 }
 
+// 实现chunks.Iterator接口
 // compactChunkIterator is responsible to compact chunks from different iterators of the same time series into single chainSeries.
 // If time-overlapping chunks are found, they are encoded and passed to series merge and encoded again into one bigger chunk.
 // TODO(bwplotka): Currently merge will compact overlapping chunks with bigger chunk, without limit. Split it: https://github.com/prometheus/tsdb/issues/670
