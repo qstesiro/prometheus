@@ -466,7 +466,9 @@ func ChainedSeriesMerge(series ...Series) Series {
 	return &SeriesEntry{
 		Lset: series[0].Labels(),
 		SampleIteratorFn: func() chunkenc.Iterator {
-			// iterator实例tsdb.populateWithDelSeriesIterator
+			// iterator实例
+			// tsdb.populateWithDelSeriesIterator
+			// tsdb.populateWithDelChunkSeriesIterator
 			iterators := make([]chunkenc.Iterator, 0, len(series))
 			for _, s := range series {
 				iterators = append(iterators, s.Iterator())
