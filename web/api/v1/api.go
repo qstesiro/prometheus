@@ -421,6 +421,8 @@ func (api *API) queryRange(r *http.Request) (result apiFuncResult) {
 
 	// For safety, limit the number of returned points per timeseries.
 	// This is sufficient for 60s resolution for a week or 1h resolution for a year.
+	// 此种计算方式不合理,因为实际不一定会超过
+	// 例如: t1---有数据---t1`---没有数据---t2`---有数据---t2` [t1, t2]包含[t1`, t2`]
 	if end.Sub(start)/step > 11000 {
 		err := errors.New("exceeded maximum resolution of 11,000 points per timeseries. Try decreasing the query resolution (?step=XX)")
 		return apiFuncResult{nil, &apiError{errorBadData, err}, nil, nil}
@@ -487,7 +489,7 @@ func (api *API) chunkQueryRange(r *http.Request) (result apiFuncResult) {
 	if err != nil {
 		return invalidParamError(err, "query")
 	}
-	set := qry.Select(true, nil, matcher)
+	set := qry.Select(false, nil, matcher)
 	for set.Next() {
 		series := set.At()
 		fmt.Printf("--------------------------------- %+v\n", series.Labels().String())

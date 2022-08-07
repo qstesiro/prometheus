@@ -93,8 +93,8 @@
 {
     curl localhost:9090/api/v1/query_range \
          --data-urlencode 'query={__name__="go_gc_duration_seconds_count"}' \
-         --data-urlencode 'start=2022-06-05T04:22:00.000Z' \
-         --data-urlencode 'end=2022-06-03T08:88:00.000Z' \
+         --data-urlencode 'start=2022-08-04T13:28:00.000Z' \
+         --data-urlencode 'end=2022-08-05T20:28:00.000Z' \
          --data-urlencode 'step=10s' \
          -g -G | jq
     curl localhost:9090/api/v1/query_range \

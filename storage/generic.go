@@ -141,7 +141,7 @@ type seriesMergerAdapter struct {
 	VerticalSeriesMergeFunc
 }
 
-// 只是为了做类型转换 ???
+// 此函数功能只是为了做类型转换(Lables->Series)
 func (a *seriesMergerAdapter) Merge(s ...Labels) Labels {
 	buf := make([]Series, 0, len(s))
 	for _, ser := range s {
@@ -154,7 +154,7 @@ type chunkSeriesMergerAdapter struct {
 	VerticalChunkSeriesMergeFunc
 }
 
-// 只是为了做类型转换 ???
+// 此函数功能只是为了做类型转换(Labels->ChunkSeries)
 func (a *chunkSeriesMergerAdapter) Merge(s ...Labels) Labels {
 	buf := make([]ChunkSeries, 0, len(s))
 	for _, ser := range s {

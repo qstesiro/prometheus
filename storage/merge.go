@@ -138,7 +138,9 @@ func (q *mergeGenericQuerier) Select(sortSeries bool, hints *SelectHints, matche
 		wg.Add(1)
 		go func(qr genericQuerier) {
 			defer wg.Done()
-
+			// 此处调用必须排序
+			// 因为在多querier的情况下每个对应的seriesSet会统进行堆排序
+			// 而压入堆中seriesSet进行大小比较实际使用当前迭代值的标签序
 			// We need to sort for NewMergeSeriesSet to work.
 			seriesSetChan <- qr.Select(true, hints, matchers...)
 		}(querier)
@@ -317,11 +319,13 @@ func NewMergeChunkSeriesSet(sets []ChunkSeriesSet, mergeFunc VerticalChunkSeries
 // genericMergeSeriesSet implements genericSeriesSet.
 type genericMergeSeriesSet struct {
 	currentLabels labels.Labels
-	mergeFunc     genericSeriesMergeFunc
+	// 指向绑定函数(函数对象存储机制可以研究一下) ???
+	// seriesMergerAdapter.Merge/chunkSeriesMergerAdapter.Merge
+	mergeFunc genericSeriesMergeFunc
 
 	heap        genericSeriesSetHeap
-	sets        []genericSeriesSet // genericSeriesSetAdapter/genericChunkSeriesSetAdapter
-	currentSets []genericSeriesSet // genericSeriesSetAdapter/genericChunkSeriesSetAdapter
+	sets        []genericSeriesSet // 存储genericSeriesSetAdapter/genericChunkSeriesSetAdapter
+	currentSets []genericSeriesSet // 存储genericSeriesSetAdapter/genericChunkSeriesSetAdapter
 }
 
 // newGenericMergeSeriesSet returns a new genericSeriesSet that merges (and deduplicates)
@@ -342,6 +346,8 @@ func newGenericMergeSeriesSet(sets []genericSeriesSet, mergeFunc genericSeriesMe
 			continue
 		}
 		if set.Next() {
+			// 压入堆中大小比较实际使用当前迭代值的标签序
+			// 正常排序需要一个前提就是迭代器返回的序列有序 ???
 			heap.Push(&h, set)
 		}
 		if err := set.Err(); err != nil {
@@ -396,7 +402,7 @@ func (c *genericMergeSeriesSet) At() Labels {
 	series := make([]Labels, 0, len(c.currentSets))
 	for _, seriesSet := range c.currentSets {
 		// genericSeriesSetAdapter/genericChunkSeriesSetAdapter.At返回storage.Labels接口
-		// series实例storage.SeriesEntry/storage.ChunkSeriesEntry
+		// series存储storage.SeriesEntry/storage.ChunkSeriesEntry
 		series = append(series, seriesSet.At())
 	}
 	return c.mergeFunc(series...)
@@ -614,7 +620,7 @@ func NewCompactingChunkSeriesMerger(mergeFunc VerticalSeriesMergeFunc) VerticalC
 		return &ChunkSeriesEntry{
 			Lset: series[0].Labels(),
 			ChunkIteratorFn: func() chunks.Iterator {
-				// fmt.Printf("________________________________________________\n")
+				// fmt.Printf("-------------------------------------------- \n")
 				// iterator实例tsdb.populateWithDelChunkSeriesIterator
 				iterators := make([]chunks.Iterator, 0, len(series))
 				for _, s := range series {
