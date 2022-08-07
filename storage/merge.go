@@ -450,6 +450,7 @@ func (h *genericSeriesSetHeap) Pop() interface{} {
 }
 
 // 合并标签完全相同的序列
+// Series是标签完全相关的序列集合
 // ChainedSeriesMerge returns single series from many same, potentially overlapping series by chaining samples together.
 // If one or more samples overlap, one sample from random overlapped ones is kept and all others with the same
 // timestamp are dropped.
@@ -615,6 +616,7 @@ func (h *samplesIteratorHeap) Pop() interface{} {
 // to handle overlaps between series.
 func NewCompactingChunkSeriesMerger(mergeFunc VerticalSeriesMergeFunc) VerticalChunkSeriesMergeFunc {
 	// ChunkSeries实例storage.ChunkSeriesEntry
+	// ChunkSeries是标签完全相同的序列集合
 	return func(series ...ChunkSeries) ChunkSeries {
 		if len(series) == 0 {
 			return nil
@@ -682,16 +684,15 @@ func (c *compactChunkIterator) Next() bool {
 	for len(c.h) > 0 {
 		// Get the next oldest chunk by min, then max time.
 		next := c.h[0].At()
-		if next.MinTime > oMaxTime {
+		if next.MinTime > oMaxTime { // 无重叠
 			// No overlap with current one.
 			break
 		}
-
 		if next.MinTime == prev.MinTime &&
 			next.MaxTime == prev.MaxTime &&
-			bytes.Equal(next.Chunk.Bytes(), prev.Chunk.Bytes()) {
+			bytes.Equal(next.Chunk.Bytes(), prev.Chunk.Bytes()) { // 完全重叠
 			// 1:1 duplicates, skip it.
-		} else {
+		} else { // 部分重叠
 			// We operate on same series, so labels does not matter here.
 			overlapping = append(overlapping, newChunkToSeriesDecoder(nil, next))
 			if next.MaxTime > oMaxTime {
@@ -699,7 +700,7 @@ func (c *compactChunkIterator) Next() bool {
 			}
 			prev = next
 		}
-
+		// 部分(完全)重叠则略过当前Meta
 		iter := heap.Pop(&c.h).(chunks.Iterator)
 		if iter.Next() {
 			heap.Push(&c.h, iter)
