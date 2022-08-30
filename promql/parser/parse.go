@@ -43,8 +43,9 @@ var parserPool = sync.Pool{
 // http://dinosaur.compilertools.net/yacc/
 // https://pubs.opengroup.org/onlinepubs/9699919799/utilities/yacc.html
 // https://archive.org/details/lexyacc00levi/mode/2up
-// https://github.com/chai2010/go-ast-book
+// https://github.com/chai2010/go-ast-book(Go语言定制指南)
 // https://pingcap.com/zh/blog/tidb-source-code-reading-5
+// https://blog.csdn.net/m0_38059938/article/details/109147106
 // 实现yyLexer接口(generated_parser.y.go:595)
 type parser struct {
 	lex Lexer
