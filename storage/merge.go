@@ -315,6 +315,28 @@ func NewMergeChunkSeriesSet(sets []ChunkSeriesSet, mergeFunc VerticalChunkSeries
 	}
 }
 
+/*
+  假设查询跨越三个block每个块对应一个序列集合每个集合包含多个序列且集合内序列已按标签排序
+
+  set1                | set2                | set3
+  --------------------+---------------------+--------------------
+                      | s1 -> (tv1,tv2,tv3) | s1 -> (tv1,tv2,tv3)
+  s2 -> (tv1,tv2,tv3) |                     | s2 -> (tv1,tv2,tv3)
+  s3 -> (tv1,tv2,tv3) | s3 -> (tv1,tv2,tv3) |
+  --------------------+---------------------+--------------------
+
+  排序使用小顶堆(不稳定排序)
+  将每个集合的第一个序列压入堆相同序列将连续排序
+  连续弹出相同的序列每次弹出都将后续的序列压入堆
+  对外部使用者感觉到的是每次都获取一个序列
+  注: pop(s2)时序颠倒问题,所以后续的iterator合并也使用了堆进行排序
+
+  初始化  -> set2(s1),set3(s1),set1(s2)
+  pop(s1) -> set1(s2),set3(s2),set2(s3)
+  pop(s2) -> set2(s3),set1(s3)
+  pop(s3) -> 结束
+*/
+
 // 实现了storage.genericSeriesSet
 // genericMergeSeriesSet implements genericSeriesSet.
 type genericMergeSeriesSet struct {
@@ -480,6 +502,7 @@ func ChainedSeriesMerge(series ...Series) Series {
 }
 
 // 实现chunkenc.Iterator接口
+// 类似genericMergeSeriesSet使用小顶堆对多个标签相同序列的迭代值进行排序
 // chainSampleIterator is responsible to iterate over samples from different iterators of the same time series in timestamps
 // order. If one or more samples overlap, one sample from random overlapped ones is kept and all others with the same
 // timestamp are dropped. It's optimized for non-overlap cases as well.

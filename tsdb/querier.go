@@ -336,7 +336,8 @@ func PostingsForMatchers(ix IndexReader, ms ...*labels.Matcher) (index.Postings,
 				}
 				its = append(its, it)
 			}
-		} else { // l="" 值为空的情况
+		} else {
+			// l="" 值为空的情况
 			// 所有matchers中对于label的所有匹配条件或者一定或者可能会匹配到空
 			// l == ""与标签不存在视为相同
 			// If the matchers for a labelname selects an empty value, it selects all
