@@ -209,6 +209,7 @@ func (a *xorAppender) Append(t int64, v float64) {
 		}
 		// 写入V
 		// 浮点数二进制表示
+		// https://zhuanlan.zhihu.com/p/343033661
 		// https://www.h-schmidt.net/FloatConverter/IEEE754.html
 		a.b.writeBits(math.Float64bits(v), 64)
 
