@@ -509,7 +509,7 @@ vector_selector: metric_identifier label_matchers
                  // by{name~='value'}
                  // group{name~='value'}
                  // offset{name~='value'}
-                        {                           
+                        {
                             vs := $2.(*VectorSelector)
                             vs.PosRange = mergeRanges(&$1, vs)
                             vs.Name = $1.Val

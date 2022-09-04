@@ -46,6 +46,8 @@ var parserPool = sync.Pool{
 // https://github.com/chai2010/go-ast-book(Go语言定制指南)
 // https://pingcap.com/zh/blog/tidb-source-code-reading-5
 // https://blog.csdn.net/m0_38059938/article/details/109147106
+// https://blog.csdn.net/weixin_46222091/article/details/105990745?spm=1001.2101.3001.6650.4&utm_medium=distribute.pc_relevant.none-task-blog-2%7Edefault%7ECTRLIST%7ERate-4-105990745-blog-45009147.pc_relevant_multi_platform_whitelistv3&depth_1-utm_source=distribute.pc_relevant.none-task-blog-2%7Edefault%7ECTRLIST%7ERate-4-105990745-blog-45009147.pc_relevant_multi_platform_whitelistv3&utm_relevant_index=5(bison使用)
+// https://www.bilibili.com/video/BV17W41187gL?p=1&vd_source=d9dbd867692836885d86df44f0a52215(编译原理视频)
 // 实现yyLexer接口(generated_parser.y.go:595)
 type parser struct {
 	lex Lexer
